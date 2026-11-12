@@ -10,11 +10,30 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as SepetRouteImport } from './routes/sepet'
 import { Route as UrunlerRouteImport } from './routes/urunler'
+import { Route as AuthenticatedHesabimRouteImport } from './routes/_authenticated/hesabim'
+import { Route as UrunSlugRouteImport } from './routes/urun.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SepetRoute = SepetRouteImport.update({
+  id: '/sepet',
+  path: '/sepet',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UrunlerRoute = UrunlerRouteImport.update({
@@ -22,31 +41,66 @@ const UrunlerRoute = UrunlerRouteImport.update({
   path: '/urunler',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedHesabimRoute = AuthenticatedHesabimRouteImport.update({
+  id: '/hesabim',
+  path: '/hesabim',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const UrunSlugRoute = UrunSlugRouteImport.update({
+  id: '/urun/$slug',
+  path: '/urun/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/sepet': typeof SepetRoute
   '/urunler': typeof UrunlerRoute
+  '/hesabim': typeof AuthenticatedHesabimRoute
+  '/urun/$slug': typeof UrunSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/sepet': typeof SepetRoute
   '/urunler': typeof UrunlerRoute
+  '/hesabim': typeof AuthenticatedHesabimRoute
+  '/urun/$slug': typeof UrunSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/sepet': typeof SepetRoute
   '/urunler': typeof UrunlerRoute
+  '/_authenticated/hesabim': typeof AuthenticatedHesabimRoute
+  '/urun/$slug': typeof UrunSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/urunler'
+  fullPaths: '/' | '/auth' | '/sepet' | '/urunler' | '/hesabim' | '/urun/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/urunler'
-  id: '__root__' | '/' | '/urunler'
+  to: '/' | '/auth' | '/sepet' | '/urunler' | '/hesabim' | '/urun/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/sepet'
+    | '/urunler'
+    | '/_authenticated/hesabim'
+    | '/urun/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  SepetRoute: typeof SepetRoute
   UrunlerRoute: typeof UrunlerRoute
+  UrunSlugRoute: typeof UrunSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +112,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sepet': {
+      id: '/sepet'
+      path: '/sepet'
+      fullPath: '/sepet'
+      preLoaderRoute: typeof SepetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/urunler': {
       id: '/urunler'
       path: '/urunler'
@@ -65,12 +140,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UrunlerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/hesabim': {
+      id: '/_authenticated/hesabim'
+      path: '/hesabim'
+      fullPath: '/hesabim'
+      preLoaderRoute: typeof AuthenticatedHesabimRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/urun/$slug': {
+      id: '/urun/$slug'
+      path: '/urun/$slug'
+      fullPath: '/urun/$slug'
+      preLoaderRoute: typeof UrunSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedHesabimRoute: typeof AuthenticatedHesabimRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedHesabimRoute: AuthenticatedHesabimRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  SepetRoute: SepetRoute,
   UrunlerRoute: UrunlerRoute,
+  UrunSlugRoute: UrunSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
