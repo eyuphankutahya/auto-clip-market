@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { money } from "@/lib/format";
+import { fetchAll } from "@/lib/fetch-all";
 import { Stat } from "@/components/site/CariStatement";
 
 export const Route = createFileRoute("/_authenticated/admin/")({ component: Dashboard });
@@ -11,11 +12,11 @@ function Dashboard() {
     queryKey: ["admin-dash"],
     queryFn: async () => {
       const [p, items, pur] = await Promise.all([
-        supabase.from("products").select("id,name,stock,min_stock,price").order("stock"),
+        fetchAll((from, to) => supabase.from("products").select("id,name,stock,min_stock,price").order("stock").order("id").range(from, to)),
         supabase.from("order_items").select("product_id, quantity, unit_price, order:orders!inner(status)").in("order.status", ["approved", "shipped"]),
         supabase.from("purchases").select("quantity, unit_cost, supplier:suppliers(name)"),
       ]);
-      return { products: p.data ?? [], items: items.data ?? [], purchases: pur.data ?? [] };
+      return { products: p, items: items.data ?? [], purchases: pur.data ?? [] };
     },
   });
   if (!data) return <p className="text-muted-foreground">Yükleniyor…</p>;
