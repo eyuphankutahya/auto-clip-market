@@ -29,12 +29,12 @@ function Purchases() {
   });
   const addPurchase = async () => {
     const { error } = await supabase.from("purchases").insert({ supplier_id: f.supplier_id || null, product_id: f.product_id, quantity: Number(f.quantity), unit_cost: Number(f.unit_cost), purchase_date: f.purchase_date });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Alım kaydedildi, stok güncellendi"); setF({ ...f, quantity: "", unit_cost: "" }); qc.invalidateQueries();
   };
   const addSupplier = async () => {
     const { error } = await supabase.from("suppliers").insert(sup);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setSup({ name: "", phone: "", address: "" }); qc.invalidateQueries();
   };
   const del = async (id: string) => { if (!confirm("Alım silinsin mi? Stoktan düşülecek.")) return; await supabase.from("purchases").delete().eq("id", id); qc.invalidateQueries(); };

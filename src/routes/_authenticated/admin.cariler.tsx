@@ -33,7 +33,7 @@ function Accounts() {
   const used = new Set(data?.accounts.map((a) => a.user_id));
   const create = async () => {
     const { error } = await supabase.from("customer_accounts").insert({ ...f, user_id: f.user_id || null, discount_rate: Number(f.discount_rate) });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Cari hesap açıldı"); setOpen(false); setF({ user_id: "", company_name: "", address: "", phone: "", notes: "", discount_rate: "0" });
     qc.invalidateQueries();
   };

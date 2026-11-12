@@ -32,9 +32,9 @@ function Cart() {
   const total = items.reduce((s, i) => s + discounted(i.price, rate) * i.quantity, 0);
   const order = async () => {
     setBusy(true);
-    const { error } = await supabase.rpc("place_order", { _items: items.map((i) => ({ product_id: i.product_id, quantity: i.quantity })), _notes: notes || undefined });
+    const { error } = await supabase.rpc("place_order", { _items: items.map((i) => ({ product_id: i.product_id, quantity: i.quantity })), _notes: notes });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     clear();
     toast.success("Sipariş talebiniz alındı");
     navigate({ to: "/hesabim" });

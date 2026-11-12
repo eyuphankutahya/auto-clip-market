@@ -31,12 +31,12 @@ function AuthPage() {
     if (mode === "in") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       setBusy(false);
-      if (error) return toast.error("Giriş başarısız: " + error.message);
+      if (error) { toast.error("Giriş başarısız: " + error.message); return; }
       navigate({ to: "/" });
     } else {
       const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin, data: { full_name: name } } });
       setBusy(false);
-      if (error) return toast.error(error.message);
+      if (error) { toast.error(error.message); return; }
       if (data.session) navigate({ to: "/" });
       else { toast.success("Kayıt alındı. E-postanıza gelen bağlantı ile hesabınızı onaylayın."); setMode("in"); }
     }

@@ -24,7 +24,7 @@ function AccountDetail() {
   };
   const addPayment = async () => {
     const { error } = await supabase.from("account_transactions").insert({ customer_account_id: id, type: "credit", amount: Number(pay.amount), payment_method: pay.method, description: pay.description || "Tahsilat" });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Tahsilat kaydedildi"); setPay({ amount: "", method: "Havale", description: "" }); qc.invalidateQueries();
   };
   if (!acc) return <p className="text-muted-foreground">Yükleniyor…</p>;

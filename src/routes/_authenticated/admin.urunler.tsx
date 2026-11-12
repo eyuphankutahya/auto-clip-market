@@ -32,7 +32,7 @@ function AdminProducts() {
     if (!form || !data) return;
     const row = { name: form.name, slug: slugify(form.name), description: form.description || null, price: Number(form.price), min_stock: Number(form.min_stock), category_id: form.category_id || null, image_url: form.image_url || null };
     const res = form.id ? await supabase.from("products").update(row).eq("id", form.id).select("id").single() : await supabase.from("products").insert(row).select("id").single();
-    if (res.error) return toast.error(res.error.message);
+    if (res.error) { toast.error(res.error.message); return; }
     const id = res.data.id;
     await supabase.from("product_oem_numbers").delete().eq("product_id", id);
     await supabase.from("product_vehicles").delete().eq("product_id", id);
