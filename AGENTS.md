@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- Order prices are computed in the `place_order` SQL function (never trust client prices) — prevents tampering.
+- Stock and cari debits change only via DB triggers on purchases and order status — single source of truth.
+- Admin roles live in `user_roles` and are checked with `has_role`; the first signup becomes admin.

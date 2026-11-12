@@ -10,33 +10,196 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as SepetRouteImport } from './routes/sepet'
+import { Route as UrunlerRouteImport } from './routes/urunler'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedHesabimRouteImport } from './routes/_authenticated/hesabim'
+import { Route as UrunSlugRouteImport } from './routes/urun.$slug'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminAlimlarRouteImport } from './routes/_authenticated/admin.alimlar'
+import { Route as AuthenticatedAdminCarilerRouteImport } from './routes/_authenticated/admin.cariler'
+import { Route as AuthenticatedAdminSiparislerRouteImport } from './routes/_authenticated/admin.siparisler'
+import { Route as AuthenticatedAdminUrunlerRouteImport } from './routes/_authenticated/admin.urunler'
+import { Route as AuthenticatedAdminCariIdRouteImport } from './routes/_authenticated/admin.cari.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SepetRoute = SepetRouteImport.update({
+  id: '/sepet',
+  path: '/sepet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UrunlerRoute = UrunlerRouteImport.update({
+  id: '/urunler',
+  path: '/urunler',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHesabimRoute = AuthenticatedHesabimRouteImport.update({
+  id: '/hesabim',
+  path: '/hesabim',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const UrunSlugRoute = UrunSlugRouteImport.update({
+  id: '/urun/$slug',
+  path: '/urun/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedAdminAlimlarRoute =
+  AuthenticatedAdminAlimlarRouteImport.update({
+    id: '/alimlar',
+    path: '/alimlar',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminCarilerRoute =
+  AuthenticatedAdminCarilerRouteImport.update({
+    id: '/cariler',
+    path: '/cariler',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminSiparislerRoute =
+  AuthenticatedAdminSiparislerRouteImport.update({
+    id: '/siparisler',
+    path: '/siparisler',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminUrunlerRoute =
+  AuthenticatedAdminUrunlerRouteImport.update({
+    id: '/urunler',
+    path: '/urunler',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminCariIdRoute =
+  AuthenticatedAdminCariIdRouteImport.update({
+    id: '/cari/$id',
+    path: '/cari/$id',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/sepet': typeof SepetRoute
+  '/urunler': typeof UrunlerRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/hesabim': typeof AuthenticatedHesabimRoute
+  '/urun/$slug': typeof UrunSlugRoute
+  '/admin/alimlar': typeof AuthenticatedAdminAlimlarRoute
+  '/admin/cariler': typeof AuthenticatedAdminCarilerRoute
+  '/admin/siparisler': typeof AuthenticatedAdminSiparislerRoute
+  '/admin/urunler': typeof AuthenticatedAdminUrunlerRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/cari/$id': typeof AuthenticatedAdminCariIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/sepet': typeof SepetRoute
+  '/urunler': typeof UrunlerRoute
+  '/hesabim': typeof AuthenticatedHesabimRoute
+  '/urun/$slug': typeof UrunSlugRoute
+  '/admin/alimlar': typeof AuthenticatedAdminAlimlarRoute
+  '/admin/cariler': typeof AuthenticatedAdminCarilerRoute
+  '/admin/siparisler': typeof AuthenticatedAdminSiparislerRoute
+  '/admin/urunler': typeof AuthenticatedAdminUrunlerRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/cari/$id': typeof AuthenticatedAdminCariIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/sepet': typeof SepetRoute
+  '/urunler': typeof UrunlerRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/_authenticated/hesabim': typeof AuthenticatedHesabimRoute
+  '/urun/$slug': typeof UrunSlugRoute
+  '/_authenticated/admin/alimlar': typeof AuthenticatedAdminAlimlarRoute
+  '/_authenticated/admin/cariler': typeof AuthenticatedAdminCarilerRoute
+  '/_authenticated/admin/siparisler': typeof AuthenticatedAdminSiparislerRoute
+  '/_authenticated/admin/urunler': typeof AuthenticatedAdminUrunlerRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/cari/$id': typeof AuthenticatedAdminCariIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/sepet'
+    | '/urunler'
+    | '/admin'
+    | '/hesabim'
+    | '/urun/$slug'
+    | '/admin/alimlar'
+    | '/admin/cariler'
+    | '/admin/siparisler'
+    | '/admin/urunler'
+    | '/admin/'
+    | '/admin/cari/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/sepet'
+    | '/urunler'
+    | '/hesabim'
+    | '/urun/$slug'
+    | '/admin/alimlar'
+    | '/admin/cariler'
+    | '/admin/siparisler'
+    | '/admin/urunler'
+    | '/admin'
+    | '/admin/cari/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/sepet'
+    | '/urunler'
+    | '/_authenticated/admin'
+    | '/_authenticated/hesabim'
+    | '/urun/$slug'
+    | '/_authenticated/admin/alimlar'
+    | '/_authenticated/admin/cariler'
+    | '/_authenticated/admin/siparisler'
+    | '/_authenticated/admin/urunler'
+    | '/_authenticated/admin/'
+    | '/_authenticated/admin/cari/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  SepetRoute: typeof SepetRoute
+  UrunlerRoute: typeof UrunlerRoute
+  UrunSlugRoute: typeof UrunSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +211,141 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sepet': {
+      id: '/sepet'
+      path: '/sepet'
+      fullPath: '/sepet'
+      preLoaderRoute: typeof SepetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/urunler': {
+      id: '/urunler'
+      path: '/urunler'
+      fullPath: '/urunler'
+      preLoaderRoute: typeof UrunlerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hesabim': {
+      id: '/_authenticated/hesabim'
+      path: '/hesabim'
+      fullPath: '/hesabim'
+      preLoaderRoute: typeof AuthenticatedHesabimRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/urun/$slug': {
+      id: '/urun/$slug'
+      path: '/urun/$slug'
+      fullPath: '/urun/$slug'
+      preLoaderRoute: typeof UrunSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/alimlar': {
+      id: '/_authenticated/admin/alimlar'
+      path: '/alimlar'
+      fullPath: '/admin/alimlar'
+      preLoaderRoute: typeof AuthenticatedAdminAlimlarRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/cariler': {
+      id: '/_authenticated/admin/cariler'
+      path: '/cariler'
+      fullPath: '/admin/cariler'
+      preLoaderRoute: typeof AuthenticatedAdminCarilerRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/siparisler': {
+      id: '/_authenticated/admin/siparisler'
+      path: '/siparisler'
+      fullPath: '/admin/siparisler'
+      preLoaderRoute: typeof AuthenticatedAdminSiparislerRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/urunler': {
+      id: '/_authenticated/admin/urunler'
+      path: '/urunler'
+      fullPath: '/admin/urunler'
+      preLoaderRoute: typeof AuthenticatedAdminUrunlerRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/cari/$id': {
+      id: '/_authenticated/admin/cari/$id'
+      path: '/cari/$id'
+      fullPath: '/admin/cari/$id'
+      preLoaderRoute: typeof AuthenticatedAdminCariIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAlimlarRoute: typeof AuthenticatedAdminAlimlarRoute
+  AuthenticatedAdminCarilerRoute: typeof AuthenticatedAdminCarilerRoute
+  AuthenticatedAdminSiparislerRoute: typeof AuthenticatedAdminSiparislerRoute
+  AuthenticatedAdminUrunlerRoute: typeof AuthenticatedAdminUrunlerRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminCariIdRoute: typeof AuthenticatedAdminCariIdRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAlimlarRoute: AuthenticatedAdminAlimlarRoute,
+  AuthenticatedAdminCarilerRoute: AuthenticatedAdminCarilerRoute,
+  AuthenticatedAdminSiparislerRoute: AuthenticatedAdminSiparislerRoute,
+  AuthenticatedAdminUrunlerRoute: AuthenticatedAdminUrunlerRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminCariIdRoute: AuthenticatedAdminCariIdRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+  AuthenticatedHesabimRoute: typeof AuthenticatedHesabimRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+  AuthenticatedHesabimRoute: AuthenticatedHesabimRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  SepetRoute: SepetRoute,
+  UrunlerRoute: UrunlerRoute,
+  UrunSlugRoute: UrunSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

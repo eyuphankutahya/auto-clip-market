@@ -1,0 +1,51 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { STATUS, date, money } from "@/lib/format";
+import { CariStatement } from "@/components/site/CariStatement";
+
+export const Route = createFileRoute("/_authenticated/hesabim")({
+  head: () => ({ meta: [{ title: "Hesabım — KlipsMarket" }, { name: "description", content: "Siparişleriniz ve cari hesabınız." }, { property: "og:title", content: "Hesabım — KlipsMarket" }, { property: "og:description", content: "Siparişleriniz ve cari hesabınız." }] }),
+  component: Account,
+});
+
+function Account() {
+  const { user, account } = useAuth();
+  const { data: orders } = useQuery({
+    queryKey: ["my-orders", user?.id],
+    enabled: !!user,
+    queryFn: async () => (await supabase.from("orders").select("*, items:order_items(*)").eq("user_id", user!.id).order("created_at", { ascending: false })).data ?? [],
+  });
+  return (
+    <div className="mx-auto max-w-5xl space-y-10 px-4 py-10">
+      <h1 className="text-3xl font-extrabold">Hesabım</h1>
+      {account && (
+        <section className="space-y-4">
+          <div className="rounded-md border bg-card p-5">
+            <div className="text-xs font-semibold uppercase tracking-wider text-accent">Cari hesap</div>
+            <div className="font-display text-xl font-extrabold">{account.company_name}</div>
+            <div className="mt-1 text-sm text-muted-foreground">{account.address} · {account.phone} · İskonto %{Number(account.discount_rate)}</div>
+          </div>
+          <CariStatement accountId={account.id} />
+        </section>
+      )}
+      <section>
+        <h2 className="mb-3 text-xl font-extrabold">Siparişlerim</h2>
+        <div className="space-y-3">
+          {orders?.length === 0 && <p className="text-muted-foreground">Henüz siparişiniz yok.</p>}
+          {orders?.map((o) => (
+            <div key={o.id} className="rounded-md border bg-card p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="font-bold">Sipariş #{o.order_no} <span className="ml-2 text-sm font-normal text-muted-foreground">{date(o.created_at)}</span></div>
+                <span className="rounded-sm bg-secondary px-2 py-1 text-xs font-semibold">{STATUS[o.status]}</span>
+              </div>
+              <ul className="mt-2 text-sm text-muted-foreground">{o.items.map((i) => <li key={i.id}>{i.quantity} × {i.product_name} — {money(i.unit_price)}</li>)}</ul>
+              <div className="mt-2 text-right font-bold">{money(o.total)}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
