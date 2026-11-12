@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { catalogQuery } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
-import { discounted, money } from "@/lib/format";
+import { discounted, isOrderable, money } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -42,16 +42,19 @@ function ProductPage() {
       <div>
         <Link to="/urunler" search={{ kategori: p.category?.slug }} className="text-sm font-semibold uppercase tracking-wide text-accent">{p.category?.name}</Link>
         <h1 className="mt-2 text-3xl font-extrabold">{p.name}</h1>
+        {p.sku && <div className="font-oem mt-2 text-sm text-muted-foreground">KlipsMarket No: <span className="font-semibold text-foreground">{p.sku}</span></div>}
         <div className="mt-3 flex flex-wrap gap-2">{p.oems.map((o) => <span key={o.id} className="font-oem rounded-sm border bg-card px-2 py-1 text-sm">OEM {o.oem}</span>)}</div>
-        <p className="mt-5 text-muted-foreground">{p.description}</p>
+        {p.description && <p className="mt-5 text-muted-foreground">{p.description}</p>}
         <div className="mt-6">
-          {rate > 0 && <div className="text-sm text-muted-foreground"><span className="line-through">{money(p.price)}</span> · cari iskontonuz %{rate}</div>}
-          <div className="font-display text-4xl font-extrabold">{money(discounted(Number(p.price), rate))}</div>
+          {Number(p.price) > 0 ? (<>
+            {rate > 0 && <div className="text-sm text-muted-foreground"><span className="line-through">{money(p.price)}</span> · cari iskontonuz %{rate}</div>}
+            <div className="font-display text-4xl font-extrabold">{money(discounted(Number(p.price), rate))}</div>
+          </>) : <div className="font-display text-2xl font-extrabold text-muted-foreground">Fiyat yakında</div>}
           <div className={p.stock > 0 ? "text-sm text-success" : "text-sm text-destructive"}>{p.stock > 0 ? `Stokta (${p.stock} adet)` : "Stokta yok"}</div>
         </div>
         <div className="mt-6 flex gap-2">
           <Input type="number" min={1} value={qty} onChange={(e) => setQty(Math.max(1, Number(e.target.value)))} className="w-28" />
-          <Button size="lg" disabled={p.stock <= 0} onClick={() => { add({ product_id: p.id, name: p.name, price: Number(p.price) }, qty); toast.success("Sepete eklendi"); }}>Sepete ekle</Button>
+          <Button size="lg" disabled={!isOrderable(p.price, p.stock)} onClick={() => { add({ product_id: p.id, name: p.name, price: Number(p.price) }, qty); toast.success("Sepete eklendi"); }}>Sepete ekle</Button>
         </div>
         <div className="mt-10">
           <h2 className="mb-3 text-lg font-extrabold">Uyumlu araçlar</h2>

@@ -35,7 +35,7 @@ function Index() {
           <form onSubmit={(e) => { e.preventDefault(); navigate({ to: "/urunler", search: { q: q || undefined } }); }} className="mt-8 flex max-w-xl gap-2 rounded-md bg-card p-2 shadow-xl">
             <div className="flex flex-1 items-center gap-2 px-2 text-foreground">
               <Search className="h-5 w-5 text-muted-foreground" />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="OEM no veya ürün adı (örn. 1H0868243)" className="font-oem w-full bg-transparent py-2 outline-none placeholder:font-sans" />
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="KM No, OEM no veya ürün adı (örn. 7703077469)" className="font-oem w-full bg-transparent py-2 outline-none placeholder:font-sans" />
             </div>
             <Button type="submit" size="lg">Ara</Button>
           </form>

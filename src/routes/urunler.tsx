@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { z } from "zod";
-import { catalogQuery } from "@/lib/catalog";
+import { catalogQuery, matchesSearch } from "@/lib/catalog";
+import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/site/ProductCard";
 import { Input } from "@/components/ui/input";
 
@@ -26,19 +28,20 @@ function Products() {
   const set = (patch: Partial<z.infer<typeof search>>) => navigate({ search: (prev) => ({ ...prev, ...patch }) });
   const { data, isLoading } = useQuery(catalogQuery);
   const brand = data?.brands.find((b) => b.slug === s.marka);
-  const q = s.q?.toLowerCase().replace(/[\s-]/g, "");
+  const [shown, setShown] = useState(60);
+  useEffect(() => setShown(60), [s.q, s.kategori, s.marka, s.model]);
   const list = (data?.products ?? []).filter((p) => {
     if (s.kategori && p.category?.slug !== s.kategori) return false;
     if (brand && !p.vehicles.some((v) => v.brand_id === brand.id)) return false;
     if (s.model && !p.vehicles.some((v) => v.model_id === s.model || (v.brand_id === brand?.id && !v.model_id))) return false;
-    if (q && !p.name.toLowerCase().replace(/[\s-]/g, "").includes(q) && !p.oems.some((o) => o.oem.toLowerCase().replace(/[\s-]/g, "").includes(q))) return false;
+    if (s.q && !matchesSearch(p, s.q)) return false;
     return true;
   });
   const chip = (active: boolean) => `block w-full rounded-sm px-2 py-1.5 text-left text-sm ${active ? "bg-primary text-primary-foreground font-semibold" : "hover:bg-secondary"}`;
   return (
     <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:grid-cols-[240px_1fr]">
       <aside className="space-y-6">
-        <Input placeholder="OEM no / ürün adı" defaultValue={s.q} className="font-oem" onChange={(e) => set({ q: e.target.value || undefined })} />
+        <Input placeholder="KM No / OEM no / ürün adı" defaultValue={s.q} className="font-oem" onChange={(e) => set({ q: e.target.value || undefined })} />
         <div>
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Kullanım yeri</h3>
           <button className={chip(!s.kategori)} onClick={() => set({ kategori: undefined })}>Tümü</button>
@@ -67,7 +70,10 @@ function Products() {
           <span className="text-sm text-muted-foreground">{list.length} ürün</span>
         </div>
         {isLoading ? <p className="text-muted-foreground">Yükleniyor…</p> : list.length === 0 ? <p className="rounded-md border bg-card p-8 text-center text-muted-foreground">Bu kriterlere uygun ürün bulunamadı.</p> : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{list.map((p) => <ProductCard key={p.id} p={p} />)}</div>
+          <>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{list.slice(0, shown).map((p) => <ProductCard key={p.id} p={p} />)}</div>
+            {list.length > shown && <div className="mt-6 text-center"><Button variant="outline" onClick={() => setShown(shown + 60)}>Daha fazla göster ({list.length - shown} ürün daha)</Button></div>}
+          </>
         )}
       </section>
     </div>
