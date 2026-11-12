@@ -246,6 +246,42 @@ export type Database = {
           },
         ]
       }
+      product_supplier_codes: {
+        Row: {
+          code: string | null
+          id: string
+          product_id: string
+          supplier_id: string
+        }
+        Insert: {
+          code?: string | null
+          id?: string
+          product_id: string
+          supplier_id: string
+        }
+        Update: {
+          code?: string | null
+          id?: string
+          product_id?: string
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_supplier_codes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_supplier_codes_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_vehicles: {
         Row: {
           brand_id: string
@@ -298,7 +334,9 @@ export type Database = {
           image_url: string | null
           min_stock: number
           name: string
+          needs_review: boolean
           price: number
+          sku: string | null
           slug: string
           stock: number
         }
@@ -310,7 +348,9 @@ export type Database = {
           image_url?: string | null
           min_stock?: number
           name: string
+          needs_review?: boolean
           price?: number
+          sku?: string | null
           slug: string
           stock?: number
         }
@@ -322,7 +362,9 @@ export type Database = {
           image_url?: string | null
           min_stock?: number
           name?: string
+          needs_review?: boolean
           price?: number
+          sku?: string | null
           slug?: string
           stock?: number
         }

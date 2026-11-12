@@ -33,3 +33,5 @@ use the editor.
 - Order prices are computed in the `place_order` SQL function (never trust client prices) — prevents tampering.
 - Stock and cari debits change only via DB triggers on purchases and order status — single source of truth.
 - Admin roles live in `user_roles` and are checked with `has_role`; the first signup becomes admin.
+- Supplier codes live in the admin-only `product_supplier_codes` table, never on `products` — public catalog reads must not expose them.
+- Product lists are read with `fetchAll` (src/lib/fetch-all.ts) — the Data API caps responses at 1000 rows.
