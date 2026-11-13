@@ -2,7 +2,7 @@
 
 export type ImportRow = Record<string, unknown>;
 export type ExistingProduct = { id: string; sku: string | null; name: string; stock: number; price: number | string };
-export type Columns = { sku?: string; name?: string; stock?: string; price?: string };
+export type Columns = { sku?: string | undefined; name?: string | undefined; stock?: string | undefined; price?: string | undefined };
 export type Update = { id: string; sku: string | null; name: string; oldStock: number; stock?: number; oldPrice: number; price?: number };
 export type Create = { sku: string; name: string; stock: number; price: number };
 export type Problem = { row: number; reason: string };

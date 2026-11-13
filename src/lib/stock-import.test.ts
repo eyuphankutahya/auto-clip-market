@@ -34,6 +34,6 @@ describe("stock import", () => {
     expect(buildPlan([{ "KLİPS_MARKET": "208", "Stok Adedi": 2.5 }], cols, products).problems).toHaveLength(1);
   });
   it("rejects an unknown KM No without a name", () => {
-    expect(buildPlan([{ "KLİPS_MARKET": "777", "Stok Adedi": 5 }], cols, products).problems[0].row).toBe(2);
+    expect(buildPlan([{ "KLİPS_MARKET": "777", "Stok Adedi": 5 }], cols, products).problems[0]?.row).toBe(2);
   });
 });
