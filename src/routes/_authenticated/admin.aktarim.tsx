@@ -38,8 +38,9 @@ function StockImport() {
   const read = async (f: File) => {
     const XLSX = await import("xlsx");
     const wb = XLSX.read(await f.arrayBuffer());
-    const json = XLSX.utils.sheet_to_json<ImportRow>(wb.Sheets[wb.SheetNames[0]], { defval: "" });
-    const hs = json.length ? Object.keys(json[0]) : [];
+    const sheet = wb.Sheets[wb.SheetNames[0] ?? ""];
+    const json = sheet ? XLSX.utils.sheet_to_json<ImportRow>(sheet, { defval: "" }) : [];
+    const hs = json[0] ? Object.keys(json[0]) : [];
     setFile(f.name); setRows(json); setHeaders(hs); setCols(detectColumns(hs));
     if (!json.length) toast.error("Dosyanın ilk sayfasında satır bulunamadı");
   };
