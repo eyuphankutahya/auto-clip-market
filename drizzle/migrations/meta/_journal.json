@@ -15,6 +15,13 @@
       "when": 1794491830578,
       "tag": "0001_product_sku_supplier_codes",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794556027386,
+      "tag": "0002_stock_adjustments",
+      "breakpoints": true
     }
   ]
 }
