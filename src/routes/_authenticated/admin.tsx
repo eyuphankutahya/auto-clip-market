@@ -15,6 +15,7 @@ const tabs = [
   { to: "/admin", label: "Stok & Raporlar" },
   { to: "/admin/siparisler", label: "Siparişler" },
   { to: "/admin/urunler", label: "Ürünler" },
+  { to: "/admin/aktarim", label: "Toplu Stok Aktarımı" },
   { to: "/admin/cariler", label: "Cari Hesaplar" },
   { to: "/admin/alimlar", label: "Alımlar & Tedarikçiler" },
 ] as const;
