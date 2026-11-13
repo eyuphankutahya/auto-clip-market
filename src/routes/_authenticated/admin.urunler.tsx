@@ -105,7 +105,7 @@ function AdminProducts() {
         </table>
         </div>
         {list.length > shown && <div className="mt-3 text-center"><Button variant="outline" size="sm" onClick={() => setShown(shown + 100)}>Daha fazla göster ({list.length - shown})</Button></div>}
-        <p className="mt-2 text-xs text-muted-foreground">Alındığı firmalar ve kodları yalnızca yönetim panelinde görünür, müşteriler göremez. Stok, "Alımlar" sekmesinden alım girildiğinde artar; sipariş onaylandığında düşer.</p>
+        <p className="mt-2 text-xs text-muted-foreground">Alındığı firmalar ve kodları yalnızca yönetim panelinde görünür, müşteriler göremez. Stok, "Alımlar" sekmesinden alım girildiğinde artar, sipariş onaylandığında düşer; toplu sayım için "Toplu Stok Aktarımı" sekmesini kullanın.</p>
       </section>
       <aside className="space-y-6"><CatalogLists onChange={refresh} /></aside>
 
