@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
-import { COMPANY, show, whatsappUrl } from "@/lib/company";
+import { COMPANY, whatsappUrl } from "@/lib/company";
 
 export function SiteFooter() {
   return (
@@ -24,9 +24,9 @@ export function SiteFooter() {
           <div>
             <div className="mb-2 font-semibold text-ink-foreground">İletişim</div>
             <ul className="space-y-1">
-              <li>Telefon: {show(COMPANY.phone)}</li>
-              <li>E-posta: {show(COMPANY.email)}</li>
-              <li>Adres: {show(COMPANY.address)}</li>
+              {COMPANY.phone && <li>Telefon: {COMPANY.phone}</li>}
+              {COMPANY.email && <li>E-posta: {COMPANY.email}</li>}
+              {COMPANY.address && <li>Adres: {COMPANY.address}</li>}
             </ul>
           </div>
         </div>
