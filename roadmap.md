@@ -2,6 +2,7 @@
 - [ ] Load only requested catalog page while preserving natural KM order, search and combined filters
 - [ ] Group admin navigation and paginate long stock/report lists
 - [ ] Add product photo uploads with original retention and clear optimized display variants
+- [ ] Verify computer/mobile photo upload and original clarity retention through saved product UI
 - [ ] Add supplier-specific editable shortage purchase exports without stock mutations
 - [ ] Add atomic audited stock imports with conflict-safe rollback and idempotent orders
 - [ ] Hide missing contact details and improve product classification review
