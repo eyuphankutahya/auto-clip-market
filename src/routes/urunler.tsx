@@ -38,8 +38,6 @@ function Products() {
     if (s.q && !matchesSearch(p, s.q)) return false;
     return true;
   });
-  const exact = s.q?.trim().toLocaleLowerCase("tr");
-  if (exact) list.sort((a, b) => Number(b.sku?.toLocaleLowerCase("tr") === exact) - Number(a.sku?.toLocaleLowerCase("tr") === exact));
   const chip = (active: boolean) => `block w-full rounded-sm px-2 py-1.5 text-left text-sm ${active ? "bg-primary text-primary-foreground font-semibold" : "hover:bg-secondary"}`;
   return (
     <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:grid-cols-[240px_1fr]">

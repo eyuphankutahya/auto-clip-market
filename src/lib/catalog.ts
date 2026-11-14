@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAll } from "@/lib/fetch-all";
+import { compareProductCodes } from "@/lib/catalog-rules";
 
 const productSelect = "*, category:categories(id,name,slug), oems:product_oem_numbers(id,oem), vehicles:product_vehicles(id,brand_id,model_id,brand:brands(name,slug),model:vehicle_models(name))";
 
@@ -11,7 +12,7 @@ async function fetchCatalog() {
     supabase.from("brands").select("*").order("name"),
     fetchAll((from, to) => supabase.from("vehicle_models").select("*").order("name").order("id").range(from, to)),
   ]);
-  return { products, categories: c.data ?? [], brands: b.data ?? [], models: m };
+  return { products: products.sort(compareProductCodes), categories: c.data ?? [], brands: b.data ?? [], models: m };
 }
 export const catalogQuery = queryOptions({ queryKey: ["catalog"], queryFn: fetchCatalog, staleTime: 60_000 });
 export type Catalog = Awaited<ReturnType<typeof fetchCatalog>>;

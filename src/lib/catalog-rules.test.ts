@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { matchesCatalogFilters, supplierCodeRows } from "./catalog-rules";
+import { compareProductCodes, matchesCatalogFilters, supplierCodeRows } from "./catalog-rules";
 
 const shared = { category: { slug: "camurluk" }, vehicles: [{ brand_id: "toyota", model_id: null }, { brand_id: "ford", model_id: "focus" }] };
 const fordOnly = { category: { slug: "camurluk" }, vehicles: [{ brand_id: "ford", model_id: null }] };
@@ -7,6 +7,14 @@ const toyotaDoor = { category: { slug: "kapi" }, vehicles: [{ brand_id: "toyota"
 const products = [shared, fordOnly, toyotaDoor];
 
 describe("catalog relationship rules", () => {
+  it("orders KlipsMarket codes numerically with letter suffixes", () => {
+    const rows = ["288B", "10", "288", "2", "288A"].map((sku) => ({ sku, id: sku }));
+    expect(rows.sort(compareProductCodes).map((p) => p.sku)).toEqual(["2", "10", "288", "288A", "288B"]);
+  });
+  it("places missing codes last with deterministic ties", () => {
+    const rows = [{ sku: null, id: "b" }, { sku: "", id: "a" }, { sku: "10", id: "c" }];
+    expect(rows.sort(compareProductCodes).map((p) => p.id)).toEqual(["c", "a", "b"]);
+  });
   it("lists all Toyota products regardless of location", () => {
     expect(products.filter((p) => matchesCatalogFilters(p, { brandId: "toyota" }))).toEqual([shared, toyotaDoor]);
   });
