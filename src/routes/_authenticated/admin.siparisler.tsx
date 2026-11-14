@@ -7,8 +7,11 @@ import { Pager, PAGE_SIZE } from "@/components/site/Pager";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Printer } from "lucide-react";
+import { Download, Printer } from "lucide-react";
 import { OrderDialog } from "@/components/site/OrderDialog";
+import { fetchAll } from "@/lib/fetch-all";
+import { downloadCsv } from "@/lib/csv";
+import { matchesCustomer, orderDateBounds, orderListHeader, orderListRow } from "@/lib/order-export";
 
 export const Route = createFileRoute("/_authenticated/admin/siparisler")({ head: () => ({ meta: [{ title: "Sipariş Yönetimi — KlipsMarket" }, { name: "description", content: "Müşteri siparişlerini ve durumlarını yönetin." }, { property: "og:title", content: "Sipariş Yönetimi — KlipsMarket" }, { property: "og:description", content: "Müşteri siparişlerini ve durumlarını yönetin." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Orders });
 
@@ -17,21 +20,62 @@ function Orders() {
   const [status, setFilter] = useState("all");
   const [page, setPage] = useState(0);
   const [q, setQ] = useState("");
+  const [customer, setCustomer] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [exporting, setExporting] = useState(false);
   const [openOrder, setOpenOrder] = useState<string | null>(null);
   const orderNo = /^\d+$/.test(q.trim()) ? Number(q.trim()) : null;
-  const { data } = useQuery({
-    queryKey: ["admin-orders", status, page, orderNo],
+  const invalidDates = Boolean(from && to && from > to);
+  const prepareQuery = async () => {
+    let query = supabase.from("orders").select("*, items:order_items(*, product:products(sku)), account:customer_accounts(company_name)", { count: "exact" });
+    if (status !== "all") query = query.eq("status", status);
+    if (orderNo !== null) query = query.eq("order_no", orderNo);
+    else if (q.trim()) query = query.eq("order_no", -1);
+    const bounds = orderDateBounds(from, to);
+    if (bounds.from) query = query.gte("created_at", bounds.from);
+    if (bounds.to) query = query.lt("created_at", bounds.to);
+    if (customer.trim()) {
+      const [profiles, accounts] = await Promise.all([
+        fetchAll((a, b) => supabase.from("profiles").select("id,email,full_name").order("id").range(a, b)),
+        fetchAll((a, b) => supabase.from("customer_accounts").select("id,company_name").order("id").range(a, b)),
+      ]);
+      const users = profiles.filter(p => matchesCustomer(p.full_name, customer) || matchesCustomer(p.email, customer)).map(p => p.id);
+      const companies = accounts.filter(a => matchesCustomer(a.company_name, customer)).map(a => a.id);
+      const clauses = [users.length ? `user_id.in.(${users.join(",")})` : "", companies.length ? `customer_account_id.in.(${companies.join(",")})` : ""].filter(Boolean);
+      if (clauses.length) query = query.or(clauses.join(","));
+      else query = query.eq("order_no", -1);
+    }
+    return { query: query.order("created_at", { ascending: false }).order("id") };
+  };
+  const { data, error, isFetching } = useQuery({
+    queryKey: ["admin-orders", status, page, q.trim(), customer.trim(), from, to],
+    enabled: !invalidDates,
     queryFn: async () => {
-      let query = supabase.from("orders").select("*, items:order_items(*, product:products(sku)), account:customer_accounts(company_name)", { count: "exact" });
-      if (status !== "all") query = query.eq("status", status);
-      if (orderNo !== null) query = query.eq("order_no", orderNo);
-      const o = await query.order("created_at", { ascending: false }).order("id").range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
+      const { query } = await prepareQuery();
+      const o = await query.range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
       if (o.error) throw new Error(o.error.message);
       const ids = [...new Set((o.data ?? []).map((x) => x.user_id))];
       const p = ids.length ? await supabase.from("profiles").select("id,email,full_name").in("id", ids) : { data: [] };
+      if ("error" in p && p.error) throw new Error(p.error.message);
       return { orders: o.data ?? [], total: o.count ?? 0, profiles: new Map((p.data ?? []).map((x) => [x.id, x])) };
     },
   });
+  const exportOrders = async () => {
+    setExporting(true);
+    try {
+      const { query } = await prepareQuery();
+      const orders = await fetchAll((a, b) => query.range(a, b));
+      const ids = new Set(orders.map(o => o.user_id));
+      const profiles = orders.length ? await fetchAll((a, b) => supabase.from("profiles").select("id,email,full_name").order("id").range(a, b)) : [];
+      const pm = new Map(profiles.filter(p => ids.has(p.id)).map(p => [p.id, p]));
+      downloadCsv("siparis-listesi.csv", orderListHeader, orders.map(o => {
+        const p = pm.get(o.user_id);
+        return orderListRow(o, o.account?.company_name || p?.full_name || p?.email || "—", p?.email ?? "");
+      }));
+    } catch (err) { toast.error(err instanceof Error ? err.message : "CSV indirilemedi."); }
+    finally { setExporting(false); }
+  };
   const setStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("orders").update({ status }).eq("id", id);
     if (error) { toast.error(error.message); return; }
@@ -41,22 +85,30 @@ function Orders() {
   return (
     <div className="space-y-3">
       <OrderDialog order={data?.orders.find((order) => order.id === openOrder) ?? null} onClose={() => setOpenOrder(null)} />
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="text-xs">Başlangıç tarihi<Input aria-label="Başlangıç tarihi" type="date" value={from} onChange={e => { setFrom(e.target.value); setPage(0); }} /></label>
+        <label className="text-xs">Bitiş tarihi<Input aria-label="Bitiş tarihi" type="date" value={to} onChange={e => { setTo(e.target.value); setPage(0); }} /></label>
         <select value={status} onChange={(e) => { setFilter(e.target.value); setPage(0); }} className="rounded-md border bg-background px-2 py-1.5 text-sm" aria-label="Duruma göre filtrele">
           <option value="all">Tüm siparişler</option>
           {Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
-        <Input value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} placeholder="Sipariş no, firma veya e-posta" className="max-w-xs" aria-label="Sipariş ara" />
-        {data && <Pager page={page} total={data.total} onChange={setPage} />}
+        <Input value={customer} onChange={e => { setCustomer(e.target.value); setPage(0); }} placeholder="Müşteri adı, firma veya e-posta" className="max-w-xs" aria-label="Müşteri ara" />
+        <Input value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} placeholder="Sipariş no" className="max-w-36" aria-label="Sipariş ara" />
+        <Button variant="outline" disabled={invalidDates || isFetching || exporting || !data?.total} onClick={exportOrders}><Download />{exporting ? "Hazırlanıyor…" : "Listeyi CSV indir"}</Button>
+        <Button variant="ghost" onClick={() => { setFrom(""); setTo(""); setCustomer(""); setQ(""); setFilter("all"); setPage(0); }}>Filtreleri temizle</Button>
       </div>
+      {invalidDates && <p role="alert" className="text-sm text-destructive">Bitiş tarihi başlangıç tarihinden önce olamaz.</p>}
+      {error && <p role="alert" className="text-sm text-destructive">Siparişler yüklenemedi: {error.message}</p>}
+      {isFetching && <p className="text-sm text-muted-foreground">Yükleniyor…</p>}
+      {data && <Pager page={page} total={data.total} onChange={setPage} />}
       {data?.orders.length === 0 && <p className="text-muted-foreground">Sipariş yok.</p>}
-      {data?.orders.filter((o) => { if (!q.trim() || orderNo !== null) return true; const u = data.profiles.get(o.user_id); const t = `${o.account?.company_name ?? ""} ${u?.full_name ?? ""} ${u?.email ?? ""}`.toLocaleLowerCase("tr"); return t.includes(q.trim().toLocaleLowerCase("tr")); }).map((o) => {
+      {data?.orders.map((o) => {
         const u = data.profiles.get(o.user_id);
         return (
           <div key={o.id} className="rounded-md border bg-card p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <div className="font-bold"><button type="button" onClick={() => setOpenOrder(o.id)} className="text-primary underline underline-offset-2 hover:opacity-80" aria-label={`Sipariş #${o.order_no} ayrıntıları`}>#{o.order_no}</button> · {o.account?.company_name ?? u?.full_name ?? u?.email}</div>
+                <div className="font-bold"><Button variant="link" onClick={() => setOpenOrder(o.id)} className="h-auto p-0 font-bold underline" aria-label={`Sipariş #${o.order_no} ayrıntıları`}>#{o.order_no}</Button> · {o.account?.company_name ?? u?.full_name ?? u?.email}</div>
                 <div className="text-xs text-muted-foreground">{date(o.created_at)} · {u?.email}{o.account ? ` · Cari (%${Number(o.discount_rate)})` : ""}</div>
               </div>
               <div className="flex items-center gap-3">
@@ -81,7 +133,7 @@ function Orders() {
 
 function printOrder(o: { order_no: number; created_at: string; total: number; notes: string | null; items: { product_name: string; quantity: number; unit_price: number }[] }, customer: string) {
   const w = window.open("", "_blank", "width=800,height=900"); if (!w) return;
-  const esc = (t: string) => t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+  const esc = (t: string) => t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
   w.document.write(`<html><head><title>Sipariş #${o.order_no}</title><style>body{font-family:sans-serif;padding:24px}table{width:100%;border-collapse:collapse}td,th{border:1px solid #999;padding:6px;text-align:left}.r{text-align:right}</style></head><body><h2>KlipsMarket · Sipariş #${o.order_no}</h2><p>${esc(customer)} · ${date(o.created_at)}</p><table><tr><th>Ürün</th><th class="r">Adet</th><th class="r">Birim</th><th class="r">Tutar</th></tr>${o.items.map((i) => `<tr><td>${esc(i.product_name)}</td><td class="r">${i.quantity}</td><td class="r">${money(i.unit_price)}</td><td class="r">${money(i.quantity * Number(i.unit_price))}</td></tr>`).join("")}<tr><th colspan="3" class="r">Toplam</th><th class="r">${money(o.total)}</th></tr></table>${o.notes ? `<p>Not: ${esc(o.notes)}</p>` : ""}<script>print()</script></body></html>`);
   w.document.close();
 }

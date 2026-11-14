@@ -1,5 +1,9 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { STATUS, date, money } from "@/lib/format";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { downloadCsv } from "@/lib/csv";
+import { orderDetailHeader, orderDetailRows } from "@/lib/order-export";
 
 export type OrderDetails = {
   order_no: number;
@@ -38,7 +42,10 @@ export function OrderDialog({ order, onClose }: { order: OrderDetails | null; on
               <tbody>{order.items.map((item) => <tr key={item.id} className="border-t"><td className="p-2 font-oem">{item.product?.sku ?? "—"}</td><td className="p-2">{item.product_name}</td><td className="p-2 text-right">{item.quantity}</td><td className="whitespace-nowrap p-2 text-right">{money(item.unit_price)}</td><td className="whitespace-nowrap p-2 text-right">{money(item.quantity * Number(item.unit_price))}</td></tr>)}</tbody>
             </table>
           </div>
-          <div className="text-right font-display text-lg font-extrabold">Toplam: {money(order.total)}</div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Button variant="outline" onClick={() => downloadCsv(`siparis-${order.order_no}-ayrintilar.csv`, orderDetailHeader, orderDetailRows(order))}><Download />Ayrıntıları CSV indir</Button>
+            <div className="text-right font-display text-lg font-extrabold">Toplam: {money(order.total)}</div>
+          </div>
         </>}
       </DialogContent>
     </Dialog>
