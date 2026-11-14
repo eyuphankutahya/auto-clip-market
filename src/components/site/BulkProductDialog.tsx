@@ -20,7 +20,7 @@ export function BulkProductDialog({ products, categories, onClose, onSaved }: { 
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const toggle = (field: string) => { setFields(previous => previous.includes(field) ? previous.filter(f => f !== field) : [...previous, field]); setConfirm(false); };
-  const patch: Record<string, Json> = {};
+  const patch: { price?: number; min_stock?: number; max_stock?: number | null; category_id?: string | null; stock_alert_enabled?: boolean; [key: string]: Json | undefined } = {};
   if (fields.includes("price")) patch.price = Number(price.replace(",", "."));
   if (fields.includes("min_stock")) patch.min_stock = Number(min);
   if (fields.includes("max_stock")) patch.max_stock = max.trim() ? Number(max) : null;

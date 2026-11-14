@@ -9,6 +9,7 @@ import { Stat } from "@/components/site/CariStatement";
 import { downloadCsv } from "@/lib/csv";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AdminAnalytics } from "@/components/site/AdminAnalytics";
 
 export const Route = createFileRoute("/_authenticated/admin/raporlar")({ head: () => ({ meta: [{ title: "Stok ve Satış Raporları — KlipsMarket" }, { name: "description", content: "Stok seviyeleri ve ürün satış raporları." }, { property: "og:title", content: "Stok ve Satış Raporları — KlipsMarket" }, { property: "og:description", content: "Stok seviyeleri ve ürün satış raporları." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Reports });
 
@@ -38,7 +39,7 @@ function Reports() {
   const revenue = [...sold.values()].reduce((s, v) => s + v.t, 0);
   return (
     <div className="space-y-8">
-      <CustomerSales />
+      <AdminAnalytics />
       <div className="grid gap-3 sm:grid-cols-4">
         <Stat label="Ürün sayısı" value={data.products.length} />
         <Stat label="Kritik stok" value={critical.length} tone={critical.length ? "text-destructive" : ""} />
