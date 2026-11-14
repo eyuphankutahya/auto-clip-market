@@ -45,3 +45,4 @@ use the editor.
 - Unbounded admin/customer lists page on the server with `Pager` (src/components/site/Pager.tsx) and `count: "exact"`; totals come from DB views (`account_balances`, `product_sales`) — avoids the 1000-row cap.
 - Contact submissions use a validated public insert-only server function; messages are read through admin-scoped RLS, never returned by the public action — preserves visitor privacy and owner access.
 - Catalog display pagination uses a URL page parameter after shared filtering and natural code ordering; filter changes reset it — keeps pages shareable without accumulating rendered product cards.
+- Product photos share one image viewer for catalog and detail views, using contain-fit originals and an accessible dialog — preserves visible product details and consistent keyboard/touch behavior.

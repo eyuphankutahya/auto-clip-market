@@ -1,11 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { Package, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import type { CatalogProduct } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { discounted, isOrderable, money } from "@/lib/format";
 import { Button } from "@/components/ui/button";
+import { ProductImage } from "@/components/site/ProductImage";
 
 export function ProductCard({ p }: { p: CatalogProduct }) {
   const { add } = useCart();
@@ -15,9 +16,7 @@ export function ProductCard({ p }: { p: CatalogProduct }) {
   const brands = [...new Set(p.vehicles.map((v) => v.brand?.name).filter(Boolean))];
   return (
     <div className="group flex flex-col overflow-hidden rounded-md border bg-card transition hover:border-accent hover:shadow-md">
-      <Link to="/urun/$slug" params={{ slug: p.slug }} className="grid aspect-[4/3] place-items-center bg-secondary">
-        {p.image_url ? <img src={p.image_url} alt={p.name} loading="lazy" className="h-full w-full object-cover" /> : <Package className="h-12 w-12 text-muted-foreground" />}
-      </Link>
+      <ProductImage src={p.image_url} name={p.name} />
       <div className="flex flex-1 flex-col gap-2 p-4">
         <div className="flex items-center justify-between gap-2 text-xs">
           <span className="font-medium uppercase tracking-wide text-accent">{p.category?.name}</span>
