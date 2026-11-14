@@ -47,6 +47,7 @@ function AdminProducts() {
   const [review, setReview] = useState(false);
   const [page, setPage] = useState(0);
   const [missing,setMissing] = useState("all");
+  const [quick,setQuick] = useState(false);
   const refresh = () => qc.invalidateQueries();
   const supName = (id: string) => sc?.suppliers.find((x) => x.id === id)?.name ?? "—";
 
@@ -217,4 +218,10 @@ function CatalogLists({ onChange }: { onChange: () => void }) {
       </div>
     </>
   );
+}
+
+function QuickNum({ label, value, step, onSave }: { label: string; value: number; step: string; onSave: (v: number) => Promise<void> }) {
+  const [v, setV] = useState(String(value));
+  const commit = () => { const n = Number(v.replace(",", ".")); if (!Number.isFinite(n) || n < 0) { setV(String(value)); toast.error(`${label} geçersiz`); return; } if (n !== value) void onSave(n); };
+  return <Input aria-label={label} type="number" min={0} step={step} value={v} onChange={(e) => setV(e.target.value)} onBlur={commit} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} className="ml-auto h-8 w-24 text-right" />;
 }
