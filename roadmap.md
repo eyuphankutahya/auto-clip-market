@@ -1,6 +1,6 @@
 # Roadmap
-- [ ] Add and verify audit user/action/date filters and complete filtered CSV export
-- [ ] Verify configured stock-threshold warnings in the admin overview
+- [x] Add and verify audit user/action/date filters and complete filtered CSV export; authenticated 16-row download, details and mobile layout checked
+- [x] Verify configured stock-threshold warnings in the admin overview; 85 warning products, displayed stocks strictly below thresholds, boundary tests passed
 - [x] Improve admin navigation, page headings and desktop/mobile workspace; desktop/sidebar and mobile menu verified
 - [x] Add safe transactional product/order bulk actions with confirmation; product save/restore, order approval/shipping and stale-batch rollback verified
 - [x] Add period comparison, product/customer sales and cari/payment analysis; live totals, tabs and CSV download verified
