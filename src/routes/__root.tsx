@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
 import { CartProvider } from "@/lib/cart";
 import { SiteHeader } from "@/components/site/SiteHeader";
+import { SiteFooter } from "@/components/site/SiteFooter";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -141,7 +142,7 @@ function RootComponent() {
         <CartProvider>
           <SiteHeader />
           <main className="min-h-[calc(100vh-4rem)]"><Outlet /></main>
-          <footer className="border-t bg-ink py-8 text-center text-sm text-ink-foreground/70">© {new Date().getFullYear()} KlipsMarket · Oto klips ve bağlantı elemanları</footer>
+          <SiteFooter />
           <Toaster richColors />
         </CartProvider>
       </AuthProvider>
