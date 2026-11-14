@@ -6,17 +6,22 @@ import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { money } from "@/lib/format";
 import { fetchAll } from "@/lib/fetch-all";
+import { canCreateLinkedAccount } from "@/lib/customer-access";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export const Route = createFileRoute("/_authenticated/admin/cariler")({ component: Accounts });
+export const Route = createFileRoute("/_authenticated/admin/cariler")({
+  head: () => ({ meta: [{ title: "Cari Müşteriler — KlipsMarket" }, { name: "description", content: "Özel müşteri cari hesapları ve iskonto yönetimi." }, { property: "og:title", content: "Cari Müşteriler — KlipsMarket" }, { property: "og:description", content: "Özel müşteri cari hesapları ve iskonto yönetimi." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  component: Accounts,
+});
 
 function Accounts() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [f, setF] = useState({ user_id: "", company_name: "", address: "", phone: "", notes: "", discount_rate: "0" });
   const { data } = useQuery({
     queryKey: ["admin-accounts"],
@@ -32,9 +37,12 @@ function Accounts() {
   });
   const used = new Set(data?.accounts.map((a) => a.user_id));
   const create = async () => {
-    const { error } = await supabase.from("customer_accounts").insert({ ...f, user_id: f.user_id || null, discount_rate: Number(f.discount_rate) });
+    if (saving || !canCreateLinkedAccount(f.user_id, f.company_name, used)) return;
+    setSaving(true);
+    const { error } = await supabase.from("customer_accounts").insert({ ...f, company_name: f.company_name.trim(), user_id: f.user_id, discount_rate: Number(f.discount_rate) });
+    setSaving(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("Cari hesap açıldı"); setOpen(false); setF({ user_id: "", company_name: "", address: "", phone: "", notes: "", discount_rate: "0" });
+    toast.success("Cari hesap açıldı; kullanıcı özel müşteri oldu."); setOpen(false); setF({ user_id: "", company_name: "", address: "", phone: "", notes: "", discount_rate: "0" });
     qc.invalidateQueries();
   };
   return (
@@ -56,7 +64,7 @@ function Accounts() {
       </table>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Cari hesap aç</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Özel müşteri / Cari hesap aç</DialogTitle></DialogHeader>
           <div className="grid gap-3">
             <div><Label>Kullanıcı (sisteme kayıtlı)</Label>
               <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f.user_id} onChange={(e) => setF({ ...f, user_id: e.target.value })}>
@@ -70,7 +78,7 @@ function Accounts() {
             </div>
             <div><Label>Adres</Label><Textarea value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} /></div>
             <div><Label>Açıklama</Label><Textarea value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>
-            <Button onClick={create} disabled={!f.company_name}>Kaydet</Button>
+            <Button onClick={create} disabled={saving || !canCreateLinkedAccount(f.user_id, f.company_name, used)}>{saving ? "Kaydediliyor…" : "Kaydet"}</Button>
           </div>
         </DialogContent>
       </Dialog>

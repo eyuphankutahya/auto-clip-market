@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-export const Route = createFileRoute("/_authenticated/admin/cari/$id")({ component: AccountDetail });
+export const Route = createFileRoute("/_authenticated/admin/cari/$id")({ head: () => ({ meta: [{ title: "Cari Hesap Detayı — KlipsMarket" }, { name: "description", content: "Müşteri cari hareketleri, iskonto ve tahsilatlar." }, { property: "og:title", content: "Cari Hesap Detayı — KlipsMarket" }, { property: "og:description", content: "Müşteri cari hareketleri, iskonto ve tahsilatlar." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: AccountDetail });
 
 function AccountDetail() {
   const { id } = Route.useParams();

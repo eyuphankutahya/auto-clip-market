@@ -6,7 +6,7 @@ const TITLE = "KVKK Aydınlatma Metni — KlipsMarket";
 const DESC = "6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında KlipsMarket aydınlatma metni.";
 
 export const Route = createFileRoute("/kvkk")({
-  head: () => ({ meta: [{ title: TITLE }, { name: "description", content: DESC }, { property: "og:title", content: TITLE }, { property: "og:description", content: DESC }] }),
+  head: () => ({ meta: [{ title: TITLE }, { name: "description", content: DESC }, { property: "og:title", content: TITLE }, { property: "og:description", content: DESC }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Kvkk,
 });
 

@@ -1,6 +1,7 @@
 # Roadmap
-- [ ] Owner-only super admin assignment and regular email/password signup — waiting on owner's account email; no app accounts yet
-- [ ] Special customer access only through admin-created linked cari account
+- [x] Owner-only verified-email super admin reservation; normal email/password signup never grants admin
+- [x] Special customer access through admin-created uniquely linked cari account
+- [ ] Verify owner confirmation, admin cari creation and customer access end to end — waiting on owner signup and email verification; no app accounts yet
 - [x] Admin lists safe past 1000 rows (cari balances, sales report, orders, purchases, cari statement)
 - [x] Leaked password protection
 - [x] Security scan after changes

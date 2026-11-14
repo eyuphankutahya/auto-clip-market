@@ -4,10 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
     const { data: u } = await supabase.auth.getUser();
-    const { data } = await supabase.rpc("has_role", { _user_id: u.user!.id, _role: "admin" });
+    if (!u.user) throw redirect({ to: "/auth" });
+    const { data } = await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
     if (!data) throw redirect({ to: "/" });
   },
-  head: () => ({ meta: [{ title: "Yönetim Paneli — KlipsMarket" }, { name: "description", content: "Stok, sipariş ve cari yönetimi." }, { property: "og:title", content: "Yönetim Paneli — KlipsMarket" }, { property: "og:description", content: "Stok, sipariş ve cari yönetimi." }] }),
+  head: () => ({ meta: [{ title: "Yönetim Paneli — KlipsMarket" }, { name: "description", content: "Stok, sipariş ve cari yönetimi." }, { property: "og:title", content: "Yönetim Paneli — KlipsMarket" }, { property: "og:description", content: "Stok, sipariş ve cari yönetimi." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: AdminLayout,
 });
 

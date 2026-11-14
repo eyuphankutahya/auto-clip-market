@@ -16,7 +16,7 @@ export const Route = createFileRoute("/urun/$slug")({
       { title: "Ürün Detayı — KlipsMarket" },
       { name: "description", content: "Klips detayları, OEM numaraları ve uyumlu araçlar." },
       { property: "og:title", content: "Ürün Detayı — KlipsMarket" },
-      { property: "og:description", content: "OEM numaraları ve uyumlu araç listesi." },
+      { property: "og:description", content: "OEM numaraları ve uyumlu araç listesi." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ProductPage,

@@ -32,7 +32,8 @@ use the editor.
 ## Project rules
 - Order prices are computed in the `place_order` SQL function (never trust client prices) — prevents tampering.
 - Stock and cari debits change only via DB triggers (purchases, order status, `stock_adjustments` inserts for stock counts/imports) — single source of truth with history.
-- Admin roles live in `user_roles` and are checked with `has_role`; the first signup becomes admin.
+- Admin roles live in `user_roles` and are checked with `has_role`; normal signup never grants admin, and a service-managed one-time owner allowlist grants admin only after email confirmation — prevents public administrator takeover.
+- Special-customer status is derived from an admin-created `customer_accounts` row linked uniquely to a profile, not a separate role — keeps discounts and cari authorization in one source of truth.
 - Supplier codes live in the admin-only `product_supplier_codes` table, never on `products` — public catalog reads must not expose them.
 - Product lists are read with `fetchAll` (src/lib/fetch-all.ts) — the Data API caps responses at 1000 rows.
 - Company contact/legal details live only in `src/lib/company.ts`; footer, contact and legal pages read from it — one place to update.

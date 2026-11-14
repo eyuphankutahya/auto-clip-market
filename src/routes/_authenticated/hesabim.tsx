@@ -6,21 +6,24 @@ import { STATUS, date, money } from "@/lib/format";
 import { CariStatement } from "@/components/site/CariStatement";
 import { Pager } from "@/components/site/Pager";
 import { useState } from "react";
+import { customerType } from "@/lib/customer-access";
 
 export const Route = createFileRoute("/_authenticated/hesabim")({
-  head: () => ({ meta: [{ title: "Hesabım — KlipsMarket" }, { name: "description", content: "Siparişleriniz ve cari hesabınız." }, { property: "og:title", content: "Hesabım — KlipsMarket" }, { property: "og:description", content: "Siparişleriniz ve cari hesabınız." }] }),
+  head: () => ({ meta: [{ title: "Hesabım — KlipsMarket" }, { name: "description", content: "Siparişleriniz ve cari hesabınız." }, { property: "og:title", content: "Hesabım — KlipsMarket" }, { property: "og:description", content: "Siparişleriniz ve cari hesabınız." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Account,
 });
 
 function Account() {
-  const { user, account } = useAuth();
+  const { user, account, isAdmin } = useAuth();
+  const type = customerType(isAdmin, user?.id, account);
   const [page, setPage] = useState(0);
   const PER = 20;
   const { data } = useQuery({
     queryKey: ["my-orders", user?.id, page],
     enabled: !!user,
     queryFn: async () => {
-      const r = await supabase.from("orders").select("*, items:order_items(*)", { count: "exact" }).eq("user_id", user!.id).order("created_at", { ascending: false }).order("id").range(page * PER, page * PER + PER - 1);
+      if (!user) return { rows: [], total: 0 };
+      const r = await supabase.from("orders").select("*, items:order_items(*)", { count: "exact" }).eq("user_id", user.id).order("created_at", { ascending: false }).order("id").range(page * PER, page * PER + PER - 1);
       if (r.error) throw new Error(r.error.message);
       return { rows: r.data ?? [], total: r.count ?? 0 };
     },
@@ -29,6 +32,7 @@ function Account() {
   return (
     <div className="mx-auto max-w-5xl space-y-10 px-4 py-10">
       <h1 className="text-3xl font-extrabold">Hesabım</h1>
+      <p className="text-sm font-semibold text-accent">{type === "superadmin" ? "Süper admin" : type === "special" ? "Özel müşteri" : "Standart müşteri"}</p>
       {account && (
         <section className="space-y-4">
           <div className="rounded-md border bg-card p-5">

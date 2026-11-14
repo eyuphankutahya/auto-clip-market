@@ -6,7 +6,7 @@ const TITLE = "Gizlilik ve Çerez Politikası — KlipsMarket";
 const DESC = "KlipsMarket sitesinde tarayıcınızda neyin saklandığı ve hangi ziyaret istatistiklerinin tutulduğu.";
 
 export const Route = createFileRoute("/gizlilik")({
-  head: () => ({ meta: [{ title: TITLE }, { name: "description", content: DESC }, { property: "og:title", content: TITLE }, { property: "og:description", content: DESC }] }),
+  head: () => ({ meta: [{ title: TITLE }, { name: "description", content: DESC }, { property: "og:title", content: TITLE }, { property: "og:description", content: DESC }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Privacy,
 });
 

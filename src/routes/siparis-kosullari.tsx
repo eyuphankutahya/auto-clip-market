@@ -6,7 +6,7 @@ const TITLE = "Sipariş ve Teslimat Koşulları — KlipsMarket";
 const DESC = "KlipsMarket'te sipariş talebi, ödeme, cari hesap, teslimat ve iade koşulları.";
 
 export const Route = createFileRoute("/siparis-kosullari")({
-  head: () => ({ meta: [{ title: TITLE }, { name: "description", content: DESC }, { property: "og:title", content: TITLE }, { property: "og:description", content: DESC }] }),
+  head: () => ({ meta: [{ title: TITLE }, { name: "description", content: DESC }, { property: "og:title", content: TITLE }, { property: "og:description", content: DESC }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Terms,
 });
 

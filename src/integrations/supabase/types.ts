@@ -62,6 +62,24 @@ export type Database = {
           },
         ]
       }
+      admin_bootstrap: {
+        Row: {
+          claimed_at: string | null
+          claimed_user_id: string | null
+          email: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          claimed_user_id?: string | null
+          email: string
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_user_id?: string | null
+          email?: string
+        }
+        Relationships: []
+      }
       brands: {
         Row: {
           id: string
@@ -132,7 +150,15 @@ export type Database = {
           phone?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customer_accounts_profile_fk"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order_items: {
         Row: {

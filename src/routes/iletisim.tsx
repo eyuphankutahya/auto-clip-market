@@ -6,7 +6,7 @@ const TITLE = "İletişim — KlipsMarket";
 const DESC = "KlipsMarket telefon, e-posta, adres ve WhatsApp iletişim bilgileri.";
 
 export const Route = createFileRoute("/iletisim")({
-  head: () => ({ meta: [{ title: TITLE }, { name: "description", content: DESC }, { property: "og:title", content: TITLE }, { property: "og:description", content: DESC }] }),
+  head: () => ({ meta: [{ title: TITLE }, { name: "description", content: DESC }, { property: "og:title", content: TITLE }, { property: "og:description", content: DESC }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Contact,
 });
 

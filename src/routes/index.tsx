@@ -13,7 +13,7 @@ export const Route = createFileRoute("/")({
       { title: "KlipsMarket — OEM Numarası ile Oto Klips Bul" },
       { name: "description", content: "Kapı döşeme, tampon, çamurluk ve daha fazlası. OEM numarası veya araç markasıyla klips arayın." },
       { property: "og:title", content: "KlipsMarket — OEM Numarası ile Oto Klips Bul" },
-      { property: "og:description", content: "Kullanım yerine ve araç markasına göre listelenmiş oto klips çeşitleri." },
+      { property: "og:description", content: "Kullanım yerine ve araç markasına göre listelenmiş oto klips çeşitleri." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Index,

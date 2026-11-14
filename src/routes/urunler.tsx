@@ -16,7 +16,7 @@ export const Route = createFileRoute("/urunler")({
       { title: "Tüm Klipsler — KlipsMarket" },
       { name: "description", content: "Kategori, araç markası ve modele göre filtrelenebilir oto klips kataloğu." },
       { property: "og:title", content: "Tüm Klipsler — KlipsMarket" },
-      { property: "og:description", content: "OEM numarası, kategori ve araç markasıyla filtreleyin." },
+      { property: "og:description", content: "OEM numarası, kategori ve araç markasıyla filtreleyin." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Products,

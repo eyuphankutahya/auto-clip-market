@@ -10,7 +10,7 @@ import { buildPlan, detectColumns, type Columns, type ImportRow, type Plan } fro
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
-export const Route = createFileRoute("/_authenticated/admin/aktarim")({ component: StockImport });
+export const Route = createFileRoute("/_authenticated/admin/aktarim")({ head: () => ({ meta: [{ title: "Toplu Stok Aktarımı — KlipsMarket" }, { name: "description", content: "Toplu ürün, stok ve fiyat aktarımı." }, { property: "og:title", content: "Toplu Stok Aktarımı — KlipsMarket" }, { property: "og:description", content: "Toplu ürün, stok ve fiyat aktarımı." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: StockImport });
 
 const historyQuery = queryOptions({
   queryKey: ["stock-adjustments"],

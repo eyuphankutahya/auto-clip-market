@@ -16,7 +16,7 @@ export const Route = createFileRoute("/sepet")({
       { title: "Sepetim — KlipsMarket" },
       { name: "description", content: "Sepetinizdeki klipsleri gözden geçirin ve sipariş talebi oluşturun." },
       { property: "og:title", content: "Sepetim — KlipsMarket" },
-      { property: "og:description", content: "Sipariş talebi oluşturun." },
+      { property: "og:description", content: "Sipariş talebi oluşturun." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Cart,

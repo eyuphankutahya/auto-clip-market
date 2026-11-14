@@ -10,7 +10,7 @@ const TITLE = "Yeni Şifre Belirle — KlipsMarket";
 const DESC = "KlipsMarket hesabınız için yeni şifre belirleyin.";
 
 export const Route = createFileRoute("/sifre-sifirla")({
-  head: () => ({ meta: [{ title: TITLE }, { name: "description", content: DESC }, { property: "og:title", content: TITLE }, { property: "og:description", content: DESC }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: TITLE }, { name: "description", content: DESC }, { property: "og:title", content: TITLE }, { property: "og:description", content: DESC }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: ResetPassword,
 });
 
