@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Add registered-user linking control to cari screen without granting admin access
 - [ ] Load only requested catalog page while preserving natural KM order, search and combined filters
 - [ ] Group admin navigation and paginate long stock/report lists
 - [ ] Add product photo uploads with original retention and clear optimized display variants
