@@ -809,6 +809,10 @@ export type Database = {
         Args: { _items: Json; _patch: Json }
         Returns: number
       }
+      admin_period_analysis: {
+        Args: { _from: string; _previous_from: string; _to: string }
+        Returns: Json
+      }
       apply_import: {
         Args: { _creates: Json; _filename: string; _updates: Json }
         Returns: string
