@@ -23,18 +23,21 @@ function Purchases() {
   const { data } = useQuery({
     queryKey: ["admin-purchases"],
     queryFn: async () => {
-      const [s, p] = await Promise.all([
+      const [s, p, codes] = await Promise.all([
         supabase.from("suppliers").select("*").order("name"),
-        fetchAll((from, to) => supabase.from("products").select("id,name,sku").order("name").order("id").range(from, to)),
+        fetchAll((from, to) => supabase.from("products").select("id,name,sku,stock,min_stock,max_stock").order("name").order("id").range(from, to)),
+        fetchAll((from,to)=>supabase.from("product_supplier_codes").select("product_id,supplier_id,code").order("id").range(from,to)),
       ]);
-      return { suppliers: s.data ?? [], products: p.sort(compareProductCodes) };
+      return { codes, suppliers: s.data ?? [], products: p.sort(compareProductCodes) };
     },
   });
   const { data: list } = useQuery({
-    queryKey: ["admin-purchases", "list", page],
+    queryKey: ["admin-purchases", "list", page, f.supplier_id],
     queryFn: async () => {
-      const r = await supabase.from("purchases").select("*, supplier:suppliers(name), product:products(name,sku)", { count: "exact" })
+      let request = supabase.from("purchases").select("*, supplier:suppliers(name), product:products(name,sku)", { count: "exact" })
         .order("purchase_date", { ascending: false }).order("created_at", { ascending: false }).order("id").range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
+      if(f.supplier_id) request=request.eq("supplier_id",f.supplier_id);
+      const r=await request;
       if (r.error) throw new Error(r.error.message);
       return { rows: r.data ?? [], total: r.count ?? 0 };
     },
@@ -50,13 +53,16 @@ function Purchases() {
     setSup({ name: "", phone: "", address: "" }); qc.invalidateQueries();
   };
   const del = async (id: string) => { if (!confirm("Alım silinsin mi? Stoktan düşülecek.")) return; await supabase.from("purchases").delete().eq("id", id); qc.invalidateQueries(); };
+  const available=(data?.products ?? []).filter(p=>!f.supplier_id || data?.codes.some(c=>c.product_id===p.id && c.supplier_id===f.supplier_id));
   const sel = "h-9 w-full rounded-md border bg-background px-2 text-sm";
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
-      <section className="space-y-6">
+      <section className="min-w-0 space-y-6">
+        {f.supplier_id && <section><h2 className="mb-3 font-bold">{data?.suppliers.find(s=>s.id===f.supplier_id)?.name} ürünleri</h2><div className="max-h-80 overflow-auto border"><table className="w-full text-sm"><thead className="bg-secondary text-left"><tr><th className="p-2">KM No / Ürün</th><th className="p-2">Tedarikçi stok kodu</th><th className="p-2">Stok</th><th className="p-2">Alım</th></tr></thead><tbody>{available.map(p=><tr key={p.id} className="border-t"><td className="p-2">{p.sku} · {p.name}</td><td className="p-2 font-oem">{data?.codes.filter(c=>c.product_id===p.id && c.supplier_id===f.supplier_id).map(c=>c.code).filter(Boolean).join(", ") || "—"}</td><td className="p-2">{p.stock}</td><td className="p-2"><Button variant="outline" size="sm" onClick={()=>setF({...f,product_id:p.id})}>Seç</Button></td></tr>)}</tbody></table>{available.length===0 && <p className="p-4">Bu tedarikçiye bağlı ürün yok.</p>}</div></section>}
+
         <div className="grid gap-3 rounded-md border bg-card p-4 sm:grid-cols-5 sm:items-end">
-          <div className="sm:col-span-2"><Label>Ürün</Label><select className={sel} value={f.product_id} onChange={(e) => setF({ ...f, product_id: e.target.value })}><option value="">Seçin</option>{data?.products.map((p) => <option key={p.id} value={p.id}>{p.sku ? `${p.sku} — ` : ""}{p.name}</option>)}</select></div>
-          <div><Label>Tedarikçi</Label><select className={sel} value={f.supplier_id} onChange={(e) => setF({ ...f, supplier_id: e.target.value })}><option value="">—</option>{data?.suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+          <div className="sm:col-span-2"><Label>Ürün</Label><select className={sel} value={f.product_id} onChange={(e) => setF({ ...f, product_id: e.target.value })}><option value="">Seçin</option>{available.map((p) => <option key={p.id} value={p.id}>{p.sku ? `${p.sku} — ` : ""}{p.name}</option>)}</select></div>
+          <div><Label>Tedarikçi</Label><select className={sel} value={f.supplier_id} onChange={(e) => {setF({ ...f, supplier_id: e.target.value,product_id:"" });setPage(0);}}><option value="">—</option>{data?.suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
           <div><Label>Adet</Label><Input type="number" value={f.quantity} onChange={(e) => setF({ ...f, quantity: e.target.value })} /></div>
           <div><Label>Alış fiyatı (₺)</Label><Input type="number" step="0.01" value={f.unit_cost} onChange={(e) => setF({ ...f, unit_cost: e.target.value })} /></div>
           <div className="sm:col-span-2"><Label>Alım tarihi</Label><Input type="date" value={f.purchase_date} onChange={(e) => setF({ ...f, purchase_date: e.target.value })} /></div>
@@ -73,8 +79,8 @@ function Purchases() {
         {list && <Pager page={page} total={list.total} onChange={setPage} />}
       </section>
       <aside className="space-y-3 rounded-md border bg-card p-4">
-        <h3 className="font-extrabold">Tedarikçi firmalar</h3>
-        <ul className="space-y-1 text-sm">{data?.suppliers.map((s) => <li key={s.id}><span className="font-semibold">{s.name}</span> <span className="text-muted-foreground">{s.phone}</span></li>)}</ul>
+        <h3 className="font-extrabold">Tedarikçi firmalar</h3><Button variant="outline" size="sm" onClick={()=>{setF({...f,supplier_id:"",product_id:""});setPage(0);}}>Tüm tedarikçiler</Button>
+        <ul className="space-y-1 text-sm">{data?.suppliers.map((s) => <li key={s.id}><Button size="sm" variant={f.supplier_id===s.id?"secondary":"ghost"} onClick={()=>{setF({...f,supplier_id:s.id,product_id:""});setPage(0);}}>{s.name}</Button> <span className="text-muted-foreground">{s.phone}</span></li>)}</ul>
         <Input placeholder="Firma adı" value={sup.name} onChange={(e) => setSup({ ...sup, name: e.target.value })} />
         <Input placeholder="Telefon" value={sup.phone} onChange={(e) => setSup({ ...sup, phone: e.target.value })} />
         <Input placeholder="Adres" value={sup.address} onChange={(e) => setSup({ ...sup, address: e.target.value })} />

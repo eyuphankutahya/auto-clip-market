@@ -95,6 +95,7 @@ function Shortages() {
         <span><b>{data.products.filter((p) => p.stock > 0).length}</b> minimum altı ürün</span>
         <span><b>{list.length}</b> listelenen ürün</span>
       </div>
+      <div className="flex flex-wrap gap-2"><Button variant={!supplier?"secondary":"outline"} size="sm" onClick={()=>{setSupplier("");setPage(0);}}>Tüm tedarikçiler</Button>{data.suppliers.map(s=><Button key={s.id} variant={supplier===s.id?"secondary":"outline"} size="sm" onClick={()=>{setSupplier(s.id);setPage(0);}}>{s.name}</Button>)}</div>
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="space-y-2"><Label htmlFor="shortage-search">KM No / ürün / tedarikçi kodu</Label><Input id="shortage-search" value={query} maxLength={200} onChange={(e) => { setQuery(e.target.value); setPage(0); }} /></div>
         <div className="space-y-2"><Label htmlFor="shortage-status">Stok durumu</Label><select id="shortage-status" className="h-9 w-full rounded-md border bg-background px-3 text-sm" value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }}><option value="all">Tüm eksikler</option><option value="empty">Tükenenler</option><option value="low">Minimum altındakiler</option></select></div>
@@ -112,7 +113,7 @@ function Shortages() {
               <td className={`whitespace-nowrap px-3 py-3 ${p.stock === 0 ? "text-destructive" : "text-warning"}`}>{p.stock === 0 ? "Tükendi" : "Minimum altı"}</td>
               <td className="px-3 py-3">{p.stock}</td><td className="whitespace-nowrap px-3 py-3">{p.min_stock} / {p.max_stock ?? "—"}</td>
               <td className="px-3 py-3"><Input aria-label={`${p.sku ?? p.name} alım adedi`} type="number" min={0} max={100000} step={1} className="w-24" value={quantities[p.id] ?? replenishmentQuantity(p)} onChange={e=>{const n=Number(e.target.value);if(Number.isInteger(n) && n>=0 && n<=100000)setQuantities(old=>({...old,[p.id]:n}));}}/></td>
-              <td className="min-w-44 px-3 py-3">{p.suppliers.length ? p.suppliers.map((s, i) => <div key={`${s.supplier_id}-${i}`} className="break-words">{s.name}{s.code && <span className="font-oem text-xs"> · {s.code}</span>}</div>) : <span className="text-muted-foreground">Tedarikçi yok</span>}</td>
+              <td className="min-w-44 px-3 py-3">{p.suppliers.length ? p.suppliers.filter(s=>!supplier || s.supplier_id===supplier).map((s, i) => <div key={`${s.supplier_id}-${i}`} className="break-words">{s.name}{s.code && <span className="font-oem text-xs"> · {s.code}</span>}</div>) : <span className="text-muted-foreground">Tedarikçi yok</span>}</td>
             </tr>)}</tbody>
           </table>
         </div>
