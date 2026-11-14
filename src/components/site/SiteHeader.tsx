@@ -19,8 +19,8 @@ export function SiteHeader() {
   };
   return (
     <header className="sticky top-0 z-40 border-b border-sidebar-border bg-ink text-ink-foreground">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4">
-        <Link to="/" className="flex items-center gap-2 font-display text-xl font-extrabold tracking-tight">
+      <div className="mx-auto flex min-h-16 max-w-7xl flex-wrap items-center gap-x-2 gap-y-2 px-4 py-2 md:flex-nowrap md:gap-6">
+        <Link to="/" className="flex shrink-0 items-center gap-2 font-display text-lg font-extrabold md:text-xl">
           <span className="grid h-8 w-8 place-items-center rounded-sm bg-accent text-accent-foreground">K</span>
           KLİPSMARKET
         </Link>
@@ -32,7 +32,7 @@ export function SiteHeader() {
         <div className="ml-auto flex items-center gap-2">
           {account && <span className="hidden rounded-sm bg-accent px-2 py-1 text-xs font-semibold text-accent-foreground sm:inline">Cari: %{Number(account.discount_rate)} iskonto</span>}
           {isAdmin && (
-            <Link to="/admin"><Button size="sm" variant="secondary"><ShieldCheck className="h-4 w-4" />Yönetim</Button></Link>
+            <Button asChild size="sm" variant="secondary"><Link to="/admin" aria-label="Yönetim"><ShieldCheck className="h-4 w-4" /><span className="hidden sm:inline">Yönetim</span></Link></Button>
           )}
           <Link to="/sepet" className="relative rounded-md p-2 hover:bg-sidebar-accent" aria-label="Sepet">
             <ShoppingCart className="h-5 w-5" />
