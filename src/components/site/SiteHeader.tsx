@@ -30,7 +30,7 @@ export function SiteHeader() {
           <Link to="/iletisim" className="opacity-80 hover:opacity-100" activeProps={{ className: "opacity-100 font-semibold" }}>İletişim</Link>
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          {account && <span className="hidden rounded-sm bg-accent px-2 py-1 text-xs font-semibold text-accent-foreground sm:inline">Cari: %{Number(account.discount_rate)} iskonto</span>}
+          {account && <Link to="/cari-hesabim" aria-label="Cari hesabım" className="hidden rounded-sm bg-accent px-2 py-1 text-xs font-semibold text-accent-foreground sm:inline">Cari: %{Number(account.discount_rate)} iskonto</Link>}
           {isAdmin && (
             <Button asChild size="sm" variant="secondary"><Link to="/admin" aria-label="Yönetim"><ShieldCheck className="h-4 w-4" /><span className="hidden sm:inline">Yönetim</span></Link></Button>
           )}

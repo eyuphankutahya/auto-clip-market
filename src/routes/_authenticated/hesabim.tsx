@@ -1,9 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { STATUS, date, money } from "@/lib/format";
-import { CariStatement } from "@/components/site/CariStatement";
 import { Pager } from "@/components/site/Pager";
 import { useState } from "react";
 import { customerType } from "@/lib/customer-access";
@@ -40,7 +39,7 @@ function Account() {
             <div className="font-display text-xl font-extrabold">{account.company_name}</div>
             <div className="mt-1 text-sm text-muted-foreground">{account.address} · {account.phone} · İskonto %{Number(account.discount_rate)}</div>
           </div>
-          <CariStatement accountId={account.id} />
+          <Link to="/cari-hesabim" className="inline-block font-semibold text-accent underline">Bakiye, hareketler ve ödemeler →</Link>
         </section>
       )}
       <section>
