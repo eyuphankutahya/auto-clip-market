@@ -40,6 +40,7 @@ function Orders() {
   };
   return (
     <div className="space-y-3">
+      <OrderDialog order={data?.orders.find((order) => order.id === openOrder) ?? null} onClose={() => setOpenOrder(null)} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <select value={status} onChange={(e) => { setFilter(e.target.value); setPage(0); }} className="rounded-md border bg-background px-2 py-1.5 text-sm" aria-label="Duruma göre filtrele">
           <option value="all">Tüm siparişler</option>
@@ -55,7 +56,7 @@ function Orders() {
           <div key={o.id} className="rounded-md border bg-card p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <div className="font-bold">#{o.order_no} · {o.account?.company_name ?? u?.full_name ?? u?.email}</div>
+                <div className="font-bold"><button type="button" onClick={() => setOpenOrder(o.id)} className="text-primary underline underline-offset-2 hover:opacity-80" aria-label={`Sipariş #${o.order_no} ayrıntıları`}>#{o.order_no}</button> · {o.account?.company_name ?? u?.full_name ?? u?.email}</div>
                 <div className="text-xs text-muted-foreground">{date(o.created_at)} · {u?.email}{o.account ? ` · Cari (%${Number(o.discount_rate)})` : ""}</div>
               </div>
               <div className="flex items-center gap-3">
