@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Add About page and expose About / Contact in desktop, mobile navigation and footer
 - [x] Add dedicated admin product creation module with atomic product, OEM, vehicle, supplier and opening-stock save
 - [ ] Verify product creation in admin UI — waiting on owner signup and email verification; no app accounts yet
 - [x] Add optional informational package quantity to admin form and customer products
