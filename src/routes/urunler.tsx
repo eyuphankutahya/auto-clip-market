@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { catalogQuery, matchesSearch } from "@/lib/catalog";
+import { matchesCatalogFilters } from "@/lib/catalog-rules";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/site/ProductCard";
 import { Input } from "@/components/ui/input";
@@ -28,12 +29,12 @@ function Products() {
   const set = (patch: Partial<z.infer<typeof search>>) => navigate({ search: (prev) => ({ ...prev, ...patch }) });
   const { data, isLoading } = useQuery(catalogQuery);
   const brand = data?.brands.find((b) => b.slug === s.marka);
+  const category = data?.categories.find((c) => c.slug === s.kategori);
   const [shown, setShown] = useState(60);
   useEffect(() => setShown(60), [s.q, s.kategori, s.marka, s.model]);
   const list = (data?.products ?? []).filter((p) => {
-    if (s.kategori && p.category?.slug !== s.kategori) return false;
-    if (brand && !p.vehicles.some((v) => v.brand_id === brand.id)) return false;
-    if (s.model && !p.vehicles.some((v) => v.model_id === s.model || (v.brand_id === brand?.id && !v.model_id))) return false;
+    if (s.marka && !brand) return false;
+    if (!matchesCatalogFilters(p, { category: s.kategori, brandId: brand?.id, modelId: s.model })) return false;
     if (s.q && !matchesSearch(p, s.q)) return false;
     return true;
   });
@@ -46,19 +47,19 @@ function Products() {
         <Input placeholder="KM No / OEM no / ürün adı" defaultValue={s.q} className="font-oem" onChange={(e) => set({ q: e.target.value || undefined })} />
         <div>
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Kullanım yeri</h3>
-          <button className={chip(!s.kategori)} onClick={() => set({ kategori: undefined })}>Tümü</button>
-          {data?.categories.map((c) => <button key={c.id} className={chip(s.kategori === c.slug)} onClick={() => set({ kategori: c.slug })}>{c.name}</button>)}
+          <Button variant="ghost" className={chip(!s.kategori)} onClick={() => set({ kategori: undefined })}>Tümü</Button>
+          {data?.categories.map((c) => <Button variant="ghost" key={c.id} className={`${chip(s.kategori === c.slug)} h-auto justify-start whitespace-normal`} onClick={() => set({ kategori: c.slug })}>{c.slug === "camurluk" ? "Çamurluk / Davlumbaz Klipsleri" : c.name}</Button>)}
         </div>
         <div>
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Araç markası</h3>
-          <button className={chip(!s.marka)} onClick={() => set({ marka: undefined, model: undefined })}>Tümü</button>
+          <Button variant="ghost" className={chip(!s.marka)} onClick={() => set({ marka: undefined, model: undefined })}>Tümü</Button>
           {data?.brands.map((b) => (
             <div key={b.id}>
-              <button className={chip(s.marka === b.slug)} onClick={() => set({ marka: b.slug, model: undefined })}>{b.name}</button>
+              <Button variant="ghost" className={chip(s.marka === b.slug)} onClick={() => set({ marka: b.slug, model: undefined })}>{b.name}</Button>
               {s.marka === b.slug && (
                 <div className="ml-3 border-l pl-2">
                   {data.models.filter((m) => m.brand_id === b.id).map((m) => (
-                    <button key={m.id} className={chip(s.model === m.id)} onClick={() => set({ model: s.model === m.id ? undefined : m.id })}>{m.name}</button>
+                    <Button variant="ghost" key={m.id} className={chip(s.model === m.id)} onClick={() => set({ model: s.model === m.id ? undefined : m.id })}>{m.name}</Button>
                   ))}
                 </div>
               )}
@@ -67,10 +68,11 @@ function Products() {
         </div>
       </aside>
       <section>
-        <div className="mb-4 flex items-baseline justify-between">
-          <h1 className="text-2xl font-extrabold">{brand ? `${brand.name} klipsleri` : "Tüm ürünler"}</h1>
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
+          <h1 className="text-2xl font-extrabold">{[brand?.name, category?.slug === "camurluk" ? "Çamurluk / Davlumbaz Klipsleri" : category?.name].filter(Boolean).join(" · ") || "Tüm ürünler"}{brand && !category ? " klipsleri" : ""}</h1>
           <span className="text-sm text-muted-foreground">{list.length} ürün</span>
         </div>
+        {(s.marka || s.kategori || s.model || s.q) && <Button variant="outline" size="sm" className="mb-4" onClick={() => navigate({ search: {} })}>Tüm filtreleri temizle</Button>}
         {isLoading ? <p className="text-muted-foreground">Yükleniyor…</p> : list.length === 0 ? <p className="rounded-md border bg-card p-8 text-center text-muted-foreground">Bu kriterlere uygun ürün bulunamadı.</p> : (
           <>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{list.slice(0, shown).map((p) => <ProductCard key={p.id} p={p} />)}</div>

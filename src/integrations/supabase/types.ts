@@ -621,6 +621,10 @@ export type Database = {
         Returns: boolean
       }
       place_order: { Args: { _items: Json; _notes?: string }; Returns: string }
+      replace_product_supplier_codes: {
+        Args: { _codes: Json; _product_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"

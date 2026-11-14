@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Verify brand/use-location filtering and multi-vehicle links; enable multiple codes per supplier
+- [ ] Verify multi-code saving in admin UI — waiting on owner signup and email verification; no app accounts yet
 - [x] Owner-only verified-email super admin reservation; normal email/password signup never grants admin
 - [x] Special customer access through admin-created uniquely linked cari account
 - [ ] Verify owner confirmation, admin cari creation and customer access end to end — waiting on owner signup and email verification; no app accounts yet
