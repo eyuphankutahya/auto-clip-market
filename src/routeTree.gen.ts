@@ -12,7 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as GizlilikRouteImport } from './routes/gizlilik'
+import { Route as IletisimRouteImport } from './routes/iletisim'
+import { Route as KvkkRouteImport } from './routes/kvkk'
 import { Route as SepetRouteImport } from './routes/sepet'
+import { Route as SifreSifirlaRouteImport } from './routes/sifre-sifirla'
+import { Route as SiparisKosullariRouteImport } from './routes/siparis-kosullari'
 import { Route as UrunlerRouteImport } from './routes/urunler'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedHesabimRouteImport } from './routes/_authenticated/hesabim'
@@ -39,9 +44,34 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GizlilikRoute = GizlilikRouteImport.update({
+  id: '/gizlilik',
+  path: '/gizlilik',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IletisimRoute = IletisimRouteImport.update({
+  id: '/iletisim',
+  path: '/iletisim',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KvkkRoute = KvkkRouteImport.update({
+  id: '/kvkk',
+  path: '/kvkk',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SepetRoute = SepetRouteImport.update({
   id: '/sepet',
   path: '/sepet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SifreSifirlaRoute = SifreSifirlaRouteImport.update({
+  id: '/sifre-sifirla',
+  path: '/sifre-sifirla',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiparisKosullariRoute = SiparisKosullariRouteImport.update({
+  id: '/siparis-kosullari',
+  path: '/siparis-kosullari',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UrunlerRoute = UrunlerRouteImport.update({
@@ -109,7 +139,12 @@ const AuthenticatedAdminCariIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/gizlilik': typeof GizlilikRoute
+  '/iletisim': typeof IletisimRoute
+  '/kvkk': typeof KvkkRoute
   '/sepet': typeof SepetRoute
+  '/sifre-sifirla': typeof SifreSifirlaRoute
+  '/siparis-kosullari': typeof SiparisKosullariRoute
   '/urunler': typeof UrunlerRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/hesabim': typeof AuthenticatedHesabimRoute
@@ -125,7 +160,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/gizlilik': typeof GizlilikRoute
+  '/iletisim': typeof IletisimRoute
+  '/kvkk': typeof KvkkRoute
   '/sepet': typeof SepetRoute
+  '/sifre-sifirla': typeof SifreSifirlaRoute
+  '/siparis-kosullari': typeof SiparisKosullariRoute
   '/urunler': typeof UrunlerRoute
   '/hesabim': typeof AuthenticatedHesabimRoute
   '/urun/$slug': typeof UrunSlugRoute
@@ -142,7 +182,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/gizlilik': typeof GizlilikRoute
+  '/iletisim': typeof IletisimRoute
+  '/kvkk': typeof KvkkRoute
   '/sepet': typeof SepetRoute
+  '/sifre-sifirla': typeof SifreSifirlaRoute
+  '/siparis-kosullari': typeof SiparisKosullariRoute
   '/urunler': typeof UrunlerRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/hesabim': typeof AuthenticatedHesabimRoute
@@ -160,7 +205,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/gizlilik'
+    | '/iletisim'
+    | '/kvkk'
     | '/sepet'
+    | '/sifre-sifirla'
+    | '/siparis-kosullari'
     | '/urunler'
     | '/admin'
     | '/hesabim'
@@ -176,7 +226,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/gizlilik'
+    | '/iletisim'
+    | '/kvkk'
     | '/sepet'
+    | '/sifre-sifirla'
+    | '/siparis-kosullari'
     | '/urunler'
     | '/hesabim'
     | '/urun/$slug'
@@ -192,7 +247,12 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/gizlilik'
+    | '/iletisim'
+    | '/kvkk'
     | '/sepet'
+    | '/sifre-sifirla'
+    | '/siparis-kosullari'
     | '/urunler'
     | '/_authenticated/admin'
     | '/_authenticated/hesabim'
@@ -210,7 +270,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  GizlilikRoute: typeof GizlilikRoute
+  IletisimRoute: typeof IletisimRoute
+  KvkkRoute: typeof KvkkRoute
   SepetRoute: typeof SepetRoute
+  SifreSifirlaRoute: typeof SifreSifirlaRoute
+  SiparisKosullariRoute: typeof SiparisKosullariRoute
   UrunlerRoute: typeof UrunlerRoute
   UrunSlugRoute: typeof UrunSlugRoute
 }
@@ -238,11 +303,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/gizlilik': {
+      id: '/gizlilik'
+      path: '/gizlilik'
+      fullPath: '/gizlilik'
+      preLoaderRoute: typeof GizlilikRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/iletisim': {
+      id: '/iletisim'
+      path: '/iletisim'
+      fullPath: '/iletisim'
+      preLoaderRoute: typeof IletisimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kvkk': {
+      id: '/kvkk'
+      path: '/kvkk'
+      fullPath: '/kvkk'
+      preLoaderRoute: typeof KvkkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sepet': {
       id: '/sepet'
       path: '/sepet'
       fullPath: '/sepet'
       preLoaderRoute: typeof SepetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sifre-sifirla': {
+      id: '/sifre-sifirla'
+      path: '/sifre-sifirla'
+      fullPath: '/sifre-sifirla'
+      preLoaderRoute: typeof SifreSifirlaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/siparis-kosullari': {
+      id: '/siparis-kosullari'
+      path: '/siparis-kosullari'
+      fullPath: '/siparis-kosullari'
+      preLoaderRoute: typeof SiparisKosullariRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/urunler': {
@@ -365,7 +465,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  GizlilikRoute: GizlilikRoute,
+  IletisimRoute: IletisimRoute,
+  KvkkRoute: KvkkRoute,
   SepetRoute: SepetRoute,
+  SifreSifirlaRoute: SifreSifirlaRoute,
+  SiparisKosullariRoute: SiparisKosullariRoute,
   UrunlerRoute: UrunlerRoute,
   UrunSlugRoute: UrunSlugRoute,
 }

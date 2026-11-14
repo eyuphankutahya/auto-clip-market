@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { STATUS, date, money } from "@/lib/format";
 import { CariStatement } from "@/components/site/CariStatement";
+import { Pager } from "@/components/site/Pager";
+import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/hesabim")({
   head: () => ({ meta: [{ title: "Hesabım — KlipsMarket" }, { name: "description", content: "Siparişleriniz ve cari hesabınız." }, { property: "og:title", content: "Hesabım — KlipsMarket" }, { property: "og:description", content: "Siparişleriniz ve cari hesabınız." }] }),
@@ -12,11 +14,18 @@ export const Route = createFileRoute("/_authenticated/hesabim")({
 
 function Account() {
   const { user, account } = useAuth();
-  const { data: orders } = useQuery({
-    queryKey: ["my-orders", user?.id],
+  const [page, setPage] = useState(0);
+  const PER = 20;
+  const { data } = useQuery({
+    queryKey: ["my-orders", user?.id, page],
     enabled: !!user,
-    queryFn: async () => (await supabase.from("orders").select("*, items:order_items(*)").eq("user_id", user!.id).order("created_at", { ascending: false })).data ?? [],
+    queryFn: async () => {
+      const r = await supabase.from("orders").select("*, items:order_items(*)", { count: "exact" }).eq("user_id", user!.id).order("created_at", { ascending: false }).order("id").range(page * PER, page * PER + PER - 1);
+      if (r.error) throw new Error(r.error.message);
+      return { rows: r.data ?? [], total: r.count ?? 0 };
+    },
   });
+  const orders = data?.rows;
   return (
     <div className="mx-auto max-w-5xl space-y-10 px-4 py-10">
       <h1 className="text-3xl font-extrabold">Hesabım</h1>
@@ -44,6 +53,7 @@ function Account() {
               <div className="mt-2 text-right font-bold">{money(o.total)}</div>
             </div>
           ))}
+          {data && <Pager page={page} total={data.total} pageSize={PER} onChange={setPage} />}
         </div>
       </section>
     </div>

@@ -6,6 +6,7 @@ import { Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { date, money } from "@/lib/format";
 import { fetchAll } from "@/lib/fetch-all";
+import { Pager, PAGE_SIZE } from "@/components/site/Pager";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,15 +18,24 @@ function Purchases() {
   const today = new Date().toISOString().slice(0, 10);
   const [f, setF] = useState({ supplier_id: "", product_id: "", quantity: "", unit_cost: "", purchase_date: today });
   const [sup, setSup] = useState({ name: "", phone: "", address: "" });
+  const [page, setPage] = useState(0);
   const { data } = useQuery({
     queryKey: ["admin-purchases"],
     queryFn: async () => {
-      const [s, p, pu] = await Promise.all([
+      const [s, p] = await Promise.all([
         supabase.from("suppliers").select("*").order("name"),
         fetchAll((from, to) => supabase.from("products").select("id,name,sku").order("name").order("id").range(from, to)),
-        supabase.from("purchases").select("*, supplier:suppliers(name), product:products(name,sku)").order("purchase_date", { ascending: false }),
       ]);
-      return { suppliers: s.data ?? [], products: p, purchases: pu.data ?? [] };
+      return { suppliers: s.data ?? [], products: p };
+    },
+  });
+  const { data: list } = useQuery({
+    queryKey: ["admin-purchases", "list", page],
+    queryFn: async () => {
+      const r = await supabase.from("purchases").select("*, supplier:suppliers(name), product:products(name,sku)", { count: "exact" })
+        .order("purchase_date", { ascending: false }).order("created_at", { ascending: false }).order("id").range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
+      if (r.error) throw new Error(r.error.message);
+      return { rows: r.data ?? [], total: r.count ?? 0 };
     },
   });
   const addPurchase = async () => {
@@ -54,11 +64,12 @@ function Purchases() {
         <table className="w-full rounded-md border bg-card text-sm">
           <thead className="bg-secondary text-left"><tr><th className="p-2">Tarih</th><th className="p-2">Ürün</th><th className="p-2">Tedarikçi</th><th className="p-2 text-right">Adet</th><th className="p-2 text-right">Alış fiyatı</th><th className="p-2 text-right">Toplam</th><th /></tr></thead>
           <tbody>
-            {data?.purchases.length === 0 && <tr><td colSpan={7} className="p-4 text-center text-muted-foreground">Henüz alım yok</td></tr>}
-            {data?.purchases.map((p) => <tr key={p.id} className="border-t"><td className="p-2">{date(p.purchase_date)}</td><td className="p-2">{p.product?.sku && <span className="font-oem mr-1 text-xs text-muted-foreground">{p.product.sku}</span>}{p.product?.name}</td><td className="p-2">{p.supplier?.name ?? "—"}</td><td className="p-2 text-right">{p.quantity}</td><td className="p-2 text-right">{money(p.unit_cost)}</td><td className="p-2 text-right font-semibold">{money(p.quantity * Number(p.unit_cost))}</td>
+            {list?.rows.length === 0 && <tr><td colSpan={7} className="p-4 text-center text-muted-foreground">Henüz alım yok</td></tr>}
+            {list?.rows.map((p) => <tr key={p.id} className="border-t"><td className="p-2">{date(p.purchase_date)}</td><td className="p-2">{p.product?.sku && <span className="font-oem mr-1 text-xs text-muted-foreground">{p.product.sku}</span>}{p.product?.name}</td><td className="p-2">{p.supplier?.name ?? "—"}</td><td className="p-2 text-right">{p.quantity}</td><td className="p-2 text-right">{money(p.unit_cost)}</td><td className="p-2 text-right font-semibold">{money(p.quantity * Number(p.unit_cost))}</td>
               <td className="p-2"><button onClick={() => del(p.id)} className="text-muted-foreground hover:text-destructive" aria-label="Sil"><Trash2 className="h-4 w-4" /></button></td></tr>)}
           </tbody>
         </table>
+        {list && <Pager page={page} total={list.total} onChange={setPage} />}
       </section>
       <aside className="space-y-3 rounded-md border bg-card p-4">
         <h3 className="font-extrabold">Tedarikçi firmalar</h3>

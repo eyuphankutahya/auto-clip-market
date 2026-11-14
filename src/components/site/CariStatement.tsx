@@ -1,16 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { date, money } from "@/lib/format";
+import { fetchAll } from "@/lib/fetch-all";
 
 export function useCariData(accountId: string) {
   return useQuery({
     queryKey: ["cari", accountId],
     queryFn: async () => {
       const [tx, orders] = await Promise.all([
-        supabase.from("account_transactions").select("*").eq("customer_account_id", accountId).order("created_at"),
-        supabase.from("orders").select("id, order_no, status, created_at, items:order_items(product_name, quantity, unit_price)").eq("customer_account_id", accountId).in("status", ["approved", "shipped"]),
+        fetchAll((from, to) => supabase.from("account_transactions").select("*").eq("customer_account_id", accountId).order("created_at").order("id").range(from, to)),
+        fetchAll((from, to) => supabase.from("orders").select("id, order_no, status, created_at, items:order_items(product_name, quantity, unit_price)").eq("customer_account_id", accountId).in("status", ["approved", "shipped"]).order("created_at").order("id").range(from, to), 200),
       ]);
-      return { tx: tx.data ?? [], orders: orders.data ?? [] };
+      return { tx, orders };
     },
   });
 }
