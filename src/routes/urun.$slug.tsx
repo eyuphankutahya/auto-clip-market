@@ -43,6 +43,7 @@ function ProductPage() {
         <Link to="/urunler" search={{ kategori: p.category?.slug }} className="text-sm font-semibold uppercase tracking-wide text-accent">{p.category?.name}</Link>
         <h1 className="mt-2 text-3xl font-extrabold">{p.name}</h1>
         {p.sku && <div className="font-oem mt-2 text-sm text-muted-foreground">KlipsMarket No: <span className="font-semibold text-foreground">{p.sku}</span></div>}
+        {p.package_quantity !== null && <div className="mt-2 text-sm text-muted-foreground">Paket içi adet: <span className="font-semibold text-foreground">{p.package_quantity}</span></div>}
         <div className="mt-3 flex flex-wrap gap-2">{p.oems.map((o) => <span key={o.id} className="font-oem rounded-sm border bg-card px-2 py-1 text-sm">OEM {o.oem}</span>)}</div>
         {p.description && <p className="mt-5 text-muted-foreground">{p.description}</p>}
         <div className="mt-6">

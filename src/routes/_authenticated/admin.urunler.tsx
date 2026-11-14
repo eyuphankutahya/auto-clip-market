@@ -8,6 +8,7 @@ import { catalogQuery, matchesSearch, type CatalogProduct } from "@/lib/catalog"
 import { fetchAll } from "@/lib/fetch-all";
 import { supplierCodeRows } from "@/lib/catalog-rules";
 import { validateStockLimits } from "@/lib/stock-limits";
+import { parsePackageQuantity } from "@/lib/package-quantity";
 import { money, slugify } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,8 +19,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 export const Route = createFileRoute("/_authenticated/admin/urunler")({ head: () => ({ meta: [{ title: "Ürün Yönetimi — KlipsMarket" }, { name: "description", content: "Klips kataloğu ve yöneticiye özel tedarikçi bilgileri." }, { property: "og:title", content: "Ürün Yönetimi — KlipsMarket" }, { property: "og:description", content: "Klips kataloğu ve yöneticiye özel tedarikçi bilgileri." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: AdminProducts });
 
 type SupRow = { on: boolean; code: string };
-type Form = { id?: string; sku: string; name: string; description: string; price: string; min_stock: string; max_stock: string; stock: number; category_id: string; image_url: string; oems: string; brands: string[]; models: string[]; sups: Record<string, SupRow> };
-const empty: Form = { sku: "", name: "", description: "", price: "", min_stock: "50", max_stock: "", stock: 0, category_id: "", image_url: "", oems: "", brands: [], models: [], sups: {} };
+type Form = { id?: string; sku: string; name: string; description: string; price: string; package_quantity: string; min_stock: string; max_stock: string; stock: number; category_id: string; image_url: string; oems: string; brands: string[]; models: string[]; sups: Record<string, SupRow> };
+const empty: Form = { sku: "", name: "", description: "", price: "", package_quantity: "", min_stock: "50", max_stock: "", stock: 0, category_id: "", image_url: "", oems: "", brands: [], models: [], sups: {} };
 
 // Admin-only: which suppliers sell each product and under which code. RLS lets only admins read this.
 const supplierCodesQuery = queryOptions({
@@ -49,6 +50,7 @@ function AdminProducts() {
   const edit = (p: CatalogProduct) => setForm({
     id: p.id, sku: p.sku ?? "", name: p.name, description: p.description ?? "", price: String(p.price), min_stock: String(p.min_stock), max_stock: p.max_stock === null ? "" : String(p.max_stock), stock: p.stock, category_id: p.category_id ?? "", image_url: p.image_url ?? "",
     oems: p.oems.map((o) => o.oem).join(", "), brands: p.vehicles.filter((v) => !v.model_id).map((v) => v.brand_id), models: p.vehicles.flatMap((v) => v.model_id ? [v.model_id] : []),
+    package_quantity: p.package_quantity === null ? "" : String(p.package_quantity),
     sups: (sc?.byProduct.get(p.id) ?? []).reduce<Record<string, SupRow>>((acc, c) => {
       const previous = acc[c.supplier_id]?.code;
       acc[c.supplier_id] = { on: true, code: [previous, c.code].filter(Boolean).join("\n") };
@@ -61,7 +63,10 @@ function AdminProducts() {
     const maxStock = form.max_stock.trim() === "" ? null : Number(form.max_stock);
     const limitsError = validateStockLimits(Number(form.min_stock), maxStock);
     if (limitsError) { toast.error(limitsError); return; }
-    const row = { sku: form.sku.trim() || null, name: form.name, slug: slugify(`${form.name} km ${form.sku || Date.now()}`), description: form.description || null, price: Number(form.price || 0), min_stock: Number(form.min_stock), max_stock: maxStock, category_id: form.category_id || null, image_url: form.image_url || null, needs_review: !form.category_id };
+    let packageQuantity: number | null;
+    try { packageQuantity = parsePackageQuantity(form.package_quantity); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "Geçersiz paket adedi"); return; }
+    const row = { sku: form.sku.trim() || null, name: form.name, slug: slugify(`${form.name} km ${form.sku || Date.now()}`), description: form.description || null, price: Number(form.price || 0), package_quantity: packageQuantity, min_stock: Number(form.min_stock), max_stock: maxStock, category_id: form.category_id || null, image_url: form.image_url || null, needs_review: !form.category_id };
     const res = form.id ? await supabase.from("products").update(row).eq("id", form.id).select("id").single() : await supabase.from("products").insert(row).select("id").single();
     if (res.error) { toast.error(res.error.message.includes("sku") ? "Bu KlipsMarket No başka bir üründe kullanılıyor" : res.error.message); return; }
     const id = res.data.id;
@@ -108,6 +113,7 @@ function AdminProducts() {
           <tbody>{list.slice(0, shown).map((p) => (
             <tr key={p.id} className="border-t align-top"><td className="font-oem p-2 text-xs font-semibold">{p.sku ?? "—"}</td>
               <td className="p-2 font-semibold">{p.name}<div className="text-xs font-normal text-muted-foreground">{p.category?.name ?? <span className="text-warning">Kontrol edilecek: ürün grubu yok</span>}</div></td>
+              
               <td className="font-oem p-2 text-xs">{p.oems.map((o) => o.oem).join(", ")}</td>
               <td className="p-2 text-xs">{supText(p.id).map((t) => <div key={t} className="font-oem whitespace-nowrap">{t}</div>)}</td>
               <td className="p-2 text-right whitespace-nowrap">{Number(p.price) > 0 ? money(p.price) : <span className="text-muted-foreground">—</span>}</td><td className="p-2 text-right">{p.stock}</td>
@@ -140,6 +146,7 @@ function AdminProducts() {
                 <div><Label htmlFor="product-max-stock">Max stok</Label><Input id="product-max-stock" type="number" min={Number(form.min_stock) || 0} step={1} placeholder="Belirlenmedi" value={form.max_stock} onChange={(e) => setForm({ ...form, max_stock: e.target.value })} /></div>
               </div>
               <div><Label>OEM numaraları (virgülle ayırın)</Label><Input className="font-oem" value={form.oems} onChange={(e) => setForm({ ...form, oems: e.target.value })} /></div>
+              <div><Label htmlFor="product-package-quantity">Paket içi adet</Label><Input id="product-package-quantity" type="number" min={1} step={1} placeholder="Belirlenmedi" value={form.package_quantity} onChange={(e) => setForm({ ...form, package_quantity: e.target.value })} /></div>
               <div>
                 <Label>Alındığı firmalar ve ürün kodları (yalnızca admin görür)</Label>
                 <div className="mt-1 grid gap-2 rounded-md border p-3 sm:grid-cols-2">
