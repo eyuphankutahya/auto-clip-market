@@ -29,6 +29,13 @@
       "when": 1794556550856,
       "tag": "0003_hardening_constraints_indexes_views",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794642065360,
+      "tag": "0004_owner_only_admin_signup",
+      "breakpoints": true
     }
   ]
 }
