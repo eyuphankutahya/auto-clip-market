@@ -21,7 +21,7 @@ function AlertSettings() {
   const [q, setQ] = useState(""); const [view, setView] = useState("all"); const [page, setPage] = useState(0);
   const { data } = useQuery({
     queryKey: ["alert-settings"],
-    queryFn: async () => (await fetchAll((a, b) => supabase.from("products").select("id,sku,name,stock,min_stock,stock_alert_enabled,stock_alert_threshold").order("id").range(a, b)) as Row[]).sort((x, y) => compareProductCodes(x.sku, y.sku)),
+    queryFn: async () => (await fetchAll((a, b) => supabase.from("products").select("id,sku,name,stock,min_stock,stock_alert_enabled,stock_alert_threshold").order("id").range(a, b)) as Row[]).sort((x, y) => compareProductCodes(x, y)),
   });
   const save = async (id: string, patch: Partial<Row>) => {
     const { error } = await supabase.from("products").update(patch).eq("id", id);
