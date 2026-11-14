@@ -1,4 +1,11 @@
 # Roadmap
+- [ ] Load only requested catalog page while preserving natural KM order, search and combined filters
+- [ ] Group admin navigation and paginate long stock/report lists
+- [ ] Add product photo uploads with original retention and clear optimized display variants
+- [ ] Add supplier-specific editable shortage purchase exports without stock mutations
+- [ ] Add atomic audited stock imports with conflict-safe rollback and idempotent orders
+- [ ] Hide missing contact details and improve product classification review
+- [ ] Complete authenticated regression checks for admin, customer and critical stock/order flows
 - [x] Add admin shortage list for depleted and below-minimum stock with supplier filtering and Excel export; verified through real admin session and temporary product
 - [x] Include every supplier and their stock codes in shortage screen and Excel export; two codes verified in downloaded workbook
 - [x] Add public contact form with stored messages and admin-only inbox; verified visitor submission, owner readback, mobile layout and privacy
