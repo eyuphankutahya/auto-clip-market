@@ -200,7 +200,7 @@ function AdminProducts() {
                   ))}
                 </div>
               </div>
-              <Button onClick={save} disabled={!form.name}>Kaydet</Button>
+              <Button onClick={save} disabled={!form.name || saving}>{saving ? "Kaydediliyor…" : "Kaydet"}</Button>
             </div>
           )}
         </DialogContent>
