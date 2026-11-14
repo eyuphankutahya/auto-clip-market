@@ -1,4 +1,8 @@
 # Roadmap
+- [ ] Improve admin navigation, page headings and desktop/mobile workspace
+- [ ] Add safe transactional product/order bulk actions with confirmation and verification
+- [ ] Add period comparison, product/customer sales and cari/payment analysis
+- [ ] Add admin-only immutable change history with before/after details and verify access
 - [x] Add and verify order date/status/customer filters and filtered-list/detail CSV exports with authenticated downloads and mobile layout
 - [x] Show cari history date, product code/name, purchased quantity, price and payment details
 - [x] Add clickable supplier choices (STAR, ATA and all suppliers) filtering shortage products and displaying only chosen supplier codes
