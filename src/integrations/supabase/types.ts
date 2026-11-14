@@ -185,6 +185,32 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_account_notes: {
+        Row: {
+          customer_account_id: string
+          notes: string
+          updated_at: string
+        }
+        Insert: {
+          customer_account_id: string
+          notes?: string
+          updated_at?: string
+        }
+        Update: {
+          customer_account_id?: string
+          notes?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_account_notes_customer_account_id_fkey"
+            columns: ["customer_account_id"]
+            isOneToOne: true
+            referencedRelation: "customer_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_accounts: {
         Row: {
           address: string | null
@@ -530,6 +556,7 @@ export type Database = {
           image_original_url: string | null
           image_thumbnail_url: string | null
           image_url: string | null
+          is_active: boolean
           max_stock: number | null
           min_stock: number
           name: string
@@ -551,6 +578,7 @@ export type Database = {
           image_original_url?: string | null
           image_thumbnail_url?: string | null
           image_url?: string | null
+          is_active?: boolean
           max_stock?: number | null
           min_stock?: number
           name: string
@@ -572,6 +600,7 @@ export type Database = {
           image_original_url?: string | null
           image_thumbnail_url?: string | null
           image_url?: string | null
+          is_active?: boolean
           max_stock?: number | null
           min_stock?: number
           name?: string
@@ -813,7 +842,12 @@ export type Database = {
         Returns: number
       }
       admin_period_analysis: {
-        Args: { _from: string; _previous_from: string; _to: string }
+        Args: {
+          _from: string
+          _limit?: number
+          _previous_from: string
+          _to: string
+        }
         Returns: Json
       }
       admin_save_product: {

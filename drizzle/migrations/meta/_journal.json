@@ -134,6 +134,13 @@
       "when": 1794650422730,
       "tag": "0018_safe_product_save_and_payment_once",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794650790911,
+      "tag": "0019_integrity_privacy_reports",
+      "breakpoints": true
     }
   ]
 }
