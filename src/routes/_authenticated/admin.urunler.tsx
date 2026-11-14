@@ -24,7 +24,7 @@ import { toggleSelection } from "@/lib/admin-rules";
 export const Route = createFileRoute("/_authenticated/admin/urunler")({ head: () => ({ meta: [{ title: "Ürün Yönetimi — KlipsMarket" }, { name: "description", content: "Klips kataloğu ve yöneticiye özel tedarikçi bilgileri." }, { property: "og:title", content: "Ürün Yönetimi — KlipsMarket" }, { property: "og:description", content: "Klips kataloğu ve yöneticiye özel tedarikçi bilgileri." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: AdminProducts });
 
 type SupRow = { on: boolean; code: string };
-type Form = { id?: string; sku: string; name: string; description: string; price: string; package_quantity: string; min_stock: string; max_stock: string; stock: number; origStock?: number; category_id: string; image_url: string; image_original_url?: string; image_thumbnail_url?: string; oems: string; brands: string[]; models: string[]; sups: Record<string, SupRow> };
+type Form = { id?: string; sku: string; name: string; description: string; price: string; package_quantity: string; min_stock: string; max_stock: string; stock: number; origStock?: number; revision?: number; category_id: string; image_url: string; image_original_url?: string; image_thumbnail_url?: string; oems: string; brands: string[]; models: string[]; sups: Record<string, SupRow> };
 const empty: Form = { sku: "", name: "", description: "", price: "", package_quantity: "", min_stock: "50", max_stock: "", stock: 0, category_id: "", image_url: "", oems: "", brands: [], models: [], sups: {} };
 
 // Admin-only: which suppliers sell each product and under which code. RLS lets only admins read this.
@@ -53,11 +53,12 @@ function AdminProducts() {
   const [quick,setQuick] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [bulk, setBulk] = useState(false);
+  const [saving, setSaving] = useState(false);
   const refresh = () => qc.invalidateQueries();
   const supName = (id: string) => sc?.suppliers.find((x) => x.id === id)?.name ?? "—";
 
   const edit = (p: CatalogProduct) => setForm({
-    id: p.id, sku: p.sku ?? "", name: p.name, description: p.description ?? "", price: String(p.price), min_stock: String(p.min_stock), max_stock: p.max_stock === null ? "" : String(p.max_stock), stock: p.stock, origStock: p.stock, category_id: p.category_id ?? "", image_url: p.image_url ?? "", image_original_url:p.image_original_url ?? "",image_thumbnail_url:p.image_thumbnail_url ?? "",
+    id: p.id, sku: p.sku ?? "", name: p.name, description: p.description ?? "", price: String(p.price), min_stock: String(p.min_stock), max_stock: p.max_stock === null ? "" : String(p.max_stock), stock: p.stock, origStock: p.stock, revision: Number(p.revision ?? 0), category_id: p.category_id ?? "", image_url: p.image_url ?? "", image_original_url:p.image_original_url ?? "",image_thumbnail_url:p.image_thumbnail_url ?? "",
     oems: p.oems.map((o) => o.oem).join(", "), brands: p.vehicles.filter((v) => !v.model_id).map((v) => v.brand_id), models: p.vehicles.flatMap((v) => v.model_id ? [v.model_id] : []),
     package_quantity: p.package_quantity === null ? "" : String(p.package_quantity),
     sups: (sc?.byProduct.get(p.id) ?? []).reduce<Record<string, SupRow>>((acc, c) => {
@@ -77,27 +78,26 @@ function AdminProducts() {
     try { packageQuantity = parsePackageQuantity(form.package_quantity); }
     catch (error) { toast.error(error instanceof Error ? error.message : "Geçersiz paket adedi"); return; }
     const row = { sku: form.sku.trim() || null, name: form.name, slug: slugify(`${form.name} km ${form.sku || Date.now()}`), description: form.description || null, price: Number(form.price || 0), package_quantity: packageQuantity, min_stock: Number(form.min_stock), max_stock: maxStock, category_id: form.category_id || null, image_url: form.image_url || null, image_original_url:form.image_original_url || null,image_thumbnail_url:form.image_thumbnail_url || null, needs_review: !form.category_id };
-    const res = form.id ? await supabase.from("products").update(row).eq("id", form.id).select("id").single() : await supabase.from("products").insert(row).select("id").single();
-    if (res.error) { toast.error(res.error.message.includes("sku") ? "Bu KlipsMarket No başka bir üründe kullanılıyor" : res.error.message); return; }
-    const id = res.data.id;
-    if (form.id && form.stock !== form.origStock) {
-      const { error: stockError } = await supabase.from("stock_adjustments").insert({ product_id: id, new_stock: form.stock, previous_stock: form.origStock ?? null, reason: "Ürün düzenleme ekranından stok düzeltme" });
-      if (stockError) { toast.error(stockError.message); return; }
-    }
-    const { error: supplierError } = await supabase.rpc("replace_product_supplier_codes", { _product_id: id, _codes: supplierCodeRows(form.sups) });
-    if (supplierError) { toast.error(supplierError.message); return; }
-    await supabase.from("product_oem_numbers").delete().eq("product_id", id);
-    await supabase.from("product_vehicles").delete().eq("product_id", id);
-    const oems = form.oems.split(/[,\n]/).map((s) => s.trim()).filter(Boolean).map((oem) => ({ product_id: id, oem }));
-    if (oems.length) await supabase.from("product_oem_numbers").insert(oems);
+    const oemList = [...new Set(form.oems.split(/[,\n]/).map((s) => s.trim()).filter(Boolean))];
     const veh = [
-      ...form.brands.map((b) => ({ product_id: id, brand_id: b, model_id: null })),
+      ...form.brands.map((b) => ({ brand_id: b, model_id: null as string | null })),
       ...form.models.flatMap((m) => {
         const model = data.models.find((x) => x.id === m);
-        return model ? [{ product_id: id, brand_id: model.brand_id, model_id: m }] : [];
+        return model ? [{ brand_id: model.brand_id, model_id: m }] : [];
       }),
     ];
-    if (veh.length) await supabase.from("product_vehicles").insert(veh);
+    const codes = supplierCodeRows(form.sups);
+    const skuMsg = (m: string) => m.includes("sku") ? "Bu KlipsMarket No başka bir üründe kullanılıyor" : m.includes("STALE_PRODUCT") ? "Ürün siz düzenlerken değişti (ör. sipariş onaylandı). Hiçbir değişiklik kaydedilmedi; pencereyi kapatıp tekrar açın." : m;
+    setSaving(true);
+    try {
+      if (form.id) {
+        const { error } = await supabase.rpc("admin_save_product", { _id: form.id, _expected_revision: form.revision ?? 0, _product: row, _stock: form.stock, _oems: oemList, _vehicles: veh, _codes: codes });
+        if (error) { toast.error(skuMsg(error.message)); if (error.message.includes("STALE_PRODUCT")) refresh(); return; }
+      } else {
+        const { error } = await supabase.rpc("create_admin_product", { _product: row, _oems: oemList, _vehicles: veh, _supplier_codes: codes, _initial_stock: form.stock });
+        if (error) { toast.error(skuMsg(error.message)); return; }
+      }
+    } finally { setSaving(false); }
     toast.success("Kaydedildi"); setForm(null); refresh();
   };
   const del = async (id: string) => { if (!confirm("Ürün silinsin mi?")) return; const { error } = await supabase.from("products").delete().eq("id", id); if (error) toast.error(error.message); else refresh(); };
@@ -200,7 +200,7 @@ function AdminProducts() {
                   ))}
                 </div>
               </div>
-              <Button onClick={save} disabled={!form.name}>Kaydet</Button>
+              <Button onClick={save} disabled={!form.name || saving}>{saving ? "Kaydediliyor…" : "Kaydet"}</Button>
             </div>
           )}
         </DialogContent>

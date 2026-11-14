@@ -40,3 +40,6 @@
 - [x] Forgot password + reset page
 - [ ] Fill real company info (unvan, adres, telefon, e-posta, WhatsApp, vergi, MERSİS) — waiting on user
 - [ ] Order emails (new order to admin, approval to customer) — waiting on user's email domain
+- [x] Atomic product edit save with stale-revision protection
+- [x] Duplicate payment prevention (button lock + request key)
+- [ ] Controlled corrections for approved orders/purchases, cart price re-confirmation, stock indicator naming, full report CSV, rollback of created products, internal cari notes, contact form rate limit

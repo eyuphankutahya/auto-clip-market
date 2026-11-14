@@ -23,6 +23,7 @@ export type Database = {
           id: string
           order_id: string | null
           payment_method: string | null
+          request_key: string | null
           type: string
         }
         Insert: {
@@ -33,6 +34,7 @@ export type Database = {
           id?: string
           order_id?: string | null
           payment_method?: string | null
+          request_key?: string | null
           type: string
         }
         Update: {
@@ -43,6 +45,7 @@ export type Database = {
           id?: string
           order_id?: string | null
           payment_method?: string | null
+          request_key?: string | null
           type?: string
         }
         Relationships: [
@@ -812,6 +815,18 @@ export type Database = {
       admin_period_analysis: {
         Args: { _from: string; _previous_from: string; _to: string }
         Returns: Json
+      }
+      admin_save_product: {
+        Args: {
+          _codes: Json
+          _expected_revision: number
+          _id: string
+          _oems: Json
+          _product: Json
+          _stock: number
+          _vehicles: Json
+        }
+        Returns: number
       }
       apply_import: {
         Args: { _creates: Json; _filename: string; _updates: Json }

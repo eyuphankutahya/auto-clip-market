@@ -17,15 +17,23 @@ function AccountDetail() {
   const { data: acc } = useQuery({ queryKey: ["account", id], queryFn: async () => (await supabase.from("customer_accounts").select("*").eq("id", id).single()).data });
   const [f, setF] = useState({ company_name: "", address: "", phone: "", notes: "", discount_rate: "0" });
   const [pay, setPay] = useState({ amount: "", method: "Havale", description: "" });
+  const [payKey, setPayKey] = useState(() => crypto.randomUUID());
+  const [paying, setPaying] = useState(false);
   useEffect(() => { if (acc) setF({ company_name: acc.company_name, address: acc.address ?? "", phone: acc.phone ?? "", notes: acc.notes ?? "", discount_rate: String(acc.discount_rate) }); }, [acc]);
   const save = async () => {
     const { error } = await supabase.from("customer_accounts").update({ ...f, discount_rate: Number(f.discount_rate) }).eq("id", id);
     if (error) toast.error(error.message); else { toast.success("Güncellendi"); qc.invalidateQueries(); }
   };
   const addPayment = async () => {
-    const { error } = await supabase.from("account_transactions").insert({ customer_account_id: id, type: "credit", amount: Number(pay.amount), payment_method: pay.method, description: pay.description || "Tahsilat" });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Tahsilat kaydedildi"); setPay({ amount: "", method: "Havale", description: "" }); qc.invalidateQueries();
+    if (paying) return;
+    setPaying(true);
+    try {
+      const { error } = await supabase.from("account_transactions").insert({ customer_account_id: id, type: "credit", amount: Number(pay.amount), payment_method: pay.method, description: pay.description || "Tahsilat", request_key: payKey });
+      // A unique-key conflict means this exact payment was already saved (e.g. retry after a lost response).
+      if (error && error.code !== "23505") { toast.error(error.message); return; }
+      toast.success(error ? "Bu tahsilat zaten kaydedilmişti" : "Tahsilat kaydedildi");
+      setPay({ amount: "", method: "Havale", description: "" }); setPayKey(crypto.randomUUID()); qc.invalidateQueries();
+    } finally { setPaying(false); }
   };
   if (!acc) return <p className="text-muted-foreground">Yükleniyor…</p>;
   return (
@@ -43,10 +51,10 @@ function AccountDetail() {
         </div>
         <div className="grid content-start gap-3 rounded-md border bg-card p-4">
           <h3 className="font-extrabold">Tahsilat gir</h3>
-          <div className="grid grid-cols-2 gap-3"><div><Label>Tutar (₺)</Label><Input type="number" step="0.01" value={pay.amount} onChange={(e) => setPay({ ...pay, amount: e.target.value })} /></div>
+          <div className="grid grid-cols-2 gap-3"><div><Label>Tutar (₺)</Label><Input type="number" step="0.01" value={pay.amount} onChange={(e) => { setPay({ ...pay, amount: e.target.value }); setPayKey(crypto.randomUUID()); }} /></div>
             <div><Label>Ödeme yöntemi</Label><select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={pay.method} onChange={(e) => setPay({ ...pay, method: e.target.value })}>{["Havale", "Nakit", "Kredi kartı", "Çek", "Senet"].map((m) => <option key={m}>{m}</option>)}</select></div></div>
           <div><Label>Açıklama</Label><Input value={pay.description} onChange={(e) => setPay({ ...pay, description: e.target.value })} /></div>
-          <Button onClick={addPayment} disabled={!(Number(pay.amount) > 0)}>Tahsilatı kaydet</Button>
+          <Button onClick={addPayment} disabled={paying || !(Number(pay.amount) > 0)}>{paying ? "Kaydediliyor…" : "Tahsilatı kaydet"}</Button>
         </div>
       </div>
       <CariStatement accountId={id} />

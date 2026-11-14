@@ -127,6 +127,13 @@
       "when": 1794649771346,
       "tag": "0017_admin_period_analytics",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794650422730,
+      "tag": "0018_safe_product_save_and_payment_once",
+      "breakpoints": true
     }
   ]
 }
