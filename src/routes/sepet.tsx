@@ -59,7 +59,7 @@ function Cart() {
         {items.map((i) => (
           <div key={i.product_id} className="flex items-center gap-4 p-4">
             <div className="flex-1 font-semibold">{i.name}<div className="text-sm font-normal text-muted-foreground">{money(discounted(i.price, rate))} / adet</div></div>
-            <Input type="number" min={1} value={i.quantity} onChange={(e) => setQty(i.product_id, Number(e.target.value))} className="w-24" />
+            <Input type="number" min={1} max={i.stock} value={i.quantity} onChange={(e) => setQty(i.product_id, Number(e.target.value))} className="w-24" />
             <div className="w-28 text-right font-bold">{money(discounted(i.price, rate) * i.quantity)}</div>
             <button onClick={() => remove(i.product_id)} aria-label="Kaldır" className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
           </div>
