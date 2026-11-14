@@ -50,6 +50,7 @@ function Shortages() {
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(0);
   const [exporting, setExporting] = useState(false);
+  const [quantities,setQuantities]=useState<Record<string,number>>({});
   const list = useMemo(() => data.products.filter((p) => {
     if (status === "empty" && p.stock !== 0) return false;
     if (status === "low" && p.stock === 0) return false;
@@ -67,8 +68,8 @@ function Shortages() {
         "KM No": p.sku ?? "", "Stok Açıklaması": p.name,
         "Durum": p.stock === 0 ? "Tükendi" : "Minimum altı",
         "Mevcut Stok": p.stock, "Min Stok": p.min_stock, "Max Stok": p.max_stock ?? "",
-        "Önerilen Alım Adedi": replenishmentQuantity(p),
-        "Tedarikçi ve Kodları": p.suppliers.map((s) => `${s.name}${s.code ? `: ${s.code}` : ""}`).join("\n"),
+        "Alım Adedi": quantities[p.id] ?? replenishmentQuantity(p),
+        "Tedarikçi ve Kodları": p.suppliers.filter(s=>!supplier || s.supplier_id===supplier).map((s) => `${s.name}${s.code ? `: ${s.code}` : ""}`).join("\n"),
       }));
       const sheet = XLSX.utils.json_to_sheet(rows);
       sheet["!cols"] = [{ wch: 12 }, { wch: 60 }, { wch: 18 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 23 }, { wch: 60 }];
@@ -110,7 +111,7 @@ function Shortages() {
               <td className="min-w-48 px-3 py-3 font-semibold">{p.name}</td>
               <td className={`whitespace-nowrap px-3 py-3 ${p.stock === 0 ? "text-destructive" : "text-warning"}`}>{p.stock === 0 ? "Tükendi" : "Minimum altı"}</td>
               <td className="px-3 py-3">{p.stock}</td><td className="whitespace-nowrap px-3 py-3">{p.min_stock} / {p.max_stock ?? "—"}</td>
-              <td className="px-3 py-3 font-semibold">{replenishmentQuantity(p) || "Belirlenmedi"}</td>
+              <td className="px-3 py-3"><Input aria-label={`${p.sku ?? p.name} alım adedi`} type="number" min={0} max={100000} step={1} className="w-24" value={quantities[p.id] ?? replenishmentQuantity(p)} onChange={e=>{const n=Number(e.target.value);if(Number.isInteger(n) && n>=0 && n<=100000)setQuantities(old=>({...old,[p.id]:n}));}}/></td>
               <td className="min-w-44 px-3 py-3">{p.suppliers.length ? p.suppliers.map((s, i) => <div key={`${s.supplier_id}-${i}`} className="break-words">{s.name}{s.code && <span className="font-oem text-xs"> · {s.code}</span>}</div>) : <span className="text-muted-foreground">Tedarikçi yok</span>}</td>
             </tr>)}</tbody>
           </table>

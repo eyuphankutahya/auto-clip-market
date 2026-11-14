@@ -56,7 +56,7 @@ function NewProductPage() {
     setBusy(true);
     try {
       const args = buildNewProductArgs(form, catalog.models);
-      const { error } = await supabase.rpc("create_admin_product", args);
+      const { error } = await supabase.rpc("create_product_with_photos", args);
       if (error) throw error;
       await qc.invalidateQueries();
       toast.success("Ürün ve tüm bağlantıları kaydedildi");
