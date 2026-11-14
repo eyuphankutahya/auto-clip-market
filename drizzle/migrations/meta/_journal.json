@@ -43,6 +43,13 @@
       "when": 1794642435458,
       "tag": "0005_multiple_supplier_codes_per_product",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794642633442,
+      "tag": "0006_product_max_stock",
+      "breakpoints": true
     }
   ]
 }

@@ -37,6 +37,7 @@ use the editor.
 - Supplier codes live in the admin-only `product_supplier_codes` table, never on `products` — public catalog reads must not expose them.
 - Supplier links permit multiple distinct codes per product/supplier; replace them through the admin-checked transactional RPC to avoid partial code deletion.
 - Brand/location filtering uses the pure `catalog-rules` helpers with regression tests — keeps listing intersections and multi-code parsing consistent.
+- Stock thresholds use shared validation and DB constraints; maximum stock is nullable and an inventory target, not a receipt restriction — preserves stock movement history.
 - Product lists are read with `fetchAll` (src/lib/fetch-all.ts) — the Data API caps responses at 1000 rows.
 - Company contact/legal details live only in `src/lib/company.ts`; footer, contact and legal pages read from it — one place to update.
 - Unbounded admin/customer lists page on the server with `Pager` (src/components/site/Pager.tsx) and `count: "exact"`; totals come from DB views (`account_balances`, `product_sales`) — avoids the 1000-row cap.

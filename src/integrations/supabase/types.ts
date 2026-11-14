@@ -358,6 +358,7 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          max_stock: number | null
           min_stock: number
           name: string
           needs_review: boolean
@@ -372,6 +373,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          max_stock?: number | null
           min_stock?: number
           name: string
           needs_review?: boolean
@@ -386,6 +388,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          max_stock?: number | null
           min_stock?: number
           name?: string
           needs_review?: boolean
