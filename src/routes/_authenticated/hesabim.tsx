@@ -1,3 +1,4 @@
+import type React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Package, ShoppingCart, MessageSquare, Building2, Mail, CalendarDays } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -48,7 +49,7 @@ function Account() {
           <QuickLink to="/iletisim" icon={<MessageSquare className="h-5 w-5" />} title="Bize ulaşın" text="Ürün veya sipariş sorularınız için yazın." />
         </div>
       </div>
-      {!account && type === "standard" && (
+      {!account && type === "regular" && (
         <section className="flex flex-col gap-3 rounded-md border border-accent/40 bg-secondary p-5 sm:flex-row sm:items-center">
           <Building2 className="h-8 w-8 shrink-0 text-accent" />
           <div className="flex-1"><div className="font-bold">Toplu alım mı yapıyorsunuz?</div><p className="text-sm text-muted-foreground">Firmanıza cari hesap açılırsa özel iskontolu fiyatlar görür, siparişlerinizi cari hesabınıza işletebilir ve bakiyenizi buradan takip edersiniz.</p></div>
