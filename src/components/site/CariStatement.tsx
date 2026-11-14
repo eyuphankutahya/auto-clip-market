@@ -33,7 +33,7 @@ export function CariStatement({ accountId }: { accountId: string }) {
   data.orders.forEach((o) => o.items.forEach((i) => { const c = bought.get(i.product_name) ?? { q: 0, t: 0 }; bought.set(i.product_name, { q: c.q + i.quantity, t: c.t + i.quantity * Number(i.unit_price) }); }));
   const payments = data.tx.filter((t) => t.type === "credit");
   const history = [
-    ...data.orders.map(order=>({id:order.id,date:order.created_at,name:order.items.length===1?order.items[0].product_name:`${order.items.length} kalem ürün`,quantity:order.items.reduce((t,i)=>t+i.quantity,0),price:Number(order.total),payment:"Cari borç",orderId:order.id as string|null,orderNo:order.order_no as number|null})),
+    ...data.orders.map(order=>({id:order.id,date:order.created_at,name:order.items.length===1?order.items[0]?.product_name ?? "Ürün":`${order.items.length} kalem ürün`,quantity:order.items.reduce((t,i)=>t+i.quantity,0),price:Number(order.total),payment:"Cari borç",orderId:order.id as string|null,orderNo:order.order_no as number|null})),
     ...payments.map(payment=>({id:payment.id,date:payment.created_at,name:payment.description ?? "Tahsilat",quantity:null,price:Number(payment.amount),payment:`${payment.payment_method ?? "Ödeme"} · Tahsilat`,orderId:null,orderNo:null}))
   ].sort((a,b)=>b.date.localeCompare(a.date));
   return (
