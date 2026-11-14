@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { catalogPageQuery } from "@/lib/catalog-page";
-import { useCart } from "@/lib/cart";
+import { clampQty, useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { discounted, isOrderable, money } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -52,8 +52,8 @@ function ProductPage() {
           <div className={p.stock > 0 ? "text-sm text-success" : "text-sm text-destructive"}>{p.stock > 0 ? `Stokta (${p.stock} adet)` : "Stokta yok"}</div>
         </div>
         <div className="mt-6 flex gap-2">
-          <Input type="number" min={1} value={qty} onChange={(e) => setQty(Math.max(1, Number(e.target.value)))} className="w-28" />
-          <Button size="lg" disabled={!isOrderable(p.price, p.stock)} onClick={() => { add({ product_id: p.id, name: p.name, price: Number(p.price) }, qty); toast.success("Sepete eklendi"); }}>Sepete ekle</Button>
+          <Input type="number" min={1} max={Math.max(1, p.stock)} value={qty} onChange={(e) => setQty(clampQty(Number(e.target.value), p.stock))} className="w-28" aria-label="Adet" />
+          <Button size="lg" disabled={!isOrderable(p.price, p.stock)} onClick={() => { if (add({ product_id: p.id, name: p.name, price: Number(p.price), stock: p.stock }, qty)) toast.success("Sepete eklendi"); else toast.error(`Stokta en fazla ${p.stock} adet var (sepetinizdekiler dahil)`); }}>Sepete ekle</Button>
         </div>
         <div className="mt-10">
           <h2 className="mb-3 text-lg font-extrabold">Uyumlu araçlar</h2>
