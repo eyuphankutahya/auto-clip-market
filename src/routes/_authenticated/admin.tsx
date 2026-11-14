@@ -18,7 +18,7 @@ const tabs = [
   { to: "/admin/siparisler", label: "Siparişler" },
   { to: "/admin/mesajlar", label: "İletişim Mesajları" },
   { to: "/admin/urunler", label: "Ürünler" },
-  { to: "/admin/eksik-stok","/admin/stok-uyarilari", label: "Eksik Stok Listesi" },
+  { to: "/admin/eksik-stok", label: "Eksik Stok Listesi" },
   { to: "/admin/stok-uyarilari", label: "Stok Uyarı Ayarları" },
   { to: "/admin/aktarim", label: "Toplu Stok Aktarımı" },
   { to: "/admin/cariler", label: "Cari Hesaplar" },
