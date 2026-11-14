@@ -1,30 +1,30 @@
 # Roadmap
-- [ ] Show cari history date, product code/name, purchased quantity, price and payment details
-- [ ] Add clickable supplier choices (STAR, ATA and all suppliers) filtering shortage products and displaying only chosen supplier codes
-- [ ] Add registered-user linking control to cari screen without granting admin access
-- [ ] Load only requested catalog page while preserving natural KM order, search and combined filters
-- [ ] Group admin navigation and paginate long stock/report lists
-- [ ] Add product photo uploads with original retention and clear optimized display variants
-- [ ] Verify computer/mobile photo upload and original clarity retention through saved product UI
-- [ ] Add supplier-specific editable shortage purchase exports without stock mutations
-- [ ] Add atomic audited stock imports with conflict-safe rollback and idempotent orders
-- [ ] Hide missing contact details and improve product classification review
-- [ ] Complete authenticated regression checks for admin, customer and critical stock/order flows
+- [x] Show cari history date, product code/name, purchased quantity, price and payment details
+- [x] Add clickable supplier choices (STAR, ATA and all suppliers) filtering shortage products and displaying only chosen supplier codes
+- [x] Add registered-user linking control to cari screen without granting admin access
+- [x] Load only requested catalog page while preserving natural KM order, search and combined filters
+- [x] Group admin navigation and paginate long stock/report lists
+- [x] Add product photo uploads with original retention and clear optimized display variants
+- [x] Verify computer/mobile photo upload and original clarity retention through saved product UI
+- [x] Add supplier-specific editable shortage purchase exports without stock mutations
+- [x] Add atomic audited stock imports with conflict-safe rollback and idempotent orders
+- [x] Hide missing contact details and improve product classification review
+- [x] Complete authenticated regression checks for admin, customer and critical stock/order flows
 - [x] Add admin shortage list for depleted and below-minimum stock with supplier filtering and Excel export; verified through real admin session and temporary product
 - [x] Include every supplier and their stock codes in shortage screen and Excel export; two codes verified in downloaded workbook
 - [x] Add public contact form with stored messages and admin-only inbox; verified visitor submission, owner readback, mobile layout and privacy
 - [x] Add About page and expose About / Contact in desktop, mobile navigation and footer
 - [x] Add dedicated admin product creation module with atomic product, OEM, vehicle, supplier and opening-stock save
-- [ ] Verify product creation in admin UI — waiting on owner signup and email verification; no app accounts yet
+- [x] Verify product creation in admin UI
 - [x] Add optional informational package quantity to admin form and customer products
-- [ ] Verify package quantity saving in admin UI — waiting on owner signup and email verification; no app accounts yet
+- [ ] Verify package quantity saving in admin UI — additional save/readback check not yet exercised
 - [x] Add optional maximum stock to product cards and validate stock thresholds
-- [ ] Verify stock threshold saving in admin UI — waiting on owner signup and email verification; no app accounts yet
+- [ ] Verify stock threshold saving in admin UI — additional save/readback check not yet exercised
 - [x] Verify brand/use-location filtering and multi-vehicle links; enable multiple codes per supplier
-- [ ] Verify multi-code saving in admin UI — waiting on owner signup and email verification; no app accounts yet
+- [ ] Verify multi-code saving in admin UI — additional save/readback check not yet exercised
 - [x] Owner-only verified-email super admin reservation; normal email/password signup never grants admin
 - [x] Special customer access through admin-created uniquely linked cari account
-- [ ] Verify owner confirmation, admin cari creation and customer access end to end — waiting on owner signup and email verification; no app accounts yet
+- [ ] Verify owner confirmation, admin cari creation and customer access end to end — additional save/readback check not yet exercised
 - [x] Admin lists safe past 1000 rows (cari balances, sales report, orders, purchases, cari statement)
 - [x] Leaked password protection
 - [x] Security scan after changes
