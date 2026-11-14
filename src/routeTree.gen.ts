@@ -21,6 +21,7 @@ import { Route as SifreSifirlaRouteImport } from './routes/sifre-sifirla'
 import { Route as SiparisKosullariRouteImport } from './routes/siparis-kosullari'
 import { Route as UrunlerRouteImport } from './routes/urunler'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedCariHesabimRouteImport } from './routes/_authenticated/cari-hesabim'
 import { Route as AuthenticatedHesabimRouteImport } from './routes/_authenticated/hesabim'
 import { Route as UrunSlugRouteImport } from './routes/urun.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -93,6 +94,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCariHesabimRoute =
+  AuthenticatedCariHesabimRouteImport.update({
+    id: '/cari-hesabim',
+    path: '/cari-hesabim',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedHesabimRoute = AuthenticatedHesabimRouteImport.update({
   id: '/hesabim',
   path: '/hesabim',
@@ -175,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/siparis-kosullari': typeof SiparisKosullariRoute
   '/urunler': typeof UrunlerRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/cari-hesabim': typeof AuthenticatedCariHesabimRoute
   '/hesabim': typeof AuthenticatedHesabimRoute
   '/urun/$slug': typeof UrunSlugRoute
   '/admin/aktarim': typeof AuthenticatedAdminAktarimRoute
@@ -199,6 +207,7 @@ export interface FileRoutesByTo {
   '/sifre-sifirla': typeof SifreSifirlaRoute
   '/siparis-kosullari': typeof SiparisKosullariRoute
   '/urunler': typeof UrunlerRoute
+  '/cari-hesabim': typeof AuthenticatedCariHesabimRoute
   '/hesabim': typeof AuthenticatedHesabimRoute
   '/urun/$slug': typeof UrunSlugRoute
   '/admin/aktarim': typeof AuthenticatedAdminAktarimRoute
@@ -226,6 +235,7 @@ export interface FileRoutesById {
   '/siparis-kosullari': typeof SiparisKosullariRoute
   '/urunler': typeof UrunlerRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/_authenticated/cari-hesabim': typeof AuthenticatedCariHesabimRoute
   '/_authenticated/hesabim': typeof AuthenticatedHesabimRoute
   '/urun/$slug': typeof UrunSlugRoute
   '/_authenticated/admin/aktarim': typeof AuthenticatedAdminAktarimRoute
@@ -253,6 +263,7 @@ export interface FileRouteTypes {
     | '/siparis-kosullari'
     | '/urunler'
     | '/admin'
+    | '/cari-hesabim'
     | '/hesabim'
     | '/urun/$slug'
     | '/admin/aktarim'
@@ -277,6 +288,7 @@ export interface FileRouteTypes {
     | '/sifre-sifirla'
     | '/siparis-kosullari'
     | '/urunler'
+    | '/cari-hesabim'
     | '/hesabim'
     | '/urun/$slug'
     | '/admin/aktarim'
@@ -303,6 +315,7 @@ export interface FileRouteTypes {
     | '/siparis-kosullari'
     | '/urunler'
     | '/_authenticated/admin'
+    | '/_authenticated/cari-hesabim'
     | '/_authenticated/hesabim'
     | '/urun/$slug'
     | '/_authenticated/admin/aktarim'
@@ -416,6 +429,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cari-hesabim': {
+      id: '/_authenticated/cari-hesabim'
+      path: '/cari-hesabim'
+      fullPath: '/cari-hesabim'
+      preLoaderRoute: typeof AuthenticatedCariHesabimRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/hesabim': {
@@ -536,11 +556,13 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+  AuthenticatedCariHesabimRoute: typeof AuthenticatedCariHesabimRoute
   AuthenticatedHesabimRoute: typeof AuthenticatedHesabimRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+  AuthenticatedCariHesabimRoute: AuthenticatedCariHesabimRoute,
   AuthenticatedHesabimRoute: AuthenticatedHesabimRoute,
 }
 
