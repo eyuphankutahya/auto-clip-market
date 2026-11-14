@@ -4,9 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { date, money } from "@/lib/format";
 import { fetchAll } from "@/lib/fetch-all";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
-const STATUS: Record<string,string> = { pending:"Bekliyor", approved:"Onaylandı", shipped:"Kargolandı", cancelled:"İptal" };
+import { OrderDialog } from "@/components/site/OrderDialog";
 
 export function useCariData(accountId: string) {
   return useQuery({
@@ -83,24 +81,4 @@ export function Stat({ label, value, tone = "" }: { label: string; value: string
   return <div className="rounded-md border bg-card p-4"><div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</div><div className={`mt-1 font-display text-2xl font-extrabold ${tone}`}>{value}</div></div>;
 }
 
-type CariOrder = NonNullable<ReturnType<typeof useCariData>["data"]>["orders"][number];
-function OrderDialog({ order, onClose }: { order: CariOrder | null; onClose: () => void }) {
-  return (
-    <Dialog open={!!order} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl">
-        {order && <>
-          <DialogHeader><DialogTitle>Sipariş #{order.order_no}</DialogTitle></DialogHeader>
-          <div className="grid gap-2 text-sm sm:grid-cols-3">
-            <div><span className="text-muted-foreground">Tarih:</span> {date(order.created_at)}</div>
-            <div><span className="text-muted-foreground">Durum:</span> {STATUS[order.status] ?? order.status}</div>
-            <div><span className="text-muted-foreground">İskonto:</span> %{Number(order.discount_rate)}</div>
-          </div>
-          {order.notes && <p className="rounded-md bg-secondary p-3 text-sm"><span className="font-semibold">Not:</span> {order.notes}</p>}
-          <div className="max-h-[50vh] overflow-auto border"><table className="w-full text-sm"><thead className="bg-secondary text-left"><tr><th className="p-2">KM No</th><th className="p-2">Ürün</th><th className="p-2 text-right">Adet</th><th className="p-2 text-right">Birim</th><th className="p-2 text-right">Tutar</th></tr></thead>
-            <tbody>{order.items.map(i => <tr key={i.id} className="border-t"><td className="p-2 font-oem">{i.product?.sku ?? "—"}</td><td className="p-2">{i.product_name}</td><td className="p-2 text-right">{i.quantity}</td><td className="whitespace-nowrap p-2 text-right">{money(i.unit_price)}</td><td className="whitespace-nowrap p-2 text-right">{money(i.quantity * Number(i.unit_price))}</td></tr>)}</tbody></table></div>
-          <div className="text-right font-display text-lg font-extrabold">Toplam: {money(order.total)}</div>
-        </>}
-      </DialogContent>
-    </Dialog>
-  );
-}
+
