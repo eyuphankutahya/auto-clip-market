@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Download, FileUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { catalogQuery } from "@/lib/catalog";
+import { compareProductCodes } from "@/lib/catalog-rules";
 import { money, slugify } from "@/lib/format";
 import { buildPlan, detectColumns, type Columns, type ImportRow, type Plan } from "@/lib/stock-import";
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,7 @@ function StockImport() {
   const template = async () => {
     if (!cat) return;
     const XLSX = await import("xlsx");
-    const data = [...cat.products].sort((a, b) => (a.sku ?? "").localeCompare(b.sku ?? "", "tr", { numeric: true }))
+    const data = [...cat.products].sort(compareProductCodes)
       .map((p) => ({ "KM No": p.sku ?? "", "Stok Açıklaması": p.name, "Stok Adedi": p.stock, "Satış Fiyatı": Number(p.price) || "" }));
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(data);

@@ -3,6 +3,16 @@ type LinkedProduct = {
   vehicles: { brand_id: string; model_id: string | null }[];
 };
 
+const codeCollator = new Intl.Collator("tr", { numeric: true, sensitivity: "base" });
+
+export function compareProductCodes(a: { sku: string | null; id: string }, b: { sku: string | null; id: string }) {
+  const left = a.sku?.trim() ?? "";
+  const right = b.sku?.trim() ?? "";
+  if (!left && right) return 1;
+  if (left && !right) return -1;
+  return codeCollator.compare(left, right) || a.id.localeCompare(b.id);
+}
+
 export function matchesCatalogFilters(
   product: LinkedProduct,
   filters: { category?: string | undefined; brandId?: string | undefined; modelId?: string | undefined },

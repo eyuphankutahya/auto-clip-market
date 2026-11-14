@@ -6,6 +6,7 @@ import { Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { date, money } from "@/lib/format";
 import { fetchAll } from "@/lib/fetch-all";
+import { compareProductCodes } from "@/lib/catalog-rules";
 import { Pager, PAGE_SIZE } from "@/components/site/Pager";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +27,7 @@ function Purchases() {
         supabase.from("suppliers").select("*").order("name"),
         fetchAll((from, to) => supabase.from("products").select("id,name,sku").order("name").order("id").range(from, to)),
       ]);
-      return { suppliers: s.data ?? [], products: p };
+      return { suppliers: s.data ?? [], products: p.sort(compareProductCodes) };
     },
   });
   const { data: list } = useQuery({
