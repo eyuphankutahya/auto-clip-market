@@ -53,7 +53,7 @@ export function CariStatement({ accountId }: { accountId: string }) {
           <tbody>
             {data.tx.length === 0 && <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">Hareket yok</td></tr>}
             {data.tx.map((t) => { run += t.type === "debit" ? Number(t.amount) : -Number(t.amount); return (
-              <tr key={t.id} className="border-t"><td className="p-2">{date(t.created_at)}</td><td className="p-2">{t.description}{t.payment_method && ` (${t.payment_method})`}</td>
+              <tr key={t.id} className="border-t"><td className="p-2">{date(t.created_at)}</td><td className="p-2">{t.order_id && data.orders.some(o=>o.id===t.order_id) ? <button type="button" onClick={()=>setOpenOrder(t.order_id)} className="font-semibold text-primary underline underline-offset-2 hover:opacity-80">{t.description}</button> : t.description}{t.payment_method && ` (${t.payment_method})`}</td>
                 <td className="p-2 text-right">{t.type === "debit" ? money(t.amount) : ""}</td><td className="p-2 text-right">{t.type === "credit" ? money(t.amount) : ""}</td><td className="p-2 text-right font-semibold">{money(run)}</td></tr>
             ); })}
           </tbody>
