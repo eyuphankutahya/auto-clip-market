@@ -8,6 +8,7 @@ import { catalogQuery } from "@/lib/catalog";
 import { compareProductCodes } from "@/lib/catalog-rules";
 import { money, slugify } from "@/lib/format";
 import { buildPlan, detectColumns, type Columns, type ImportRow, type Plan } from "@/lib/stock-import";
+import { ImportHistory } from "@/components/site/ImportHistory";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
@@ -63,27 +64,13 @@ function StockImport() {
     setBusy(true);
     const reason = `Toplu aktarım: ${file}`;
     try {
-      // New product cards
-      for (const part of chunks(plan.creates, 200)) {
-        const { data, error } = await supabase.from("products").insert(part.map((c) => ({ sku: c.sku, name: c.name, slug: slugify(`${c.name} km ${c.sku}`), price: c.price, needs_review: true }))).select("id, sku");
-        if (error) throw error;
-        const adj = part.filter((c) => c.stock > 0).map((c) => ({ product_id: data.find((d) => d.sku === c.sku)!.id, new_stock: c.stock, reason }));
-        if (adj.length) { const r = await supabase.from("stock_adjustments").insert(adj); if (r.error) throw r.error; }
-      }
-      // Stock counts (a trigger writes the new stock onto the product)
-      const stockRows = plan.updates.filter((u) => u.stock !== undefined).map((u) => ({ product_id: u.id, new_stock: u.stock!, reason }));
-      for (const part of chunks(stockRows, 500)) { const r = await supabase.from("stock_adjustments").insert(part); if (r.error) throw r.error; }
-      // Prices
-      const priceRows = plan.updates.filter((u) => u.price !== undefined);
-      for (const part of chunks(priceRows, 10)) {
-        const res = await Promise.all(part.map((u) => supabase.from("products").update({ price: u.price! }).eq("id", u.id)));
-        const err = res.find((r) => r.error)?.error; if (err) throw err;
-      }
+      const { error } = await supabase.rpc("apply_import", { _filename: file, _updates: plan.updates.map(u => ({ id: u.id, revision: u.revision, ...(u.stock === undefined ? {} : { stock: u.stock }), ...(u.price === undefined ? {} : { price: u.price }) })), _creates: plan.creates });
+      if (error) throw error;
       toast.success(`Aktarım tamam: ${plan.updates.length} ürün güncellendi, ${plan.creates.length} yeni kart açıldı`);
       setRows([]); setFile("");
       qc.invalidateQueries();
     } catch (e) {
-      toast.error(`Aktarım yarıda kaldı: ${(e as Error).message}`);
+      toast.error(`Aktarım uygulanmadı: ${(e as Error).message}`);
       qc.invalidateQueries();
     } finally { setBusy(false); }
   };
@@ -155,6 +142,7 @@ function StockImport() {
       </section>
 
       <aside>
+        <ImportHistory />
         <h3 className="mb-2 font-extrabold">Son stok hareketleri</h3>
         <div className="max-h-[640px] overflow-y-auto rounded-md border bg-card">
           <table className="w-full text-xs">

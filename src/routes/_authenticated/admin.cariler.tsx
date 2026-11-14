@@ -22,6 +22,7 @@ function Accounts() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [userSearch,setUserSearch] = useState("");
   const [f, setF] = useState({ user_id: "", company_name: "", address: "", phone: "", notes: "", discount_rate: "0" });
   const { data } = useQuery({
     queryKey: ["admin-accounts"],
@@ -47,7 +48,7 @@ function Accounts() {
   };
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between"><h2 className="font-extrabold">Cari hesaplar</h2><Button size="sm" onClick={() => setOpen(true)}><Plus className="h-4 w-4" />Cari hesap aç</Button></div>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><h2 className="font-extrabold">Cari hesaplar</h2><div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => setOpen(true)}><Plus className="h-4 w-4" />Kullanıcı ekle</Button><Button size="sm" onClick={() => setOpen(true)}><Plus className="h-4 w-4" />Cari hesap aç</Button></div></div>
       <table className="w-full rounded-md border bg-card text-sm">
         <thead className="bg-secondary text-left"><tr><th className="p-2">Firma</th><th className="p-2">Kullanıcı</th><th className="p-2">Telefon</th><th className="p-2 text-right">İskonto</th><th className="p-2 text-right">Bakiye</th></tr></thead>
         <tbody>
@@ -66,10 +67,11 @@ function Accounts() {
         <DialogContent>
           <DialogHeader><DialogTitle>Özel müşteri / Cari hesap aç</DialogTitle></DialogHeader>
           <div className="grid gap-3">
+            <div><Label htmlFor="cari-user-search">Kullanıcı ara</Label><Input id="cari-user-search" placeholder="E-posta veya ad soyad" value={userSearch} maxLength={200} onChange={e=>setUserSearch(e.target.value)}/></div>
             <div><Label>Kullanıcı (sisteme kayıtlı)</Label>
-              <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f.user_id} onChange={(e) => setF({ ...f, user_id: e.target.value })}>
+              <select aria-label="Cari kullanıcı seçimi" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f.user_id} onChange={(e) => setF({ ...f, user_id: e.target.value })}>
                 <option value="">Kullanıcı seçin</option>
-                {data?.profiles.filter((p) => !used.has(p.id)).map((p) => <option key={p.id} value={p.id}>{p.email}{p.full_name ? ` (${p.full_name})` : ""}</option>)}
+                {data?.profiles.filter((p) => !used.has(p.id) && `${p.email} ${p.full_name ?? ""}`.toLocaleLowerCase("tr").includes(userSearch.toLocaleLowerCase("tr"))).map((p) => <option key={p.id} value={p.id}>{p.email}{p.full_name ? ` (${p.full_name})` : ""}</option>)}
               </select></div>
             <div><Label>Firma adı</Label><Input value={f.company_name} onChange={(e) => setF({ ...f, company_name: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">

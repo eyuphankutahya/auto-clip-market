@@ -16,6 +16,8 @@ export type NewProductForm = {
   package_quantity: string;
   category_id: string;
   image_url: string;
+  image_original_url?: string;
+  image_thumbnail_url?: string;
   oems: string;
   brands: string[];
   models: string[];
@@ -62,6 +64,7 @@ export function buildNewProductArgs(
     _product: {
       sku: form.sku.trim(), name, slug: slugify(`${name} ${form.sku.trim() || Date.now()}`),
       description: form.description.trim(), image_url: form.image_url.trim(), price,
+      image_original_url: form.image_original_url ?? null, image_thumbnail_url: form.image_thumbnail_url ?? null,
       min_stock: minStock, max_stock: maxStock,
       package_quantity: parsePackageQuantity(form.package_quantity),
       category_id: form.category_id || null,

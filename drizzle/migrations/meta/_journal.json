@@ -78,6 +78,34 @@
       "when": 1794644015432,
       "tag": "0010_contact_submission_least_privilege",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794645354083,
+      "tag": "0011_catalog_pages_and_safe_operations",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794645381283,
+      "tag": "0012_atomic_import_and_rollback",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794645501380,
+      "tag": "0013_product_photo_metadata_creation",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794645818442,
+      "tag": "0014_photo_upload_metadata_validation",
+      "breakpoints": true
     }
   ]
 }

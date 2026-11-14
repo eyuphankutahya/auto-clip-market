@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Mail, MapPin, MessageCircle, Phone, Clock } from "lucide-react";
-import { COMPANY, show, whatsappUrl } from "@/lib/company";
+import { COMPANY, whatsappUrl } from "@/lib/company";
 import { ContactForm } from "@/components/site/ContactForm";
 
 const TITLE = "İletişim — KlipsMarket";
@@ -27,16 +27,14 @@ function Contact() {
       <p className="mt-2 text-muted-foreground">Ürün, fiyat, cari hesap ve toplu alım için bize ulaşın.</p>
       <ContactForm />
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
-        <Row icon={Phone} label="Telefon">{COMPANY.phone ? <a href={`tel:${COMPANY.phone.replace(/\s/g, "")}`} className="hover:underline">{COMPANY.phone}</a> : show(null)}</Row>
-        <Row icon={Mail} label="E-posta">{COMPANY.email ? <a href={`mailto:${COMPANY.email}`} className="hover:underline">{COMPANY.email}</a> : show(null)}</Row>
-        <Row icon={MessageCircle} label="WhatsApp">{COMPANY.whatsapp ? <a href={whatsappUrl(COMPANY.whatsapp)} target="_blank" rel="noopener noreferrer" className="hover:underline">WhatsApp'tan yazın</a> : show(null)}</Row>
-        <Row icon={Clock} label="Çalışma saatleri">{show(COMPANY.hours)}</Row>
-        <div className="sm:col-span-2"><Row icon={MapPin} label="Adres">{show(COMPANY.address)}</Row></div>
+        {COMPANY.phone && <Row icon={Phone} label="Telefon"><a href={`tel:${COMPANY.phone.replace(/\s/g, "")}`}>{COMPANY.phone}</a></Row>}
+        {COMPANY.email && <Row icon={Mail} label="E-posta"><a href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a></Row>}
+        {COMPANY.whatsapp && <Row icon={MessageCircle} label="WhatsApp"><a href={whatsappUrl(COMPANY.whatsapp)} target="_blank" rel="noopener noreferrer">WhatsApp'tan yazın</a></Row>}
+        {COMPANY.hours && <Row icon={Clock} label="Çalışma saatleri">{COMPANY.hours}</Row>}
+        {COMPANY.address && <div className="sm:col-span-2"><Row icon={MapPin} label="Adres">{COMPANY.address}</Row></div>}
       </div>
-      <div className="mt-8 rounded-md border bg-secondary p-4 text-sm">
-        <div className="font-semibold">Firma bilgileri</div>
-        <div className="mt-1 text-muted-foreground">Unvan: {show(COMPANY.legalName)} · Vergi dairesi: {show(COMPANY.taxOffice)} · Vergi no: {show(COMPANY.taxNumber)} · MERSİS: {show(COMPANY.mersis)}</div>
-      </div>
+      {COMPANY.legalName && <section className="mt-8 border-t pt-4 text-sm"><h2 className="font-semibold">Firma bilgileri</h2><p>{COMPANY.legalName}</p>{COMPANY.taxOffice && <p>Vergi dairesi: {COMPANY.taxOffice}</p>}{COMPANY.taxNumber && <p>Vergi no: {COMPANY.taxNumber}</p>}{COMPANY.mersis && <p>MERSİS: {COMPANY.mersis}</p>}</section>}
+
     </div>
   );
 }

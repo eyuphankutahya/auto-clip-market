@@ -10,6 +10,8 @@ import { supplierCodeRows } from "@/lib/catalog-rules";
 import { validateStockLimits } from "@/lib/stock-limits";
 import { parsePackageQuantity } from "@/lib/package-quantity";
 import { money, slugify } from "@/lib/format";
+import { ProductPhotoUpload } from "@/components/site/ProductPhotoUpload";
+import { Pager, PAGE_SIZE } from "@/components/site/Pager";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 export const Route = createFileRoute("/_authenticated/admin/urunler")({ head: () => ({ meta: [{ title: "Ürün Yönetimi — KlipsMarket" }, { name: "description", content: "Klips kataloğu ve yöneticiye özel tedarikçi bilgileri." }, { property: "og:title", content: "Ürün Yönetimi — KlipsMarket" }, { property: "og:description", content: "Klips kataloğu ve yöneticiye özel tedarikçi bilgileri." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: AdminProducts });
 
 type SupRow = { on: boolean; code: string };
-type Form = { id?: string; sku: string; name: string; description: string; price: string; package_quantity: string; min_stock: string; max_stock: string; stock: number; category_id: string; image_url: string; oems: string; brands: string[]; models: string[]; sups: Record<string, SupRow> };
+type Form = { id?: string; sku: string; name: string; description: string; price: string; package_quantity: string; min_stock: string; max_stock: string; stock: number; category_id: string; image_url: string; image_original_url?: string; image_thumbnail_url?: string; oems: string; brands: string[]; models: string[]; sups: Record<string, SupRow> };
 const empty: Form = { sku: "", name: "", description: "", price: "", package_quantity: "", min_stock: "50", max_stock: "", stock: 0, category_id: "", image_url: "", oems: "", brands: [], models: [], sups: {} };
 
 // Admin-only: which suppliers sell each product and under which code. RLS lets only admins read this.
@@ -43,12 +45,13 @@ function AdminProducts() {
   const [form, setForm] = useState<Form | null>(null);
   const [q, setQ] = useState("");
   const [review, setReview] = useState(false);
-  const [shown, setShown] = useState(100);
+  const [page, setPage] = useState(0);
+  const [missing,setMissing] = useState("all");
   const refresh = () => qc.invalidateQueries();
   const supName = (id: string) => sc?.suppliers.find((x) => x.id === id)?.name ?? "—";
 
   const edit = (p: CatalogProduct) => setForm({
-    id: p.id, sku: p.sku ?? "", name: p.name, description: p.description ?? "", price: String(p.price), min_stock: String(p.min_stock), max_stock: p.max_stock === null ? "" : String(p.max_stock), stock: p.stock, category_id: p.category_id ?? "", image_url: p.image_url ?? "",
+    id: p.id, sku: p.sku ?? "", name: p.name, description: p.description ?? "", price: String(p.price), min_stock: String(p.min_stock), max_stock: p.max_stock === null ? "" : String(p.max_stock), stock: p.stock, category_id: p.category_id ?? "", image_url: p.image_url ?? "", image_original_url:p.image_original_url ?? "",image_thumbnail_url:p.image_thumbnail_url ?? "",
     oems: p.oems.map((o) => o.oem).join(", "), brands: p.vehicles.filter((v) => !v.model_id).map((v) => v.brand_id), models: p.vehicles.flatMap((v) => v.model_id ? [v.model_id] : []),
     package_quantity: p.package_quantity === null ? "" : String(p.package_quantity),
     sups: (sc?.byProduct.get(p.id) ?? []).reduce<Record<string, SupRow>>((acc, c) => {
@@ -66,7 +69,7 @@ function AdminProducts() {
     let packageQuantity: number | null;
     try { packageQuantity = parsePackageQuantity(form.package_quantity); }
     catch (error) { toast.error(error instanceof Error ? error.message : "Geçersiz paket adedi"); return; }
-    const row = { sku: form.sku.trim() || null, name: form.name, slug: slugify(`${form.name} km ${form.sku || Date.now()}`), description: form.description || null, price: Number(form.price || 0), package_quantity: packageQuantity, min_stock: Number(form.min_stock), max_stock: maxStock, category_id: form.category_id || null, image_url: form.image_url || null, needs_review: !form.category_id };
+    const row = { sku: form.sku.trim() || null, name: form.name, slug: slugify(`${form.name} km ${form.sku || Date.now()}`), description: form.description || null, price: Number(form.price || 0), package_quantity: packageQuantity, min_stock: Number(form.min_stock), max_stock: maxStock, category_id: form.category_id || null, image_url: form.image_url || null, image_original_url:form.image_original_url || null,image_thumbnail_url:form.image_thumbnail_url || null, needs_review: !form.category_id };
     const res = form.id ? await supabase.from("products").update(row).eq("id", form.id).select("id").single() : await supabase.from("products").insert(row).select("id").single();
     if (res.error) { toast.error(res.error.message.includes("sku") ? "Bu KlipsMarket No başka bir üründe kullanılıyor" : res.error.message); return; }
     const id = res.data.id;
@@ -92,6 +95,9 @@ function AdminProducts() {
   const supText = (pid: string) => (sc?.byProduct.get(pid) ?? []).map((c) => `${supName(c.supplier_id)}${c.code ? ` ${c.code}` : ""}`);
   const list = (data?.products ?? []).filter((p) => {
     if (review && !p.needs_review) return false;
+    if(missing === "category" && p.category_id) return false;
+    if(missing === "vehicles" && p.vehicles.length) return false;
+    if(missing === "photos" && p.image_url) return false;
     if (!q) return true;
     if (matchesSearch(p, q)) return true;
     const n = q.toLocaleLowerCase("tr").replace(/\s/g, "");
@@ -104,13 +110,14 @@ function AdminProducts() {
       <section className="min-w-0">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 className="font-extrabold">Ürünler <span className="text-sm font-normal text-muted-foreground">({list.length})</span></h2><Button size="sm" asChild><Link to="/admin/urun-ekle"><Plus className="h-4 w-4" />Yeni ürün</Link></Button></div>
         <div className="mb-3 flex flex-wrap items-center gap-3">
-          <Input value={q} onChange={(e) => { setQ(e.target.value); setShown(100); }} placeholder="KM No, ürün adı, OEM veya firma kodu" className="max-w-sm" />
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={review} onChange={(e) => { setReview(e.target.checked); setShown(100); }} />Sadece kontrol edilecekler ({reviewCount})</label>
+          <Input value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} placeholder="KM No, ürün adı, OEM veya firma kodu" className="max-w-sm" />
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={review} onChange={(e) => { setReview(e.target.checked); setPage(0); }} />Sadece kontrol edilecekler ({reviewCount})</label>
         </div>
+        <select aria-label="Eksik bilgi filtresi" className="mb-3 rounded-md border bg-background p-2 text-sm" value={missing} onChange={e=>{setMissing(e.target.value);setPage(0);}}><option value="all">Tüm bilgiler</option><option value="category">Kategorisi eksik</option><option value="vehicles">Araç uyumu eksik</option><option value="photos">Fotoğrafı eksik</option></select>
         <div className="overflow-x-auto rounded-md border">
         <table className="w-full bg-card text-sm">
           <thead className="bg-secondary text-left"><tr><th className="p-2">KM No</th><th className="p-2">Ürün</th><th className="p-2">OEM</th><th className="p-2">Alındığı firmalar / kod</th><th className="p-2 text-right">Fiyat</th><th className="p-2 text-right">Stok</th><th className="p-2 text-right">Min / Max</th><th /></tr></thead>
-          <tbody>{list.slice(0, shown).map((p) => (
+          <tbody>{list.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((p) => (
             <tr key={p.id} className="border-t align-top"><td className="font-oem p-2 text-xs font-semibold">{p.sku ?? "—"}</td>
               <td className="p-2 font-semibold">{p.name}<div className="text-xs font-normal text-muted-foreground">{p.category?.name ?? <span className="text-warning">Kontrol edilecek: ürün grubu yok</span>}</div></td>
               
@@ -122,7 +129,7 @@ function AdminProducts() {
           ))}</tbody>
         </table>
         </div>
-        {list.length > shown && <div className="mt-3 text-center"><Button variant="outline" size="sm" onClick={() => setShown(shown + 100)}>Daha fazla göster ({list.length - shown})</Button></div>}
+        <Pager page={page} total={list.length} onChange={setPage} />
         <p className="mt-2 text-xs text-muted-foreground">Alındığı firmalar ve kodları yalnızca yönetim panelinde görünür, müşteriler göremez. Stok, "Alımlar" sekmesinden alım girildiğinde artar, sipariş onaylandığında düşer; toplu sayım için "Toplu Stok Aktarımı" sekmesini kullanın.</p>
       </section>
       <aside className="space-y-6"><CatalogLists onChange={refresh} /></aside>
@@ -162,7 +169,7 @@ function AdminProducts() {
                   })}
                 </div>
               </div>
-              <div><Label>Görsel adresi (isteğe bağlı)</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} /></div>
+              <div><Label>Ürün fotoğrafı</Label><ProductPhotoUpload onChange={photos=>setForm({...form,...photos})}/><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value,image_original_url:"",image_thumbnail_url:"" })} /></div>
               <div><Label>Açıklama</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
               <div>
                 <Label>Uyumlu araçlar</Label>

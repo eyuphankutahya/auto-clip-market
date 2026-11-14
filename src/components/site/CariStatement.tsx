@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Pager, PAGE_SIZE } from "@/components/site/Pager";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { date, money } from "@/lib/format";
@@ -9,7 +11,7 @@ export function useCariData(accountId: string) {
     queryFn: async () => {
       const [tx, orders] = await Promise.all([
         fetchAll((from, to) => supabase.from("account_transactions").select("*").eq("customer_account_id", accountId).order("created_at").order("id").range(from, to)),
-        fetchAll((from, to) => supabase.from("orders").select("id, order_no, status, created_at, items:order_items(product_name, quantity, unit_price)").eq("customer_account_id", accountId).in("status", ["approved", "shipped"]).order("created_at").order("id").range(from, to), 200),
+        fetchAll((from, to) => supabase.from("orders").select("id, order_no, status, created_at, items:order_items(id, product_id, product_name, quantity, unit_price,product:products(sku))").eq("customer_account_id", accountId).in("status", ["approved", "shipped"]).order("created_at").order("id").range(from, to), 200),
       ]);
       return { tx, orders };
     },
@@ -18,6 +20,7 @@ export function useCariData(accountId: string) {
 
 export function CariStatement({ accountId }: { accountId: string }) {
   const { data } = useCariData(accountId);
+  const [historyPage,setHistoryPage]=useState(0);
   if (!data) return <p className="text-muted-foreground">Yükleniyor…</p>;
   const debit = data.tx.filter((t) => t.type === "debit").reduce((s, t) => s + Number(t.amount), 0);
   const credit = data.tx.filter((t) => t.type === "credit").reduce((s, t) => s + Number(t.amount), 0);
@@ -25,8 +28,14 @@ export function CariStatement({ accountId }: { accountId: string }) {
   const bought = new Map<string, { q: number; t: number }>();
   data.orders.forEach((o) => o.items.forEach((i) => { const c = bought.get(i.product_name) ?? { q: 0, t: 0 }; bought.set(i.product_name, { q: c.q + i.quantity, t: c.t + i.quantity * Number(i.unit_price) }); }));
   const payments = data.tx.filter((t) => t.type === "credit");
+  const history = [
+    ...data.orders.flatMap(order=>order.items.map(item=>({id:item.id,date:order.created_at,code:item.product?.sku ?? item.product_id ?? "—",name:item.product_name,quantity:item.quantity,price:Number(item.unit_price),payment:`Cari borç · Sipariş #${order.order_no}`}))),
+    ...payments.map(payment=>({id:payment.id,date:payment.created_at,code:"—",name:payment.description ?? "Tahsilat",quantity:null,price:Number(payment.amount),payment:`${payment.payment_method ?? "Ödeme"} · Tahsilat`}))
+  ].sort((a,b)=>b.date.localeCompare(a.date));
   return (
     <div className="space-y-8">
+      <section><h3 className="mb-3 font-bold">Geçmiş hareketler</h3><div className="overflow-x-auto border"><table className="w-full bg-card text-sm"><thead className="bg-secondary text-left"><tr>{["Tarih","Ürün ID / KM No","Ürün adı","Alım adet","Fiyat","Ödeme bilgisi"].map(h=><th key={h} className="whitespace-nowrap p-3">{h}</th>)}</tr></thead><tbody>{history.slice(historyPage*PAGE_SIZE,(historyPage+1)*PAGE_SIZE).map(row=><tr key={row.id} className="border-t"><td className="whitespace-nowrap p-3">{date(row.date)}</td><td className="p-3 font-oem">{row.code}</td><td className="min-w-40 p-3">{row.name}</td><td className="p-3">{row.quantity ?? "—"}</td><td className="whitespace-nowrap p-3">{money(row.price)}</td><td className="min-w-40 p-3">{row.payment}</td></tr>)}</tbody></table>{!history.length && <p className="p-6 text-muted-foreground">Henüz hareket yok.</p>}</div><Pager page={historyPage} total={history.length} onChange={setHistoryPage}/></section>
+
       <div className="grid gap-3 sm:grid-cols-3">
         <Stat label="Toplam borç" value={money(debit)} />
         <Stat label="Toplam ödeme" value={money(credit)} />

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { catalogQuery } from "@/lib/catalog";
+import { catalogPageQuery } from "@/lib/catalog-page";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { discounted, isOrderable, money } from "@/lib/format";
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/urun/$slug")({
 
 function ProductPage() {
   const { slug } = Route.useParams();
-  const { data, isLoading } = useQuery(catalogQuery);
+  const { data, isLoading } = useQuery(catalogPageQuery({ slug }));
   const { add } = useCart();
   const { account } = useAuth();
   const [qty, setQty] = useState(1);
@@ -36,7 +36,7 @@ function ProductPage() {
   p.vehicles.forEach((v) => { const k = v.brand?.name ?? ""; byBrand.set(k, [...(byBrand.get(k) ?? []), v.model?.name ?? "Tüm modeller"]); });
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-4 py-10 md:grid-cols-2">
-      <ProductImage src={p.image_url} name={p.name} detail />
+      <ProductImage src={p.image_url} original={p.image_original_url} name={p.name} detail />
       <div>
         <Link to="/urunler" search={{ kategori: p.category?.slug }} className="text-sm font-semibold uppercase tracking-wide text-accent">{p.category?.name}</Link>
         <h1 className="mt-2 text-3xl font-extrabold">{p.name}</h1>

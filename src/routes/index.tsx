@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { useState } from "react";
 import hero from "@/assets/hero-clips.jpg";
-import { catalogQuery } from "@/lib/catalog";
+import { catalogFiltersQuery, catalogPageQuery } from "@/lib/catalog-page";
 import { ProductCard } from "@/components/site/ProductCard";
 import { Button } from "@/components/ui/button";
 
@@ -20,7 +20,8 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { data } = useQuery(catalogQuery);
+  const { data } = useQuery(catalogFiltersQuery);
+  const { data: page } = useQuery(catalogPageQuery());
   const [q, setQ] = useState("");
   const navigate = useNavigate();
   return (
@@ -48,7 +49,7 @@ function Index() {
           {data?.categories.map((c) => (
             <Link key={c.id} to="/urunler" search={{ kategori: c.slug }} className="rounded-md border bg-card p-4 font-display font-bold transition hover:border-accent hover:text-accent">
               {c.slug === "camurluk" ? "Çamurluk / Davlumbaz Klipsleri" : c.name}
-              <div className="mt-1 text-xs font-normal text-muted-foreground">{data.products.filter((p) => p.category_id === c.id).length} ürün</div>
+              
             </Link>
           ))}
         </div>
@@ -65,7 +66,7 @@ function Index() {
           <Link to="/urunler" search={{}} className="text-sm font-semibold text-accent">Tümünü gör →</Link>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {data?.products.slice(0, 8).map((p) => <ProductCard key={p.id} p={p} />)}
+          {page?.products.slice(0, 8).map((p) => <ProductCard key={p.id} p={p} />)}
         </div>
       </section>
     </div>

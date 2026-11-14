@@ -16,7 +16,7 @@ export function ProductCard({ p }: { p: CatalogProduct }) {
   const brands = [...new Set(p.vehicles.map((v) => v.brand?.name).filter(Boolean))];
   return (
     <div className="group flex flex-col overflow-hidden rounded-md border bg-card transition hover:border-accent hover:shadow-md">
-      <ProductImage src={p.image_url} name={p.name} />
+      <ProductImage src={p.image_thumbnail_url ?? p.image_url} original={p.image_original_url ?? p.image_url} name={p.name} />
       <div className="flex flex-1 flex-col gap-2 p-4">
         <div className="flex items-center justify-between gap-2 text-xs">
           <span className="font-medium uppercase tracking-wide text-accent">{p.category?.name}</span>

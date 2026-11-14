@@ -187,6 +187,78 @@ export type Database = {
           },
         ]
       }
+      import_batches: {
+        Row: {
+          created_at: string
+          created_by: string
+          filename: string
+          id: string
+          rolled_back_at: string | null
+          rolled_back_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          filename: string
+          id?: string
+          rolled_back_at?: string | null
+          rolled_back_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          filename?: string
+          id?: string
+          rolled_back_at?: string | null
+          rolled_back_by?: string | null
+        }
+        Relationships: []
+      }
+      import_items: {
+        Row: {
+          applied_data: Json
+          applied_revision: number
+          batch_id: string
+          id: string
+          previous_data: Json
+          product_id: string
+          was_created: boolean
+        }
+        Insert: {
+          applied_data: Json
+          applied_revision: number
+          batch_id: string
+          id?: string
+          previous_data: Json
+          product_id: string
+          was_created?: boolean
+        }
+        Update: {
+          applied_data?: Json
+          applied_revision?: number
+          batch_id?: string
+          id?: string
+          previous_data?: Json
+          product_id?: string
+          was_created?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "import_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           id: string
@@ -225,6 +297,38 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_requests: {
+        Row: {
+          created_at: string
+          order_id: string
+          payload: Json
+          request_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          order_id: string
+          payload: Json
+          request_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          order_id?: string
+          payload?: Json
+          request_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -384,6 +488,8 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          image_original_url: string | null
+          image_thumbnail_url: string | null
           image_url: string | null
           max_stock: number | null
           min_stock: number
@@ -391,6 +497,7 @@ export type Database = {
           needs_review: boolean
           package_quantity: number | null
           price: number
+          revision: number
           sku: string | null
           slug: string
           stock: number
@@ -400,6 +507,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_original_url?: string | null
+          image_thumbnail_url?: string | null
           image_url?: string | null
           max_stock?: number | null
           min_stock?: number
@@ -407,6 +516,7 @@ export type Database = {
           needs_review?: boolean
           package_quantity?: number | null
           price?: number
+          revision?: number
           sku?: string | null
           slug: string
           stock?: number
@@ -416,6 +526,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_original_url?: string | null
+          image_thumbnail_url?: string | null
           image_url?: string | null
           max_stock?: number | null
           min_stock?: number
@@ -423,6 +535,7 @@ export type Database = {
           needs_review?: boolean
           package_quantity?: number | null
           price?: number
+          revision?: number
           sku?: string | null
           slug?: string
           stock?: number
@@ -646,7 +759,33 @@ export type Database = {
       }
     }
     Functions: {
+      apply_import: {
+        Args: { _creates: Json; _filename: string; _updates: Json }
+        Returns: string
+      }
+      catalog_norm: { Args: { _text: string }; Returns: string }
+      catalog_page: {
+        Args: {
+          _brand?: string
+          _category?: string
+          _model?: string
+          _page?: number
+          _q?: string
+          _slug?: string
+        }
+        Returns: Json
+      }
       create_admin_product: {
+        Args: {
+          _initial_stock: number
+          _oems: Json
+          _product: Json
+          _supplier_codes: Json
+          _vehicles: Json
+        }
+        Returns: string
+      }
+      create_product_with_photos: {
         Args: {
           _initial_stock: number
           _oems: Json
@@ -664,10 +803,15 @@ export type Database = {
         Returns: boolean
       }
       place_order: { Args: { _items: Json; _notes?: string }; Returns: string }
+      place_order_once: {
+        Args: { _items: Json; _notes: string; _request_key: string }
+        Returns: string
+      }
       replace_product_supplier_codes: {
         Args: { _codes: Json; _product_id: string }
         Returns: undefined
       }
+      rollback_import: { Args: { _batch_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"
