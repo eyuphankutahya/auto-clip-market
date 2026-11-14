@@ -21,7 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 export const Route = createFileRoute("/_authenticated/admin/urunler")({ head: () => ({ meta: [{ title: "Ürün Yönetimi — KlipsMarket" }, { name: "description", content: "Klips kataloğu ve yöneticiye özel tedarikçi bilgileri." }, { property: "og:title", content: "Ürün Yönetimi — KlipsMarket" }, { property: "og:description", content: "Klips kataloğu ve yöneticiye özel tedarikçi bilgileri." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: AdminProducts });
 
 type SupRow = { on: boolean; code: string };
-type Form = { id?: string; sku: string; name: string; description: string; price: string; package_quantity: string; min_stock: string; max_stock: string; stock: number; category_id: string; image_url: string; image_original_url?: string; image_thumbnail_url?: string; oems: string; brands: string[]; models: string[]; sups: Record<string, SupRow> };
+type Form = { id?: string; sku: string; name: string; description: string; price: string; package_quantity: string; min_stock: string; max_stock: string; stock: number; origStock?: number; category_id: string; image_url: string; image_original_url?: string; image_thumbnail_url?: string; oems: string; brands: string[]; models: string[]; sups: Record<string, SupRow> };
 const empty: Form = { sku: "", name: "", description: "", price: "", package_quantity: "", min_stock: "50", max_stock: "", stock: 0, category_id: "", image_url: "", oems: "", brands: [], models: [], sups: {} };
 
 // Admin-only: which suppliers sell each product and under which code. RLS lets only admins read this.
@@ -52,7 +52,7 @@ function AdminProducts() {
   const supName = (id: string) => sc?.suppliers.find((x) => x.id === id)?.name ?? "—";
 
   const edit = (p: CatalogProduct) => setForm({
-    id: p.id, sku: p.sku ?? "", name: p.name, description: p.description ?? "", price: String(p.price), min_stock: String(p.min_stock), max_stock: p.max_stock === null ? "" : String(p.max_stock), stock: p.stock, category_id: p.category_id ?? "", image_url: p.image_url ?? "", image_original_url:p.image_original_url ?? "",image_thumbnail_url:p.image_thumbnail_url ?? "",
+    id: p.id, sku: p.sku ?? "", name: p.name, description: p.description ?? "", price: String(p.price), min_stock: String(p.min_stock), max_stock: p.max_stock === null ? "" : String(p.max_stock), stock: p.stock, origStock: p.stock, category_id: p.category_id ?? "", image_url: p.image_url ?? "", image_original_url:p.image_original_url ?? "",image_thumbnail_url:p.image_thumbnail_url ?? "",
     oems: p.oems.map((o) => o.oem).join(", "), brands: p.vehicles.filter((v) => !v.model_id).map((v) => v.brand_id), models: p.vehicles.flatMap((v) => v.model_id ? [v.model_id] : []),
     package_quantity: p.package_quantity === null ? "" : String(p.package_quantity),
     sups: (sc?.byProduct.get(p.id) ?? []).reduce<Record<string, SupRow>>((acc, c) => {
@@ -67,6 +67,7 @@ function AdminProducts() {
     const maxStock = form.max_stock.trim() === "" ? null : Number(form.max_stock);
     const limitsError = validateStockLimits(Number(form.min_stock), maxStock);
     if (limitsError) { toast.error(limitsError); return; }
+    if (!Number.isInteger(form.stock) || form.stock < 0) { toast.error("Stok sıfır veya pozitif tam sayı olmalı"); return; }
     let packageQuantity: number | null;
     try { packageQuantity = parsePackageQuantity(form.package_quantity); }
     catch (error) { toast.error(error instanceof Error ? error.message : "Geçersiz paket adedi"); return; }
@@ -74,6 +75,10 @@ function AdminProducts() {
     const res = form.id ? await supabase.from("products").update(row).eq("id", form.id).select("id").single() : await supabase.from("products").insert(row).select("id").single();
     if (res.error) { toast.error(res.error.message.includes("sku") ? "Bu KlipsMarket No başka bir üründe kullanılıyor" : res.error.message); return; }
     const id = res.data.id;
+    if (form.id && form.stock !== form.origStock) {
+      const { error: stockError } = await supabase.from("stock_adjustments").insert({ product_id: id, new_stock: form.stock, previous_stock: form.origStock ?? null, reason: "Ürün düzenleme ekranından stok düzeltme" });
+      if (stockError) { toast.error(stockError.message); return; }
+    }
     const { error: supplierError } = await supabase.rpc("replace_product_supplier_codes", { _product_id: id, _codes: supplierCodeRows(form.sups) });
     if (supplierError) { toast.error(supplierError.message); return; }
     await supabase.from("product_oem_numbers").delete().eq("product_id", id);
@@ -150,7 +155,7 @@ function AdminProducts() {
                 <div><Label>Kategori</Label><select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })}><option value="">—</option>{data.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
-                <div><Label htmlFor="product-stock">Mevcut stok</Label><Input id="product-stock" type="number" readOnly value={form.stock} /></div>
+                <div><Label htmlFor="product-stock">Mevcut stok</Label><Input id="product-stock" type="number" min={0} step={1} disabled={!form.id} title={form.id ? "" : "Yeni ürünün açılış stoğu Yeni ürün sayfasından girilir"} value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} /></div>
                 <div><Label htmlFor="product-min-stock">Min stok</Label><Input id="product-min-stock" type="number" min={0} step={1} value={form.min_stock} onChange={(e) => setForm({ ...form, min_stock: e.target.value })} /></div>
                 <div><Label htmlFor="product-max-stock">Max stok</Label><Input id="product-max-stock" type="number" min={Number(form.min_stock) || 0} step={1} placeholder="Belirlenmedi" value={form.max_stock} onChange={(e) => setForm({ ...form, max_stock: e.target.value })} /></div>
               </div>
