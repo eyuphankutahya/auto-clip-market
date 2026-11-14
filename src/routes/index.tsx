@@ -47,7 +47,7 @@ function Index() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
           {data?.categories.map((c) => (
             <Link key={c.id} to="/urunler" search={{ kategori: c.slug }} className="rounded-md border bg-card p-4 font-display font-bold transition hover:border-accent hover:text-accent">
-              {c.name}
+              {c.slug === "camurluk" ? "Çamurluk / Davlumbaz Klipsleri" : c.name}
               <div className="mt-1 text-xs font-normal text-muted-foreground">{data.products.filter((p) => p.category_id === c.id).length} ürün</div>
             </Link>
           ))}

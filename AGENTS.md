@@ -35,6 +35,8 @@ use the editor.
 - Admin roles live in `user_roles` and are checked with `has_role`; normal signup never grants admin, and a service-managed one-time owner allowlist grants admin only after email confirmation — prevents public administrator takeover.
 - Special-customer status is derived from an admin-created `customer_accounts` row linked uniquely to a profile, not a separate role — keeps discounts and cari authorization in one source of truth.
 - Supplier codes live in the admin-only `product_supplier_codes` table, never on `products` — public catalog reads must not expose them.
+- Supplier links permit multiple distinct codes per product/supplier; replace them through the admin-checked transactional RPC to avoid partial code deletion.
+- Brand/location filtering uses the pure `catalog-rules` helpers with regression tests — keeps listing intersections and multi-code parsing consistent.
 - Product lists are read with `fetchAll` (src/lib/fetch-all.ts) — the Data API caps responses at 1000 rows.
 - Company contact/legal details live only in `src/lib/company.ts`; footer, contact and legal pages read from it — one place to update.
 - Unbounded admin/customer lists page on the server with `Pager` (src/components/site/Pager.tsx) and `count: "exact"`; totals come from DB views (`account_balances`, `product_sales`) — avoids the 1000-row cap.

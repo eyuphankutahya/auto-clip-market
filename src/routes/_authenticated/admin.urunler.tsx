@@ -6,6 +6,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { catalogQuery, matchesSearch, type CatalogProduct } from "@/lib/catalog";
 import { fetchAll } from "@/lib/fetch-all";
+import { supplierCodeRows } from "@/lib/catalog-rules";
 import { money, slugify } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,8 +47,12 @@ function AdminProducts() {
 
   const edit = (p: CatalogProduct) => setForm({
     id: p.id, sku: p.sku ?? "", name: p.name, description: p.description ?? "", price: String(p.price), min_stock: String(p.min_stock), category_id: p.category_id ?? "", image_url: p.image_url ?? "",
-    oems: p.oems.map((o) => o.oem).join(", "), brands: p.vehicles.filter((v) => !v.model_id).map((v) => v.brand_id), models: p.vehicles.filter((v) => v.model_id).map((v) => v.model_id!),
-    sups: Object.fromEntries((sc?.byProduct.get(p.id) ?? []).map((c) => [c.supplier_id, { on: true, code: c.code ?? "" }])),
+    oems: p.oems.map((o) => o.oem).join(", "), brands: p.vehicles.filter((v) => !v.model_id).map((v) => v.brand_id), models: p.vehicles.flatMap((v) => v.model_id ? [v.model_id] : []),
+    sups: (sc?.byProduct.get(p.id) ?? []).reduce<Record<string, SupRow>>((acc, c) => {
+      const previous = acc[c.supplier_id]?.code;
+      acc[c.supplier_id] = { on: true, code: [previous, c.code].filter(Boolean).join("\n") };
+      return acc;
+    }, {}),
   });
 
   const save = async () => {
@@ -56,18 +61,20 @@ function AdminProducts() {
     const res = form.id ? await supabase.from("products").update(row).eq("id", form.id).select("id").single() : await supabase.from("products").insert(row).select("id").single();
     if (res.error) { toast.error(res.error.message.includes("sku") ? "Bu KlipsMarket No başka bir üründe kullanılıyor" : res.error.message); return; }
     const id = res.data.id;
+    const { error: supplierError } = await supabase.rpc("replace_product_supplier_codes", { _product_id: id, _codes: supplierCodeRows(form.sups) });
+    if (supplierError) { toast.error(supplierError.message); return; }
     await supabase.from("product_oem_numbers").delete().eq("product_id", id);
     await supabase.from("product_vehicles").delete().eq("product_id", id);
-    await supabase.from("product_supplier_codes").delete().eq("product_id", id);
     const oems = form.oems.split(/[,\n]/).map((s) => s.trim()).filter(Boolean).map((oem) => ({ product_id: id, oem }));
     if (oems.length) await supabase.from("product_oem_numbers").insert(oems);
     const veh = [
       ...form.brands.map((b) => ({ product_id: id, brand_id: b, model_id: null })),
-      ...form.models.map((m) => ({ product_id: id, brand_id: data.models.find((x) => x.id === m)!.brand_id, model_id: m })),
+      ...form.models.flatMap((m) => {
+        const model = data.models.find((x) => x.id === m);
+        return model ? [{ product_id: id, brand_id: model.brand_id, model_id: m }] : [];
+      }),
     ];
     if (veh.length) await supabase.from("product_vehicles").insert(veh);
-    const sups = Object.entries(form.sups).filter(([, v]) => v.on).map(([supplier_id, v]) => ({ product_id: id, supplier_id, code: v.code.trim() || null }));
-    if (sups.length) await supabase.from("product_supplier_codes").insert(sups);
     toast.success("Kaydedildi"); setForm(null); refresh();
   };
   const del = async (id: string) => { if (!confirm("Ürün silinsin mi?")) return; const { error } = await supabase.from("products").delete().eq("id", id); if (error) toast.error(error.message); else refresh(); };
@@ -100,7 +107,7 @@ function AdminProducts() {
               <td className="font-oem p-2 text-xs">{p.oems.map((o) => o.oem).join(", ")}</td>
               <td className="p-2 text-xs">{supText(p.id).map((t) => <div key={t} className="font-oem whitespace-nowrap">{t}</div>)}</td>
               <td className="p-2 text-right whitespace-nowrap">{Number(p.price) > 0 ? money(p.price) : <span className="text-muted-foreground">—</span>}</td><td className="p-2 text-right">{p.stock}</td>
-              <td className="p-2 text-right whitespace-nowrap"><button onClick={() => edit(p)} className="p-1 text-muted-foreground hover:text-foreground" aria-label="Düzenle"><Pencil className="h-4 w-4" /></button><button onClick={() => del(p.id)} className="p-1 text-muted-foreground hover:text-destructive" aria-label="Sil"><Trash2 className="h-4 w-4" /></button></td></tr>
+              <td className="p-2 text-right whitespace-nowrap"><Button variant="ghost" size="icon" onClick={() => edit(p)} aria-label="Düzenle"><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => del(p.id)} aria-label="Sil"><Trash2 className="h-4 w-4" /></Button></td></tr>
           ))}</tbody>
         </table>
         </div>
@@ -131,9 +138,9 @@ function AdminProducts() {
                     const v = form.sups[sp.id] ?? { on: false, code: "" };
                     const setV = (nv: SupRow) => setForm({ ...form, sups: { ...form.sups, [sp.id]: nv } });
                     return (
-                      <div key={sp.id} className="flex items-center gap-2">
+                      <div key={sp.id} className="flex items-start gap-2">
                         <label className="flex w-32 shrink-0 items-center gap-2 text-sm"><input type="checkbox" checked={v.on} onChange={(e) => setV({ ...v, on: e.target.checked })} />{sp.name}</label>
-                        <Input className="font-oem h-8" placeholder="Kod" value={v.code} onChange={(e) => setV({ on: true, code: e.target.value })} />
+                        <Textarea aria-label={`${sp.name} ürün kodları`} className="font-oem min-h-16" placeholder="Ürün kodları (virgül veya yeni satır)" value={v.code} onChange={(e) => setV({ on: true, code: e.target.value })} />
                       </div>
                     );
                   })}
