@@ -18,7 +18,8 @@ const tabs = [
   { to: "/admin/siparisler", label: "Siparişler" },
   { to: "/admin/mesajlar", label: "İletişim Mesajları" },
   { to: "/admin/urunler", label: "Ürünler" },
-  { to: "/admin/eksik-stok", label: "Eksik Stok Listesi" },
+  { to: "/admin/eksik-stok","/admin/stok-uyarilari", label: "Eksik Stok Listesi" },
+  { to: "/admin/stok-uyarilari", label: "Stok Uyarı Ayarları" },
   { to: "/admin/aktarim", label: "Toplu Stok Aktarımı" },
   { to: "/admin/cariler", label: "Cari Hesaplar" },
   { to: "/admin/alimlar", label: "Alımlar & Tedarikçiler" },
@@ -28,7 +29,7 @@ function AdminLayout() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-6 grid gap-3 border-b pb-4 md:grid-cols-4">
-        {[{label:"Genel",paths:["/admin","/admin/raporlar"]},{label:"Ürünler ve stok",paths:["/admin/urunler","/admin/eksik-stok","/admin/aktarim","/admin/alimlar"]},{label:"Siparişler ve cariler",paths:["/admin/siparisler","/admin/cariler"]},{label:"İletişim",paths:["/admin/mesajlar"]}].map(group=><nav key={group.label} aria-label={group.label}><h2 className="mb-1 text-xs font-bold uppercase text-muted-foreground">{group.label}</h2><div className="flex flex-wrap gap-1">{tabs.filter(t=>group.paths.includes(t.to)).map(t=><Link key={t.to} to={t.to} activeOptions={{exact:t.to==="/admin"}} className="rounded-sm px-2 py-1.5 text-sm font-semibold hover:bg-secondary" activeProps={{className:"bg-secondary text-accent"}}>{t.label}</Link>)}</div></nav>)}
+        {[{label:"Genel",paths:["/admin","/admin/raporlar"]},{label:"Ürünler ve stok",paths:["/admin/urunler","/admin/eksik-stok","/admin/stok-uyarilari","/admin/aktarim","/admin/alimlar"]},{label:"Siparişler ve cariler",paths:["/admin/siparisler","/admin/cariler"]},{label:"İletişim",paths:["/admin/mesajlar"]}].map(group=><nav key={group.label} aria-label={group.label}><h2 className="mb-1 text-xs font-bold uppercase text-muted-foreground">{group.label}</h2><div className="flex flex-wrap gap-1">{tabs.filter(t=>group.paths.includes(t.to)).map(t=><Link key={t.to} to={t.to} activeOptions={{exact:t.to==="/admin"}} className="rounded-sm px-2 py-1.5 text-sm font-semibold hover:bg-secondary" activeProps={{className:"bg-secondary text-accent"}}>{t.label}</Link>)}</div></nav>)}
       </div>
       <Outlet />
     </div>

@@ -5,6 +5,7 @@ import { STATUS, date, money } from "@/lib/format";
 import { fetchAll } from "@/lib/fetch-all";
 import { Stat } from "@/components/site/CariStatement";
 import { useState } from "react";
+import { alertLevel, needsAlert } from "@/lib/stock-alerts";
 import { AlertTriangle } from "lucide-react";
 
 const T = "Yönetim Özeti — KlipsMarket";
@@ -22,13 +23,13 @@ function Overview() {
       const [orders, pending, low, out, balances, messages, latest] = await Promise.all([
         fetchAll((a, b) => supabase.from("orders").select("id,total,status,created_at").gte("created_at", since.toISOString()).order("id").range(a, b)),
         supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending"),
-        fetchAll((a, b) => supabase.from("products").select("id,sku,name,stock,min_stock,max_stock").order("id").range(a, b)),
+        fetchAll((a, b) => supabase.from("products").select("id,sku,name,stock,min_stock,max_stock,stock_alert_enabled,stock_alert_threshold").order("id").range(a, b)),
         supabase.from("products").select("id", { count: "exact", head: true }).lte("stock", 0),
         fetchAll((a, b) => supabase.from("account_balances").select("balance").order("customer_account_id").range(a, b)),
         supabase.from("contact_submissions").select("id", { count: "exact", head: true }).gte("created_at", new Date(Date.now() - 7 * DAY).toISOString()),
         supabase.from("orders").select("id,order_no,total,status,created_at,account:customer_accounts(company_name)").eq("status", "pending").order("created_at", { ascending: false }).limit(8),
       ]);
-      return { since, orders, pending: pending.count ?? 0, critical: low.filter((p) => p.stock <= p.min_stock).length, alerts: low.filter((p) => p.stock <= 0 || p.stock < p.min_stock).sort((a, b) => a.stock / Math.max(1, a.min_stock) - b.stock / Math.max(1, b.min_stock)), out: out.count ?? 0, receivable: balances.reduce((s, r) => s + Math.max(0, Number(r.balance ?? 0)), 0), messages: messages.count ?? 0, latest: latest.data ?? [] };
+      return { since, orders, pending: pending.count ?? 0, critical: low.filter((p) => p.stock <= p.min_stock).length, alerts: low.filter(needsAlert).map((p) => ({ ...p, min_stock: alertLevel(p) })).sort((a, b) => a.stock / Math.max(1, a.min_stock) - b.stock / Math.max(1, b.min_stock)), out: out.count ?? 0, receivable: balances.reduce((s, r) => s + Math.max(0, Number(r.balance ?? 0)), 0), messages: messages.count ?? 0, latest: latest.data ?? [] };
     },
   });
   if (!data) return <p className="text-muted-foreground">Yükleniyor…</p>;
@@ -78,7 +79,7 @@ function StockAlerts({ items }: { items: Alert[] }) {
     <section className="rounded-md border border-destructive/40 bg-card p-4" role="alert">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="flex items-center gap-2 font-extrabold text-destructive"><AlertTriangle className="h-5 w-5" />Stok uyarıları ({items.length} ürün)</h2>
-        <Link to="/admin/eksik-stok" className="text-sm font-semibold text-accent underline">Eksik stok listesi ve tedarikçiler →</Link>
+        <div className="flex gap-4"><Link to="/admin/stok-uyarilari" className="text-sm font-semibold text-accent underline">Uyarı ayarları</Link><Link to="/admin/eksik-stok" className="text-sm font-semibold text-accent underline">Eksik stok listesi →</Link></div>
       </div>
       <ul className="divide-y">
         {shown.map((p) => { const out = p.stock <= 0; const need = Math.max(0, (p.max_stock ?? p.min_stock) - p.stock); return (
@@ -86,7 +87,7 @@ function StockAlerts({ items }: { items: Alert[] }) {
             <span className={`rounded-sm px-2 py-0.5 text-xs font-bold ${out ? "bg-destructive text-destructive-foreground" : "bg-warning text-ink"}`}>{out ? "Tükendi" : "Kritik"}</span>
             <span className="font-oem w-16 font-semibold">{p.sku ?? "—"}</span>
             <span className="min-w-40 flex-1">{p.name}</span>
-            <span className="text-muted-foreground">Stok <b className="text-foreground">{p.stock}</b> / min {p.min_stock}</span>
+            <span className="text-muted-foreground">Stok <b className="text-foreground">{p.stock}</b> / eşik {p.min_stock}</span>
             <span className="w-32 text-right text-muted-foreground">Önerilen alım: <b className="text-foreground">{need}</b></span>
           </li>); })}
       </ul>
