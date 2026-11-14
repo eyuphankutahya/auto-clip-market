@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Add optional maximum stock to product cards and validate stock thresholds
+- [ ] Verify stock threshold saving in admin UI — waiting on owner signup and email verification; no app accounts yet
 - [x] Verify brand/use-location filtering and multi-vehicle links; enable multiple codes per supplier
 - [ ] Verify multi-code saving in admin UI — waiting on owner signup and email verification; no app accounts yet
 - [x] Owner-only verified-email super admin reservation; normal email/password signup never grants admin

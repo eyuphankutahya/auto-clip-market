@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { catalogQuery, matchesSearch, type CatalogProduct } from "@/lib/catalog";
 import { fetchAll } from "@/lib/fetch-all";
 import { supplierCodeRows } from "@/lib/catalog-rules";
+import { validateStockLimits } from "@/lib/stock-limits";
 import { money, slugify } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,8 +18,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 export const Route = createFileRoute("/_authenticated/admin/urunler")({ head: () => ({ meta: [{ title: "Ürün Yönetimi — KlipsMarket" }, { name: "description", content: "Klips kataloğu ve yöneticiye özel tedarikçi bilgileri." }, { property: "og:title", content: "Ürün Yönetimi — KlipsMarket" }, { property: "og:description", content: "Klips kataloğu ve yöneticiye özel tedarikçi bilgileri." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: AdminProducts });
 
 type SupRow = { on: boolean; code: string };
-type Form = { id?: string; sku: string; name: string; description: string; price: string; min_stock: string; category_id: string; image_url: string; oems: string; brands: string[]; models: string[]; sups: Record<string, SupRow> };
-const empty: Form = { sku: "", name: "", description: "", price: "", min_stock: "50", category_id: "", image_url: "", oems: "", brands: [], models: [], sups: {} };
+type Form = { id?: string; sku: string; name: string; description: string; price: string; min_stock: string; max_stock: string; stock: number; category_id: string; image_url: string; oems: string; brands: string[]; models: string[]; sups: Record<string, SupRow> };
+const empty: Form = { sku: "", name: "", description: "", price: "", min_stock: "50", max_stock: "", stock: 0, category_id: "", image_url: "", oems: "", brands: [], models: [], sups: {} };
 
 // Admin-only: which suppliers sell each product and under which code. RLS lets only admins read this.
 const supplierCodesQuery = queryOptions({
@@ -46,7 +47,7 @@ function AdminProducts() {
   const supName = (id: string) => sc?.suppliers.find((x) => x.id === id)?.name ?? "—";
 
   const edit = (p: CatalogProduct) => setForm({
-    id: p.id, sku: p.sku ?? "", name: p.name, description: p.description ?? "", price: String(p.price), min_stock: String(p.min_stock), category_id: p.category_id ?? "", image_url: p.image_url ?? "",
+    id: p.id, sku: p.sku ?? "", name: p.name, description: p.description ?? "", price: String(p.price), min_stock: String(p.min_stock), max_stock: p.max_stock === null ? "" : String(p.max_stock), stock: p.stock, category_id: p.category_id ?? "", image_url: p.image_url ?? "",
     oems: p.oems.map((o) => o.oem).join(", "), brands: p.vehicles.filter((v) => !v.model_id).map((v) => v.brand_id), models: p.vehicles.flatMap((v) => v.model_id ? [v.model_id] : []),
     sups: (sc?.byProduct.get(p.id) ?? []).reduce<Record<string, SupRow>>((acc, c) => {
       const previous = acc[c.supplier_id]?.code;
@@ -57,7 +58,10 @@ function AdminProducts() {
 
   const save = async () => {
     if (!form || !data) return;
-    const row = { sku: form.sku.trim() || null, name: form.name, slug: slugify(`${form.name} km ${form.sku || Date.now()}`), description: form.description || null, price: Number(form.price || 0), min_stock: Number(form.min_stock), category_id: form.category_id || null, image_url: form.image_url || null, needs_review: !form.category_id };
+    const maxStock = form.max_stock.trim() === "" ? null : Number(form.max_stock);
+    const limitsError = validateStockLimits(Number(form.min_stock), maxStock);
+    if (limitsError) { toast.error(limitsError); return; }
+    const row = { sku: form.sku.trim() || null, name: form.name, slug: slugify(`${form.name} km ${form.sku || Date.now()}`), description: form.description || null, price: Number(form.price || 0), min_stock: Number(form.min_stock), max_stock: maxStock, category_id: form.category_id || null, image_url: form.image_url || null, needs_review: !form.category_id };
     const res = form.id ? await supabase.from("products").update(row).eq("id", form.id).select("id").single() : await supabase.from("products").insert(row).select("id").single();
     if (res.error) { toast.error(res.error.message.includes("sku") ? "Bu KlipsMarket No başka bir üründe kullanılıyor" : res.error.message); return; }
     const id = res.data.id;
@@ -100,13 +104,14 @@ function AdminProducts() {
         </div>
         <div className="overflow-x-auto rounded-md border">
         <table className="w-full bg-card text-sm">
-          <thead className="bg-secondary text-left"><tr><th className="p-2">KM No</th><th className="p-2">Ürün</th><th className="p-2">OEM</th><th className="p-2">Alındığı firmalar / kod</th><th className="p-2 text-right">Fiyat</th><th className="p-2 text-right">Stok</th><th /></tr></thead>
+          <thead className="bg-secondary text-left"><tr><th className="p-2">KM No</th><th className="p-2">Ürün</th><th className="p-2">OEM</th><th className="p-2">Alındığı firmalar / kod</th><th className="p-2 text-right">Fiyat</th><th className="p-2 text-right">Stok</th><th className="p-2 text-right">Min / Max</th><th /></tr></thead>
           <tbody>{list.slice(0, shown).map((p) => (
             <tr key={p.id} className="border-t align-top"><td className="font-oem p-2 text-xs font-semibold">{p.sku ?? "—"}</td>
               <td className="p-2 font-semibold">{p.name}<div className="text-xs font-normal text-muted-foreground">{p.category?.name ?? <span className="text-warning">Kontrol edilecek: ürün grubu yok</span>}</div></td>
               <td className="font-oem p-2 text-xs">{p.oems.map((o) => o.oem).join(", ")}</td>
               <td className="p-2 text-xs">{supText(p.id).map((t) => <div key={t} className="font-oem whitespace-nowrap">{t}</div>)}</td>
               <td className="p-2 text-right whitespace-nowrap">{Number(p.price) > 0 ? money(p.price) : <span className="text-muted-foreground">—</span>}</td><td className="p-2 text-right">{p.stock}</td>
+              <td className="p-2 text-right whitespace-nowrap">{p.min_stock} / {p.max_stock ?? "—"}</td>
               <td className="p-2 text-right whitespace-nowrap"><Button variant="ghost" size="icon" onClick={() => edit(p)} aria-label="Düzenle"><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => del(p.id)} aria-label="Sil"><Trash2 className="h-4 w-4" /></Button></td></tr>
           ))}</tbody>
         </table>
@@ -125,10 +130,14 @@ function AdminProducts() {
                 <div><Label>KlipsMarket No</Label><Input className="font-oem" value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} /></div>
                 <div><Label>Ürün adı (stok açıklaması)</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div><Label>Satış fiyatı (₺)</Label><Input type="number" step="0.01" placeholder="Boş = fiyat yakında" value={form.price === "0" ? "" : form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
-                <div><Label>Kritik stok</Label><Input type="number" value={form.min_stock} onChange={(e) => setForm({ ...form, min_stock: e.target.value })} /></div>
                 <div><Label>Kategori</Label><select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })}><option value="">—</option>{data.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div><Label htmlFor="product-stock">Mevcut stok</Label><Input id="product-stock" type="number" readOnly value={form.stock} /></div>
+                <div><Label htmlFor="product-min-stock">Min stok</Label><Input id="product-min-stock" type="number" min={0} step={1} value={form.min_stock} onChange={(e) => setForm({ ...form, min_stock: e.target.value })} /></div>
+                <div><Label htmlFor="product-max-stock">Max stok</Label><Input id="product-max-stock" type="number" min={Number(form.min_stock) || 0} step={1} placeholder="Belirlenmedi" value={form.max_stock} onChange={(e) => setForm({ ...form, max_stock: e.target.value })} /></div>
               </div>
               <div><Label>OEM numaraları (virgülle ayırın)</Label><Input className="font-oem" value={form.oems} onChange={(e) => setForm({ ...form, oems: e.target.value })} /></div>
               <div>
