@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -102,7 +102,7 @@ function AdminProducts() {
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
       <section className="min-w-0">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 className="font-extrabold">Ürünler <span className="text-sm font-normal text-muted-foreground">({list.length})</span></h2><Button size="sm" onClick={() => setForm(empty)}><Plus className="h-4 w-4" />Yeni ürün</Button></div>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 className="font-extrabold">Ürünler <span className="text-sm font-normal text-muted-foreground">({list.length})</span></h2><Button size="sm" asChild><Link to="/admin/urun-ekle"><Plus className="h-4 w-4" />Yeni ürün</Link></Button></div>
         <div className="mb-3 flex flex-wrap items-center gap-3">
           <Input value={q} onChange={(e) => { setQ(e.target.value); setShown(100); }} placeholder="KM No, ürün adı, OEM veya firma kodu" className="max-w-sm" />
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={review} onChange={(e) => { setReview(e.target.checked); setShown(100); }} />Sadece kontrol edilecekler ({reviewCount})</label>

@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Add dedicated admin product creation module with atomic product, OEM, vehicle, supplier and opening-stock save
+- [ ] Verify product creation in admin UI — waiting on owner signup and email verification; no app accounts yet
 - [x] Add optional informational package quantity to admin form and customer products
 - [ ] Verify package quantity saving in admin UI — waiting on owner signup and email verification; no app accounts yet
 - [x] Add optional maximum stock to product cards and validate stock thresholds
