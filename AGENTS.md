@@ -32,6 +32,7 @@ use the editor.
 ## Project rules
 - Bulk product/order edits use admin-checked transactional RPCs with expected revisions/statuses and confirmation; existing stock/cari triggers remain authoritative — avoids partial or stale batch writes.
 - Admin change history is append-only through database triggers with admin-only reads; records begin at installation and never invent earlier changes — protects audit integrity.
+- Audit list and full CSV export share one database-filtered query and Istanbul date boundaries; exports page through all matches and neutralize spreadsheet formulas — prevents incomplete or inconsistent downloads.
 - Admin analytics use approved/shipped order snapshots for sales and independent credit transactions for payments, comparing equal Istanbul calendar periods — prevents invented financial allocation.
 - Order list and CSV exports share server-applied filters; date bounds use Istanbul calendar days and CSV text neutralizes formulas — keeps exports complete, consistent and safe.
 - Order prices are computed in the `place_order` SQL function (never trust client prices) — prevents tampering.
