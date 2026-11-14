@@ -785,6 +785,16 @@ export type Database = {
         }
         Returns: string
       }
+      create_product_with_photos: {
+        Args: {
+          _initial_stock: number
+          _oems: Json
+          _product: Json
+          _supplier_codes: Json
+          _vehicles: Json
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

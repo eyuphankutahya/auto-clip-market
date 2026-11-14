@@ -92,6 +92,13 @@
       "when": 1794645381283,
       "tag": "0012_atomic_import_and_rollback",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794645501380,
+      "tag": "0013_product_photo_metadata_creation",
+      "breakpoints": true
     }
   ]
 }
