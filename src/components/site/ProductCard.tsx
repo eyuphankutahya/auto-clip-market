@@ -28,6 +28,7 @@ export function ProductCard({ p }: { p: CatalogProduct }) {
           {p.oems.slice(0, 3).map((o) => <span key={o.id} className="font-oem rounded-sm bg-secondary px-1.5 py-0.5 text-[11px]">OEM {o.oem}</span>)}
         </div>
         {brands.length > 0 && <div className="text-xs text-muted-foreground">{brands.join(" · ")}</div>}
+        {p.package_quantity !== null && <div className="text-xs text-muted-foreground">Paket içi: {p.package_quantity} adet</div>}
         <div className="mt-auto flex items-end justify-between pt-2">
           <div>
             {Number(p.price) > 0 ? (<>
