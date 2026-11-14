@@ -112,7 +112,7 @@ function AdminProducts() {
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 className="font-extrabold">Ürünler <span className="text-sm font-normal text-muted-foreground">({list.length})</span></h2><Button size="sm" asChild><Link to="/admin/urun-ekle"><Plus className="h-4 w-4" />Yeni ürün</Link></Button></div>
         <div className="mb-3 flex flex-wrap items-center gap-3">
           <Input value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} placeholder="KM No, ürün adı, OEM veya firma kodu" className="max-w-sm" />
-          <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={quick} onChange={(e) => setQuick(e.target.checked)} />Hızlı fiyat/stok düzenleme</label>
+          <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={quick} onChange={(e) => setQuick(e.target.checked)} />Hızlı fiyat/stok/min-max düzenleme</label>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={review} onChange={(e) => { setReview(e.target.checked); setPage(0); }} />Sadece kontrol edilecekler ({reviewCount})</label>
         </div>
         <select aria-label="Eksik bilgi filtresi" className="mb-3 rounded-md border bg-background p-2 text-sm" value={missing} onChange={e=>{setMissing(e.target.value);setPage(0);}}><option value="all">Tüm bilgiler</option><option value="category">Kategorisi eksik</option><option value="vehicles">Araç uyumu eksik</option><option value="photos">Fotoğrafı eksik</option></select>
@@ -126,7 +126,7 @@ function AdminProducts() {
               <td className="font-oem p-2 text-xs">{p.oems.map((o) => o.oem).join(", ")}</td>
               <td className="p-2 text-xs">{supText(p.id).map((t) => <div key={t} className="font-oem whitespace-nowrap">{t}</div>)}</td>
               <td className="p-2 text-right whitespace-nowrap">{quick ? <QuickNum label="Fiyat" value={Number(p.price)} step="0.01" onSave={async v=>{const {error}=await supabase.from("products").update({price:v}).eq("id",p.id); if(error) toast.error(error.message); else {toast.success("Fiyat güncellendi"); refresh();}}}/> : Number(p.price) > 0 ? money(p.price) : <span className="text-muted-foreground">—</span>}</td><td className="p-2 text-right">{quick ? <QuickNum label="Stok" value={p.stock} step="1" onSave={async v=>{const {error}=await supabase.from("stock_adjustments").insert({product_id:p.id,new_stock:Math.round(v),reason:"Hızlı stok düzeltme"}); if(error) toast.error(error.message); else {toast.success("Stok güncellendi"); refresh();}}}/> : p.stock}</td>
-              <td className="p-2 text-right whitespace-nowrap">{p.min_stock} / {p.max_stock ?? "—"}</td>
+              <td className="p-2 text-right whitespace-nowrap">{quick ? <QuickLimits key={`${p.id}-${p.min_stock}-${p.max_stock}`} min={p.min_stock} max={p.max_stock} onSave={async (min,max)=>{const {error}=await supabase.from("products").update({min_stock:min,max_stock:max}).eq("id",p.id); if(error) toast.error(error.message); else {toast.success("Stok seviyeleri kaydedildi"); refresh();}}}/> : <>{p.min_stock} / {p.max_stock ?? "—"}</>}</td>
               <td className="p-2 text-right whitespace-nowrap"><Button variant="ghost" size="icon" onClick={() => edit(p)} aria-label="Düzenle"><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => del(p.id)} aria-label="Sil"><Trash2 className="h-4 w-4" /></Button></td></tr>
           ))}</tbody>
         </table>
@@ -224,4 +224,17 @@ function QuickNum({ label, value, step, onSave }: { label: string; value: number
   const [v, setV] = useState(String(value));
   const commit = () => { const n = Number(v.replace(",", ".")); if (!Number.isFinite(n) || n < 0) { setV(String(value)); toast.error(`${label} geçersiz`); return; } if (n !== value) void onSave(n); };
   return <Input aria-label={label} type="number" min={0} step={step} value={v} onChange={(e) => setV(e.target.value)} onBlur={commit} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} className="ml-auto h-8 w-24 text-right" />;
+}
+
+function QuickLimits({ min, max, onSave }: { min: number; max: number | null; onSave: (min: number, max: number | null) => Promise<void> }) {
+  const [a, setA] = useState(String(min)); const [b, setB] = useState(max === null ? "" : String(max));
+  const nMin = Number(a); const nMax = b.trim() === "" ? null : Number(b);
+  const err = validateStockLimits(nMin, nMax);
+  const dirty = nMin !== min || nMax !== max;
+  return <div className="flex items-center justify-end gap-1">
+    <Input aria-label="Min stok" type="number" min={0} step={1} value={a} onChange={(e) => setA(e.target.value)} className="h-8 w-20 text-right" />
+    <span>/</span>
+    <Input aria-label="Max stok" type="number" min={0} step={1} placeholder="—" value={b} onChange={(e) => setB(e.target.value)} className="h-8 w-20 text-right" />
+    <Button size="sm" variant="outline" disabled={!dirty} title={err ?? ""} onClick={() => { if (err) { toast.error(err); return; } void onSave(nMin, nMax); }}>Kaydet</Button>
+  </div>;
 }
