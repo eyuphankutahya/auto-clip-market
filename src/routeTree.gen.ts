@@ -29,6 +29,7 @@ import { Route as AuthenticatedAdminAktarimRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminAlimlarRouteImport } from './routes/_authenticated/admin.alimlar'
 import { Route as AuthenticatedAdminCarilerRouteImport } from './routes/_authenticated/admin.cariler'
 import { Route as AuthenticatedAdminEksikStokRouteImport } from './routes/_authenticated/admin.eksik-stok'
+import { Route as AuthenticatedAdminIslemGecmisiRouteImport } from './routes/_authenticated/admin.islem-gecmisi'
 import { Route as AuthenticatedAdminMesajlarRouteImport } from './routes/_authenticated/admin.mesajlar'
 import { Route as AuthenticatedAdminRaporlarRouteImport } from './routes/_authenticated/admin.raporlar'
 import { Route as AuthenticatedAdminSiparislerRouteImport } from './routes/_authenticated/admin.siparisler'
@@ -141,6 +142,12 @@ const AuthenticatedAdminEksikStokRoute =
     path: '/eksik-stok',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminIslemGecmisiRoute =
+  AuthenticatedAdminIslemGecmisiRouteImport.update({
+    id: '/islem-gecmisi',
+    path: '/islem-gecmisi',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminMesajlarRoute =
   AuthenticatedAdminMesajlarRouteImport.update({
     id: '/mesajlar',
@@ -203,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/admin/alimlar': typeof AuthenticatedAdminAlimlarRoute
   '/admin/cariler': typeof AuthenticatedAdminCarilerRoute
   '/admin/eksik-stok': typeof AuthenticatedAdminEksikStokRoute
+  '/admin/islem-gecmisi': typeof AuthenticatedAdminIslemGecmisiRoute
   '/admin/mesajlar': typeof AuthenticatedAdminMesajlarRoute
   '/admin/raporlar': typeof AuthenticatedAdminRaporlarRoute
   '/admin/siparisler': typeof AuthenticatedAdminSiparislerRoute
@@ -230,6 +238,7 @@ export interface FileRoutesByTo {
   '/admin/alimlar': typeof AuthenticatedAdminAlimlarRoute
   '/admin/cariler': typeof AuthenticatedAdminCarilerRoute
   '/admin/eksik-stok': typeof AuthenticatedAdminEksikStokRoute
+  '/admin/islem-gecmisi': typeof AuthenticatedAdminIslemGecmisiRoute
   '/admin/mesajlar': typeof AuthenticatedAdminMesajlarRoute
   '/admin/raporlar': typeof AuthenticatedAdminRaporlarRoute
   '/admin/siparisler': typeof AuthenticatedAdminSiparislerRoute
@@ -260,6 +269,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/alimlar': typeof AuthenticatedAdminAlimlarRoute
   '/_authenticated/admin/cariler': typeof AuthenticatedAdminCarilerRoute
   '/_authenticated/admin/eksik-stok': typeof AuthenticatedAdminEksikStokRoute
+  '/_authenticated/admin/islem-gecmisi': typeof AuthenticatedAdminIslemGecmisiRoute
   '/_authenticated/admin/mesajlar': typeof AuthenticatedAdminMesajlarRoute
   '/_authenticated/admin/raporlar': typeof AuthenticatedAdminRaporlarRoute
   '/_authenticated/admin/siparisler': typeof AuthenticatedAdminSiparislerRoute
@@ -290,6 +300,7 @@ export interface FileRouteTypes {
     | '/admin/alimlar'
     | '/admin/cariler'
     | '/admin/eksik-stok'
+    | '/admin/islem-gecmisi'
     | '/admin/mesajlar'
     | '/admin/raporlar'
     | '/admin/siparisler'
@@ -317,6 +328,7 @@ export interface FileRouteTypes {
     | '/admin/alimlar'
     | '/admin/cariler'
     | '/admin/eksik-stok'
+    | '/admin/islem-gecmisi'
     | '/admin/mesajlar'
     | '/admin/raporlar'
     | '/admin/siparisler'
@@ -346,6 +358,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/alimlar'
     | '/_authenticated/admin/cariler'
     | '/_authenticated/admin/eksik-stok'
+    | '/_authenticated/admin/islem-gecmisi'
     | '/_authenticated/admin/mesajlar'
     | '/_authenticated/admin/raporlar'
     | '/_authenticated/admin/siparisler'
@@ -513,6 +526,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminEksikStokRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/islem-gecmisi': {
+      id: '/_authenticated/admin/islem-gecmisi'
+      path: '/islem-gecmisi'
+      fullPath: '/admin/islem-gecmisi'
+      preLoaderRoute: typeof AuthenticatedAdminIslemGecmisiRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/mesajlar': {
       id: '/_authenticated/admin/mesajlar'
       path: '/mesajlar'
@@ -570,6 +590,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAlimlarRoute: typeof AuthenticatedAdminAlimlarRoute
   AuthenticatedAdminCarilerRoute: typeof AuthenticatedAdminCarilerRoute
   AuthenticatedAdminEksikStokRoute: typeof AuthenticatedAdminEksikStokRoute
+  AuthenticatedAdminIslemGecmisiRoute: typeof AuthenticatedAdminIslemGecmisiRoute
   AuthenticatedAdminMesajlarRoute: typeof AuthenticatedAdminMesajlarRoute
   AuthenticatedAdminRaporlarRoute: typeof AuthenticatedAdminRaporlarRoute
   AuthenticatedAdminSiparislerRoute: typeof AuthenticatedAdminSiparislerRoute
@@ -585,6 +606,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAlimlarRoute: AuthenticatedAdminAlimlarRoute,
   AuthenticatedAdminCarilerRoute: AuthenticatedAdminCarilerRoute,
   AuthenticatedAdminEksikStokRoute: AuthenticatedAdminEksikStokRoute,
+  AuthenticatedAdminIslemGecmisiRoute: AuthenticatedAdminIslemGecmisiRoute,
   AuthenticatedAdminMesajlarRoute: AuthenticatedAdminMesajlarRoute,
   AuthenticatedAdminRaporlarRoute: AuthenticatedAdminRaporlarRoute,
   AuthenticatedAdminSiparislerRoute: AuthenticatedAdminSiparislerRoute,

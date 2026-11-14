@@ -17,6 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BulkProductDialog } from "@/components/site/BulkProductDialog";
+import { toggleSelection } from "@/lib/admin-rules";
 
 export const Route = createFileRoute("/_authenticated/admin/urunler")({ head: () => ({ meta: [{ title: "Ürün Yönetimi — KlipsMarket" }, { name: "description", content: "Klips kataloğu ve yöneticiye özel tedarikçi bilgileri." }, { property: "og:title", content: "Ürün Yönetimi — KlipsMarket" }, { property: "og:description", content: "Klips kataloğu ve yöneticiye özel tedarikçi bilgileri." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: AdminProducts });
 
@@ -48,6 +51,8 @@ function AdminProducts() {
   const [page, setPage] = useState(0);
   const [missing,setMissing] = useState("all");
   const [quick,setQuick] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [bulk, setBulk] = useState(false);
   const refresh = () => qc.invalidateQueries();
   const supName = (id: string) => sc?.suppliers.find((x) => x.id === id)?.name ?? "—";
 
@@ -110,9 +115,11 @@ function AdminProducts() {
     return supText(p.id).some((t) => t.toLocaleLowerCase("tr").replace(/\s/g, "").includes(n));
   });
   const reviewCount = data?.products.filter((p) => p.needs_review).length ?? 0;
+  const visible = list.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const chosen = visible.filter(p => selected.includes(p.id));
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
+    <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_240px]">
       <section className="min-w-0">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 className="font-extrabold">Ürünler <span className="text-sm font-normal text-muted-foreground">({list.length})</span></h2><Button size="sm" asChild><Link to="/admin/urun-ekle"><Plus className="h-4 w-4" />Yeni ürün</Link></Button></div>
         <div className="mb-3 flex flex-wrap items-center gap-3">
@@ -121,11 +128,12 @@ function AdminProducts() {
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={review} onChange={(e) => { setReview(e.target.checked); setPage(0); }} />Sadece kontrol edilecekler ({reviewCount})</label>
         </div>
         <select aria-label="Eksik bilgi filtresi" className="mb-3 rounded-md border bg-background p-2 text-sm" value={missing} onChange={e=>{setMissing(e.target.value);setPage(0);}}><option value="all">Tüm bilgiler</option><option value="category">Kategorisi eksik</option><option value="vehicles">Araç uyumu eksik</option><option value="photos">Fotoğrafı eksik</option></select>
+        <div className="mb-3 flex flex-wrap items-center gap-2"><Checkbox aria-label="Bu sayfadaki ürünleri seç" checked={visible.length > 0 && visible.every(p => selected.includes(p.id))} onCheckedChange={checked => setSelected(checked ? visible.map(p => p.id) : [])} /><span className="mr-auto text-sm text-muted-foreground">{chosen.length} ürün seçildi</span><Button size="sm" variant="outline" disabled={!chosen.length} onClick={() => setBulk(true)}><Pencil />Toplu düzenle</Button>{chosen.length > 0 && <Button size="sm" variant="ghost" onClick={() => setSelected([])}>Seçimi temizle</Button>}</div>
         <div className="overflow-x-auto rounded-md border">
         <table className="w-full bg-card text-sm">
-          <thead className="bg-secondary text-left"><tr><th className="p-2">KM No</th><th className="p-2">Ürün</th><th className="p-2">OEM</th><th className="p-2">Alındığı firmalar / kod</th><th className="p-2 text-right">Fiyat</th><th className="p-2 text-right">Stok</th><th className="p-2 text-right">Min / Max</th><th /></tr></thead>
-          <tbody>{list.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((p) => (
-            <tr key={p.id} className="border-t align-top"><td className="font-oem p-2 text-xs font-semibold">{p.sku ?? "—"}</td>
+          <thead className="bg-secondary text-left"><tr><th className="p-2">Seç</th><th className="p-2">KM No</th><th className="p-2">Ürün</th><th className="p-2">OEM</th><th className="p-2">Alındığı firmalar / kod</th><th className="p-2 text-right">Fiyat</th><th className="p-2 text-right">Stok</th><th className="p-2 text-right">Min / Max</th><th /></tr></thead>
+          <tbody>{visible.map((p) => (
+            <tr key={p.id} className="border-t align-top hover:bg-secondary/40"><td className="p-2"><Checkbox aria-label={`KM ${p.sku ?? "—"} seç`} checked={selected.includes(p.id)} onCheckedChange={() => setSelected(ids => toggleSelection(ids,p.id))} /></td><td className="font-oem p-2 text-xs font-semibold">{p.sku ?? "—"}</td>
               <td className="p-2 font-semibold">{p.name}<div className="text-xs font-normal text-muted-foreground">{p.category?.name ?? <span className="text-warning">Kontrol edilecek: ürün grubu yok</span>}</div></td>
               
               <td className="font-oem p-2 text-xs">{p.oems.map((o) => o.oem).join(", ")}</td>
@@ -136,10 +144,11 @@ function AdminProducts() {
           ))}</tbody>
         </table>
         </div>
-        <Pager page={page} total={list.length} onChange={setPage} />
+        <Pager page={page} total={list.length} onChange={value => { setSelected([]); setPage(value); }} />
         <p className="mt-2 text-xs text-muted-foreground">Alındığı firmalar ve kodları yalnızca yönetim panelinde görünür, müşteriler göremez. Stok, "Alımlar" sekmesinden alım girildiğinde artar, sipariş onaylandığında düşer; toplu sayım için "Toplu Stok Aktarımı" sekmesini kullanın.</p>
       </section>
       <aside className="space-y-6"><CatalogLists onChange={refresh} /></aside>
+      {bulk && data && <BulkProductDialog products={chosen} categories={data.categories} onClose={() => setBulk(false)} onSaved={() => { setSelected([]); refresh(); }} />}
 
       <Dialog open={!!form} onOpenChange={(o) => !o && setForm(null)}>
         <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
