@@ -4,7 +4,8 @@ export type CartItem = { product_id: string; name: string; price: number; quanti
 /** Clamps a cart quantity to 1..stock (stock unknown = no upper bound). */
 export const clampQty = (q: number, stock?: number) => { const n = Math.max(1, Math.floor(Number.isFinite(q) ? q : 1)); return stock === undefined ? n : Math.min(n, Math.max(0, stock)); };
 type Ctx = { items: CartItem[]; add: (i: Omit<CartItem, "quantity">, q?: number) => boolean; setQty: (id: string, q: number) => void; remove: (id: string) => void; clear: () => void; count: number };
-const CartCtx = createContext<Ctx>(null as unknown as Ctx);
+const CartCtx = createContext<Ctx | null>(null);
+const noCart: Ctx = { items: [], add: () => false, setQty: () => {}, remove: () => {}, clear: () => {}, count: 0 };
 const KEY = "klips-cart";
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -23,4 +24,5 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clear = () => save([]);
   return <CartCtx.Provider value={{ items, add, setQty, remove, clear, count: items.reduce((s, x) => s + x.quantity, 0) }}>{children}</CartCtx.Provider>;
 }
-export const useCart = () => useContext(CartCtx);
+/** Falls back to an empty cart if rendered outside the provider (e.g. during hot reload). */
+export const useCart = () => useContext(CartCtx) ?? noCart;
