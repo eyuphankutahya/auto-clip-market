@@ -78,6 +78,13 @@
       "when": 1794644015432,
       "tag": "0010_contact_submission_least_privilege",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794645354083,
+      "tag": "0011_catalog_pages_and_safe_operations",
+      "breakpoints": true
     }
   ]
 }
