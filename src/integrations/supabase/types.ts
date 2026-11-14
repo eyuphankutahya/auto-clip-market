@@ -501,6 +501,8 @@ export type Database = {
           sku: string | null
           slug: string
           stock: number
+          stock_alert_enabled: boolean
+          stock_alert_threshold: number | null
         }
         Insert: {
           category_id?: string | null
@@ -520,6 +522,8 @@ export type Database = {
           sku?: string | null
           slug: string
           stock?: number
+          stock_alert_enabled?: boolean
+          stock_alert_threshold?: number | null
         }
         Update: {
           category_id?: string | null
@@ -539,6 +543,8 @@ export type Database = {
           sku?: string | null
           slug?: string
           stock?: number
+          stock_alert_enabled?: boolean
+          stock_alert_threshold?: number | null
         }
         Relationships: [
           {
