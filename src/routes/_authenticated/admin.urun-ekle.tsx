@@ -55,12 +55,11 @@ function NewProductPage() {
     setBusy(true);
     try {
       const args = buildNewProductArgs(form, catalog.models);
-      const { data, error } = await supabase.rpc("create_admin_product", args);
+      const { error } = await supabase.rpc("create_admin_product", args);
       if (error) throw error;
       await qc.invalidateQueries();
       toast.success("Ürün ve tüm bağlantıları kaydedildi");
       await navigate({ to: "/admin/urunler" });
-      return data;
     } catch (error) {
       const message = error instanceof Error ? error.message : "Ürün kaydedilemedi";
       toast.error(message.includes("products_sku_key") ? "Bu KlipsMarket No başka bir üründe kullanılıyor" : message);
