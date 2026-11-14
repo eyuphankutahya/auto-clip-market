@@ -17,11 +17,12 @@ function Orders() {
   const [status, setFilter] = useState("all");
   const [page, setPage] = useState(0);
   const [q, setQ] = useState("");
+  const [openOrder, setOpenOrder] = useState<string | null>(null);
   const orderNo = /^\d+$/.test(q.trim()) ? Number(q.trim()) : null;
   const { data } = useQuery({
     queryKey: ["admin-orders", status, page, orderNo],
     queryFn: async () => {
-      let query = supabase.from("orders").select("*, items:order_items(*), account:customer_accounts(company_name)", { count: "exact" });
+      let query = supabase.from("orders").select("*, items:order_items(*, product:products(sku)), account:customer_accounts(company_name)", { count: "exact" });
       if (status !== "all") query = query.eq("status", status);
       if (orderNo !== null) query = query.eq("order_no", orderNo);
       const o = await query.order("created_at", { ascending: false }).order("id").range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
