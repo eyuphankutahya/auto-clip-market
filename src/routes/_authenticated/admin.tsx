@@ -15,6 +15,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const tabs = [
   { to: "/admin", label: "Stok & Raporlar" },
   { to: "/admin/siparisler", label: "Siparişler" },
+  { to: "/admin/mesajlar", label: "İletişim Mesajları" },
   { to: "/admin/urunler", label: "Ürünler" },
   { to: "/admin/aktarim", label: "Toplu Stok Aktarımı" },
   { to: "/admin/cariler", label: "Cari Hesaplar" },

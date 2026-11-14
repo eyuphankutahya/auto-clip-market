@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Mail, MapPin, MessageCircle, Phone, Clock } from "lucide-react";
 import { COMPANY, show, whatsappUrl } from "@/lib/company";
+import { ContactForm } from "@/components/site/ContactForm";
 
 const TITLE = "İletişim — KlipsMarket";
-const DESC = "KlipsMarket telefon, e-posta, adres ve WhatsApp iletişim bilgileri.";
+const DESC = "KlipsMarket iletişim bilgileri; ürün, fiyat ve toplu alım sorularınızı iletişim formundan gönderin.";
 
 export const Route = createFileRoute("/iletisim")({
   head: () => ({ meta: [{ title: TITLE }, { name: "description", content: DESC }, { property: "og:title", content: TITLE }, { property: "og:description", content: DESC }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -24,6 +25,7 @@ function Contact() {
     <div className="mx-auto max-w-3xl px-4 py-12">
       <h1 className="text-3xl font-extrabold">İletişim</h1>
       <p className="mt-2 text-muted-foreground">Ürün, fiyat, cari hesap ve toplu alım için bize ulaşın.</p>
+      <ContactForm />
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
         <Row icon={Phone} label="Telefon">{COMPANY.phone ? <a href={`tel:${COMPANY.phone.replace(/\s/g, "")}`} className="hover:underline">{COMPANY.phone}</a> : show(null)}</Row>
         <Row icon={Mail} label="E-posta">{COMPANY.email ? <a href={`mailto:${COMPANY.email}`} className="hover:underline">{COMPANY.email}</a> : show(null)}</Row>
