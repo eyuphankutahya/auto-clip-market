@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Add clickable supplier choices (STAR, ATA and all suppliers) filtering shortage products and displaying only chosen supplier codes
 - [ ] Add registered-user linking control to cari screen without granting admin access
 - [ ] Load only requested catalog page while preserving natural KM order, search and combined filters
 - [ ] Group admin navigation and paginate long stock/report lists
