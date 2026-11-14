@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Add and verify order date/status/customer filters and filtered-list/detail CSV exports with authenticated downloads and mobile layout
 - [x] Show cari history date, product code/name, purchased quantity, price and payment details
 - [x] Add clickable supplier choices (STAR, ATA and all suppliers) filtering shortage products and displaying only chosen supplier codes
 - [x] Add registered-user linking control to cari screen without granting admin access

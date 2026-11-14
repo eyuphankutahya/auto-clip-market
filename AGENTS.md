@@ -30,6 +30,7 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
+- Order list and CSV exports share server-applied filters; date bounds use Istanbul calendar days and CSV text neutralizes formulas — keeps exports complete, consistent and safe.
 - Order prices are computed in the `place_order` SQL function (never trust client prices) — prevents tampering.
 - Stock and cari debits change only via DB triggers (purchases, order status, `stock_adjustments` inserts for stock counts/imports) — single source of truth with history.
 - Admin roles live in `user_roles` and are checked with `has_role`; normal signup never grants admin, and a service-managed one-time owner allowlist grants admin only after email confirmation — prevents public administrator takeover.
