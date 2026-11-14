@@ -6,6 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { money } from "@/lib/format";
 import { fetchAll } from "@/lib/fetch-all";
 import { Stat } from "@/components/site/CariStatement";
+import { downloadCsv } from "@/lib/csv";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/_authenticated/admin/raporlar")({ head: () => ({ meta: [{ title: "Stok ve Satış Raporları — KlipsMarket" }, { name: "description", content: "Stok seviyeleri ve ürün satış raporları." }, { property: "og:title", content: "Stok ve Satış Raporları — KlipsMarket" }, { property: "og:description", content: "Stok seviyeleri ve ürün satış raporları." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Reports });
 
@@ -35,6 +38,7 @@ function Reports() {
   const revenue = [...sold.values()].reduce((s, v) => s + v.t, 0);
   return (
     <div className="space-y-8">
+      <CustomerSales />
       <div className="grid gap-3 sm:grid-cols-4">
         <Stat label="Ürün sayısı" value={data.products.length} />
         <Stat label="Kritik stok" value={critical.length} tone={critical.length ? "text-destructive" : ""} />
@@ -52,12 +56,12 @@ function Reports() {
         </div>
       </section>
       <div className="grid gap-8 md:grid-cols-3">
-        <section><h2 className="mb-2 font-extrabold">Satılan ürünler</h2><Pager page={soldPage} total={soldList.length} onChange={setSoldPage}/>
+        <section><div className="mb-2 flex items-center justify-between gap-2"><h2 className="font-extrabold">Satılan ürünler</h2><Button size="sm" variant="outline" onClick={()=>downloadCsv("satilan-urunler.csv",["Ürün","Adet","Ciro"],soldList.map(p=>[p.name,sold.get(p.id)?.q??0,sold.get(p.id)?.t??0]))}>Excel</Button></div><Pager page={soldPage} total={soldList.length} onChange={setSoldPage}/>
           <table className="w-full rounded-md border bg-card text-sm"><tbody>
             {soldList.length === 0 && <tr><td className="p-3 text-muted-foreground">Henüz satış yok</td></tr>}
             {soldList.slice(soldPage*PAGE_SIZE,(soldPage+1)*PAGE_SIZE).map((p) => <tr key={p.id} className="border-t"><td className="p-2">{p.name}</td><td className="p-2 text-right">{sold.get(p.id)?.q ?? 0}</td><td className="p-2 text-right">{money(sold.get(p.id)?.t ?? 0)}</td></tr>)}
           </tbody></table></section>
-        <section><h2 className="mb-2 font-extrabold">Satılmayan ürünler</h2><Pager page={unsoldPage} total={unsold.length} onChange={setUnsoldPage}/>
+        <section><div className="mb-2 flex items-center justify-between gap-2"><h2 className="font-extrabold">Satılmayan ürünler</h2><Button size="sm" variant="outline" onClick={()=>downloadCsv("satilmayan-urunler.csv",["Ürün","Stok"],unsold.map(p=>[p.name,p.stock]))}>Excel</Button></div><Pager page={unsoldPage} total={unsold.length} onChange={setUnsoldPage}/>
           <div className="max-h-[480px] overflow-y-auto rounded-md border"><table className="w-full bg-card text-sm"><tbody>
             {unsold.slice(unsoldPage*PAGE_SIZE,(unsoldPage+1)*PAGE_SIZE).map((p) => <tr key={p.id} className="border-t"><td className="p-2">{p.name}</td><td className="p-2 text-right text-muted-foreground">{p.stock} stok</td></tr>)}
           </tbody></table></div></section>
@@ -68,5 +72,41 @@ function Reports() {
           </tbody></table></section>
       </div>
     </div>
+  );
+}
+
+const iso = (d: Date) => d.toISOString().slice(0, 10);
+function CustomerSales() {
+  const [from, setFrom] = useState(() => iso(new Date(Date.now() - 30 * 864e5)));
+  const [to, setTo] = useState(() => iso(new Date()));
+  const { data } = useQuery({
+    queryKey: ["admin-customer-sales", from, to],
+    queryFn: async () => {
+      const [orders, profiles] = await Promise.all([
+        fetchAll((a, b) => supabase.from("orders").select("id,user_id,total,account:customer_accounts(company_name)").in("status", ["approved", "shipped"]).gte("created_at", from).lt("created_at", iso(new Date(new Date(to).getTime() + 864e5))).order("id").range(a, b)),
+        fetchAll((a, b) => supabase.from("profiles").select("id,email,full_name").order("id").range(a, b)),
+      ]);
+      const pm = new Map(profiles.map((p) => [p.id, p]));
+      const agg = new Map<string, { name: string; n: number; t: number }>();
+      orders.forEach((o) => { const u = pm.get(o.user_id); const name = o.account?.company_name ?? (u?.full_name || u?.email || "—"); const c = agg.get(name) ?? { name, n: 0, t: 0 }; c.n++; c.t += Number(o.total); agg.set(name, c); });
+      return [...agg.values()].sort((a, b) => b.t - a.t);
+    },
+  });
+  const total = data?.reduce((s, r) => s + r.t, 0) ?? 0;
+  return (
+    <section className="rounded-md border bg-card p-4">
+      <div className="mb-3 flex flex-wrap items-end gap-3">
+        <h2 className="mr-auto font-extrabold">Müşteri bazlı satış</h2>
+        <label className="text-xs">Başlangıç<Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
+        <label className="text-xs">Bitiş<Input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></label>
+        <Button size="sm" variant="outline" disabled={!data?.length} onClick={() => downloadCsv(`musteri-satis-${from}-${to}.csv`, ["Müşteri", "Sipariş", "Tutar"], (data ?? []).map((r) => [r.name, r.n, r.t]))}>Excel</Button>
+      </div>
+      <p className="mb-2 text-sm text-muted-foreground">Onaylanan ve kargolanan siparişler · Toplam {money(total)}</p>
+      <table className="w-full text-sm"><thead className="bg-secondary text-left"><tr><th className="p-2">Müşteri</th><th className="p-2 text-right">Sipariş</th><th className="p-2 text-right">Tutar</th></tr></thead><tbody>
+        {!data && <tr><td className="p-3 text-muted-foreground">Yükleniyor…</td></tr>}
+        {data?.length === 0 && <tr><td colSpan={3} className="p-3 text-muted-foreground">Bu tarih aralığında satış yok.</td></tr>}
+        {data?.map((r) => <tr key={r.name} className="border-t"><td className="p-2">{r.name}</td><td className="p-2 text-right">{r.n}</td><td className="p-2 text-right font-semibold">{money(r.t)}</td></tr>)}
+      </tbody></table>
+    </section>
   );
 }
