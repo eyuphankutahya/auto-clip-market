@@ -35,3 +35,5 @@ use the editor.
 - Admin roles live in `user_roles` and are checked with `has_role`; the first signup becomes admin.
 - Supplier codes live in the admin-only `product_supplier_codes` table, never on `products` — public catalog reads must not expose them.
 - Product lists are read with `fetchAll` (src/lib/fetch-all.ts) — the Data API caps responses at 1000 rows.
+- Company contact/legal details live only in `src/lib/company.ts`; footer, contact and legal pages read from it — one place to update.
+- Unbounded admin/customer lists page on the server with `Pager` (src/components/site/Pager.tsx) and `count: "exact"`; totals come from DB views (`account_balances`, `product_sales`) — avoids the 1000-row cap.
