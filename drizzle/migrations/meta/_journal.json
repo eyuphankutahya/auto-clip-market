@@ -99,6 +99,13 @@
       "when": 1794645501380,
       "tag": "0013_product_photo_metadata_creation",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794645818442,
+      "tag": "0014_photo_upload_metadata_validation",
+      "breakpoints": true
     }
   ]
 }

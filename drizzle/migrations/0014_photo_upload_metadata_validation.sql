@@ -1,0 +1,1 @@
+ALTER POLICY "Validate product photo uploads" ON storage.objects WITH CHECK(bucket_id<>'product-photos' OR (public.has_role(auth.uid(),'admin') AND (metadata IS NULL OR (coalesce((metadata->>'size')::bigint,0)<=20971520 AND coalesce(metadata->>'mimetype','image/jpeg') IN ('image/jpeg','image/png','image/webp')))));
