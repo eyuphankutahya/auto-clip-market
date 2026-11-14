@@ -37,7 +37,7 @@ function AuditHistory() {
   try{
    const rows=await fetchAll((a,b)=>filteredQuery().range(a,b));
    const profiles=await fetchAll((a,b)=>supabase.from("profiles").select("id,full_name,email").order("id").range(a,b));
-   const names=new Map(profiles.map(p=>[p.id,p.full_name||p.email]));
+   const names=new Map(profiles.map(p=>[p.id,p.full_name||p.email||"İsimsiz kullanıcı"]));
    downloadCsv("islem-gecmisi.csv",auditCsvHeader,rows.map(row=>auditCsvRow(row,names)));
   }catch(e){setExportError(e instanceof Error?e.message:"İşlem geçmişi indirilemedi.");}finally{setExporting(false);}
  }

@@ -14,7 +14,7 @@ describe("işlem geçmişi filtreleri ve CSV", () => {
     expect(() => auditFilterValues({ ...filters, to: "2026-11-13" })).toThrow();
   });
   it("CSV kullanıcıyı ve önceki/sonraki değerleri korur, formülü çalıştırmaz", () => {
-    const row = auditCsvRow({ id: 7, created_at: "2026-11-14T09:00:00Z", actor_id: "user-1", table_name: "products", record_id: "p1", record_label: "=1+1", action: "UPDATE", before_data: { stock: 12 }, after_data: { stock: 9 } }, new Map([["user-1", "Yönetici"]]));
+    const row = auditCsvRow({ id: "7", created_at: "2026-11-14T09:00:00Z", actor_id: "user-1", table_name: "products", record_id: "p1", record_label: "=1+1", action: "UPDATE", before_data: { stock: 12 }, after_data: { stock: 9 } }, new Map([["user-1", "Yönetici"]]));
     expect(row.slice(2)).toEqual(["Yönetici", "user-1", "Ürünler", "=1+1", "Değiştirildi", '{"stock":12}', '{"stock":9}']);
     expect(csvContent([], [row])).toContain('"\'=1+1"');
   });
