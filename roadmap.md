@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Add admin shortage list for depleted and below-minimum stock with supplier filtering and Excel export
 - [x] Add public contact form with stored messages and admin-only inbox; verified visitor submission, owner readback, mobile layout and privacy
 - [x] Add About page and expose About / Contact in desktop, mobile navigation and footer
 - [x] Add dedicated admin product creation module with atomic product, OEM, vehicle, supplier and opening-stock save

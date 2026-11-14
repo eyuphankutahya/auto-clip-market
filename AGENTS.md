@@ -46,3 +46,4 @@ use the editor.
 - Contact submissions use a validated public insert-only server function; messages are read through admin-scoped RLS, never returned by the public action — preserves visitor privacy and owner access.
 - Catalog display pagination uses a URL page parameter after shared filtering and natural code ordering; filter changes reset it — keeps pages shareable without accumulating rendered product cards.
 - Product photos share one image viewer for catalog and detail views, using contain-fit originals and an accessible dialog — preserves visible product details and consistent keyboard/touch behavior.
+- Shortage reports are read-only, include zero stock or stock strictly below minimum, and suggest replenishment to maximum (or minimum when unset) without multiplying package quantities — separates purchase planning from stock movements.
