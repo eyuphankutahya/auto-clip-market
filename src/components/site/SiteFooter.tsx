@@ -14,6 +14,7 @@ export function SiteFooter() {
           <div>
             <div className="mb-2 font-semibold text-ink-foreground">Kurumsal</div>
             <ul className="space-y-1">
+              <li><Link to="/hakkimizda" className="hover:text-ink-foreground">Hakkımızda</Link></li>
               <li><Link to="/iletisim" className="hover:text-ink-foreground">İletişim</Link></li>
               <li><Link to="/siparis-kosullari" className="hover:text-ink-foreground">Sipariş ve Teslimat Koşulları</Link></li>
               <li><Link to="/kvkk" className="hover:text-ink-foreground">KVKK Aydınlatma Metni</Link></li>

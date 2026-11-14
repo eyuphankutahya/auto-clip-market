@@ -26,6 +26,8 @@ export function SiteHeader() {
         </Link>
         <nav className="hidden gap-5 text-sm md:flex">
           <Link to="/urunler" search={{}} className="opacity-80 hover:opacity-100" activeProps={{ className: "opacity-100 font-semibold" }}>Tüm Ürünler</Link>
+          <Link to="/hakkimizda" className="opacity-80 hover:opacity-100" activeProps={{ className: "opacity-100 font-semibold" }}>Hakkımızda</Link>
+          <Link to="/iletisim" className="opacity-80 hover:opacity-100" activeProps={{ className: "opacity-100 font-semibold" }}>İletişim</Link>
         </nav>
         <div className="ml-auto flex items-center gap-2">
           {account && <span className="hidden rounded-sm bg-accent px-2 py-1 text-xs font-semibold text-accent-foreground sm:inline">Cari: %{Number(account.discount_rate)} iskonto</span>}
@@ -46,6 +48,11 @@ export function SiteHeader() {
           )}
         </div>
       </div>
+      <nav aria-label="Mobil menü" className="flex gap-6 overflow-x-auto border-t border-sidebar-border px-4 py-3 text-sm md:hidden">
+        <Link to="/urunler" search={{}} className="shrink-0 opacity-80" activeProps={{ className: "opacity-100 font-semibold" }}>Tüm Ürünler</Link>
+        <Link to="/hakkimizda" className="shrink-0 opacity-80" activeProps={{ className: "opacity-100 font-semibold" }}>Hakkımızda</Link>
+        <Link to="/iletisim" className="shrink-0 opacity-80" activeProps={{ className: "opacity-100 font-semibold" }}>İletişim</Link>
+      </nav>
     </header>
   );
 }
