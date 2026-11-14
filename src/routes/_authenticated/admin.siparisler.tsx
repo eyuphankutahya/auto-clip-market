@@ -6,7 +6,7 @@ import { STATUS, date, money } from "@/lib/format";
 import { Pager, PAGE_SIZE } from "@/components/site/Pager";
 import { useState } from "react";
 
-export const Route = createFileRoute("/_authenticated/admin/siparisler")({ component: Orders });
+export const Route = createFileRoute("/_authenticated/admin/siparisler")({ head: () => ({ meta: [{ title: "Sipariş Yönetimi — KlipsMarket" }, { name: "description", content: "Müşteri siparişlerini ve durumlarını yönetin." }, { property: "og:title", content: "Sipariş Yönetimi — KlipsMarket" }, { property: "og:description", content: "Müşteri siparişlerini ve durumlarını yönetin." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Orders });
 
 function Orders() {
   const qc = useQueryClient();

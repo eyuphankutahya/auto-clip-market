@@ -9,7 +9,7 @@ import { useState } from "react";
 import { customerType } from "@/lib/customer-access";
 
 export const Route = createFileRoute("/_authenticated/hesabim")({
-  head: () => ({ meta: [{ title: "Hesabım — KlipsMarket" }, { name: "description", content: "Siparişleriniz ve cari hesabınız." }, { property: "og:title", content: "Hesabım — KlipsMarket" }, { property: "og:description", content: "Siparişleriniz ve cari hesabınız." }] }),
+  head: () => ({ meta: [{ title: "Hesabım — KlipsMarket" }, { name: "description", content: "Siparişleriniz ve cari hesabınız." }, { property: "og:title", content: "Hesabım — KlipsMarket" }, { property: "og:description", content: "Siparişleriniz ve cari hesabınız." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Account,
 });
 

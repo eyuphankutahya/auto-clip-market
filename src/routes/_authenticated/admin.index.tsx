@@ -5,7 +5,7 @@ import { money } from "@/lib/format";
 import { fetchAll } from "@/lib/fetch-all";
 import { Stat } from "@/components/site/CariStatement";
 
-export const Route = createFileRoute("/_authenticated/admin/")({ component: Dashboard });
+export const Route = createFileRoute("/_authenticated/admin/")({ head: () => ({ meta: [{ title: "Stok ve Satış Raporları — KlipsMarket" }, { name: "description", content: "Stok seviyeleri ve ürün satış raporları." }, { property: "og:title", content: "Stok ve Satış Raporları — KlipsMarket" }, { property: "og:description", content: "Stok seviyeleri ve ürün satış raporları." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Dashboard });
 
 function Dashboard() {
   const { data } = useQuery({

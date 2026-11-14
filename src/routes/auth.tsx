@@ -12,7 +12,7 @@ export const Route = createFileRoute("/auth")({
       { title: "Giriş Yap — KlipsMarket" },
       { name: "description", content: "KlipsMarket hesabınıza giriş yapın veya yeni hesap oluşturun." },
       { property: "og:title", content: "Giriş Yap — KlipsMarket" },
-      { property: "og:description", content: "Hesabınıza giriş yapın." },
+      { property: "og:description", content: "Hesabınıza giriş yapın." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AuthPage,

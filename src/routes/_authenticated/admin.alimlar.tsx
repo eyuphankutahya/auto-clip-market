@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export const Route = createFileRoute("/_authenticated/admin/alimlar")({ component: Purchases });
+export const Route = createFileRoute("/_authenticated/admin/alimlar")({ head: () => ({ meta: [{ title: "Alımlar ve Tedarikçiler — KlipsMarket" }, { name: "description", content: "Ürün alımları ve tedarikçi kayıtları." }, { property: "og:title", content: "Alımlar ve Tedarikçiler — KlipsMarket" }, { property: "og:description", content: "Ürün alımları ve tedarikçi kayıtları." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Purchases });
 
 function Purchases() {
   const qc = useQueryClient();
