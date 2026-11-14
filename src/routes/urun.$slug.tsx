@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Package } from "lucide-react";
 import { toast } from "sonner";
 import { catalogQuery } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
@@ -9,6 +8,7 @@ import { useAuth } from "@/lib/auth";
 import { discounted, isOrderable, money } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ProductImage } from "@/components/site/ProductImage";
 
 export const Route = createFileRoute("/urun/$slug")({
   head: () => ({
@@ -36,9 +36,7 @@ function ProductPage() {
   p.vehicles.forEach((v) => { const k = v.brand?.name ?? ""; byBrand.set(k, [...(byBrand.get(k) ?? []), v.model?.name ?? "Tüm modeller"]); });
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-4 py-10 md:grid-cols-2">
-      <div className="grid aspect-square place-items-center rounded-md border bg-secondary">
-        {p.image_url ? <img src={p.image_url} alt={p.name} className="h-full w-full rounded-md object-cover" /> : <Package className="h-24 w-24 text-muted-foreground" />}
-      </div>
+      <ProductImage src={p.image_url} name={p.name} detail />
       <div>
         <Link to="/urunler" search={{ kategori: p.category?.slug }} className="text-sm font-semibold uppercase tracking-wide text-accent">{p.category?.name}</Link>
         <h1 className="mt-2 text-3xl font-extrabold">{p.name}</h1>
