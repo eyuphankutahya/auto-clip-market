@@ -1,8 +1,9 @@
 # Roadmap
-- [ ] Admin lists safe past 1000 rows (cari balances, sales report, orders, purchases, cari statement)
-- [ ] Leaked password protection
-- [ ] Security scan after changes
-- [ ] Test order flow end to end (place, approve, stock/cari)
-- [ ] Legal & contact pages (KVKK, mesafeli satış, çerez, iletişim) + footer links + WhatsApp
-- [ ] Forgot password + reset page
-- [ ] Order emails (new order to admin, approval to customer) — needs email domain
+- [x] Admin lists safe past 1000 rows (cari balances, sales report, orders, purchases, cari statement)
+- [x] Leaked password protection
+- [x] Security scan after changes
+- [x] Test order flow end to end (DB-level, rolled back)
+- [x] Legal & contact pages (KVKK, gizlilik/çerez, sipariş koşulları, iletişim) + footer links + WhatsApp button
+- [x] Forgot password + reset page
+- [ ] Fill real company info (unvan, adres, telefon, e-posta, WhatsApp, vergi, MERSİS) — waiting on user
+- [ ] Order emails (new order to admin, approval to customer) — waiting on user's email domain
