@@ -1,72 +1,67 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Pager, PAGE_SIZE } from "@/components/site/Pager";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { money } from "@/lib/format";
+import { STATUS, date, money } from "@/lib/format";
 import { fetchAll } from "@/lib/fetch-all";
 import { Stat } from "@/components/site/CariStatement";
 
-export const Route = createFileRoute("/_authenticated/admin/")({ head: () => ({ meta: [{ title: "Stok ve Satış Raporları — KlipsMarket" }, { name: "description", content: "Stok seviyeleri ve ürün satış raporları." }, { property: "og:title", content: "Stok ve Satış Raporları — KlipsMarket" }, { property: "og:description", content: "Stok seviyeleri ve ürün satış raporları." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Dashboard });
+const T = "Yönetim Özeti — KlipsMarket";
+const D = "Günlük satış, bekleyen siparişler, kritik stok ve cari alacak özeti.";
+export const Route = createFileRoute("/_authenticated/admin/")({ head: () => ({ meta: [{ title: T }, { name: "description", content: D }, { property: "og:title", content: T }, { property: "og:description", content: D }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Overview });
 
-function Dashboard() {
-  const [stockPage,setStockPage]=useState(0);
-  const [soldPage,setSoldPage]=useState(0);
-  const [unsoldPage,setUnsoldPage]=useState(0);
+const DAY = 864e5;
+const dayKey = (d: Date) => d.toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit" });
+
+function Overview() {
   const { data } = useQuery({
-    queryKey: ["admin-dash"],
+    queryKey: ["admin-overview"],
     queryFn: async () => {
-      const [p, sales, pur] = await Promise.all([
-        fetchAll((from, to) => supabase.from("products").select("id,name,stock,min_stock,price").order("stock").order("id").range(from, to)),
-        fetchAll((from, to) => supabase.from("product_sales").select("product_id, quantity, revenue").order("product_id").range(from, to)),
-        fetchAll((from, to) => supabase.from("purchases").select("quantity, unit_cost, supplier:suppliers(name)").order("id").range(from, to)),
+      const since = new Date(Date.now() - 29 * DAY); since.setHours(0, 0, 0, 0);
+      const [orders, pending, low, out, balances, messages, latest] = await Promise.all([
+        fetchAll((a, b) => supabase.from("orders").select("id,total,status,created_at").gte("created_at", since.toISOString()).order("id").range(a, b)),
+        supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        fetchAll((a, b) => supabase.from("products").select("id,stock,min_stock").order("id").range(a, b)),
+        supabase.from("products").select("id", { count: "exact", head: true }).lte("stock", 0),
+        fetchAll((a, b) => supabase.from("account_balances").select("balance").order("customer_account_id").range(a, b)),
+        supabase.from("contact_submissions").select("id", { count: "exact", head: true }).gte("created_at", new Date(Date.now() - 7 * DAY).toISOString()),
+        supabase.from("orders").select("id,order_no,total,status,created_at,account:customer_accounts(company_name)").eq("status", "pending").order("created_at", { ascending: false }).limit(8),
       ]);
-      return { products: p, sales, purchases: pur };
+      return { since, orders, pending: pending.count ?? 0, critical: low.filter((p) => p.stock <= p.min_stock).length, out: out.count ?? 0, receivable: balances.reduce((s, r) => s + Math.max(0, Number(r.balance ?? 0)), 0), messages: messages.count ?? 0, latest: latest.data ?? [] };
     },
   });
   if (!data) return <p className="text-muted-foreground">Yükleniyor…</p>;
-  const sold = new Map<string, { q: number; t: number }>();
-  data.sales.forEach((r) => { if (r.product_id) sold.set(r.product_id, { q: Number(r.quantity ?? 0), t: Number(r.revenue ?? 0) }); });
-  const soldList = data.products.filter((p) => sold.has(p.id)).sort((a, b) => (sold.get(b.id)?.q ?? 0) - (sold.get(a.id)?.q ?? 0));
-  const unsold = data.products.filter((p) => !sold.has(p.id));
-  const critical = data.products.filter((p) => p.stock <= p.min_stock);
-  const bySup = new Map<string, number>();
-  data.purchases.forEach((x) => { const n = x.supplier?.name ?? "—"; bySup.set(n, (bySup.get(n) ?? 0) + x.quantity * Number(x.unit_cost)); });
-  const revenue = [...sold.values()].reduce((s, v) => s + v.t, 0);
+  const active = data.orders.filter((o) => o.status === "approved" || o.status === "shipped");
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const todayTotal = active.filter((o) => new Date(o.created_at) >= today).reduce((s, o) => s + Number(o.total), 0);
+  const monthTotal = active.reduce((s, o) => s + Number(o.total), 0);
+  const days = Array.from({ length: 30 }, (_, i) => { const d = new Date(data.since.getTime() + i * DAY); return { key: dayKey(d), total: 0 }; });
+  const idx = new Map(days.map((d, i) => [d.key, i]));
+  active.forEach((o) => { const i = idx.get(dayKey(new Date(o.created_at))); if (i !== undefined) days[i]!.total += Number(o.total); });
+  const max = Math.max(1, ...days.map((d) => d.total));
   return (
     <div className="space-y-8">
-      <div className="grid gap-3 sm:grid-cols-4">
-        <Stat label="Ürün sayısı" value={data.products.length} />
-        <Stat label="Kritik stok" value={critical.length} tone={critical.length ? "text-destructive" : ""} />
-        <Stat label="Satış cirosu" value={money(revenue)} />
-        <Stat label="Satılmayan ürün" value={unsold.length} />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <Stat label="Bugünkü satış" value={money(todayTotal)} />
+        <Stat label="Son 30 gün satış" value={money(monthTotal)} />
+        <Stat label="Toplam cari alacak" value={money(data.receivable)} tone={data.receivable > 0 ? "text-destructive" : ""} />
+        <Link to="/admin/siparisler" className="block hover:opacity-90"><Stat label="Bekleyen sipariş →" value={data.pending} tone={data.pending ? "text-warning" : ""} /></Link>
+        <Link to="/admin/eksik-stok" className="block hover:opacity-90"><Stat label={`Kritik stok (${data.out} tükendi) →`} value={data.critical} tone={data.critical ? "text-destructive" : ""} /></Link>
+        <Link to="/admin/mesajlar" className="block hover:opacity-90"><Stat label="Son 7 gün mesaj →" value={data.messages} /></Link>
       </div>
-      <section>
-        <h2 className="mb-2 font-extrabold">Stok durumu</h2><Pager page={stockPage} total={data.products.length} onChange={setStockPage}/>
-        <div className="max-h-[480px] overflow-y-auto rounded-md border">
-        <table className="w-full bg-card text-sm">
-          <thead className="bg-secondary text-left"><tr><th className="p-2">Ürün</th><th className="p-2 text-right">Stok</th><th className="p-2 text-right">Kritik seviye</th><th className="p-2 text-right">Durum</th></tr></thead>
-          <tbody>{data.products.slice(stockPage*PAGE_SIZE,(stockPage+1)*PAGE_SIZE).map((p) => <tr key={p.id} className="border-t"><td className="p-2">{p.name}</td><td className="p-2 text-right font-semibold">{p.stock}</td><td className="p-2 text-right text-muted-foreground">{p.min_stock}</td>
-            <td className="p-2 text-right">{p.stock <= 0 ? <span className="text-destructive font-semibold">Tükendi</span> : p.stock <= p.min_stock ? <span className="text-warning font-semibold">Kritik</span> : <span className="text-success">Yeterli</span>}</td></tr>)}</tbody>
-        </table>
+      <section className="rounded-md border bg-card p-4">
+        <h2 className="mb-3 font-extrabold">Son 30 gün satışlar <span className="text-sm font-normal text-muted-foreground">(onaylanan ve kargolanan)</span></h2>
+        <div className="flex h-44 items-end gap-1" role="img" aria-label="Son 30 günlük satış grafiği">
+          {days.map((d) => <div key={d.key} className="group relative flex-1"><div className="w-full rounded-t-sm bg-accent" style={{ height: `${Math.max(2, (d.total / max) * 160)}px`, opacity: d.total ? 1 : 0.2 }} /><span className="pointer-events-none absolute -top-8 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-sm bg-ink px-2 py-1 text-xs text-ink-foreground group-hover:block">{d.key}: {money(d.total)}</span></div>)}
         </div>
+        <div className="mt-1 flex justify-between text-xs text-muted-foreground"><span>{days[0]!.key}</span><span>{days[29]!.key}</span></div>
       </section>
-      <div className="grid gap-8 md:grid-cols-3">
-        <section><h2 className="mb-2 font-extrabold">Satılan ürünler</h2><Pager page={soldPage} total={soldList.length} onChange={setSoldPage}/>
-          <table className="w-full rounded-md border bg-card text-sm"><tbody>
-            {soldList.length === 0 && <tr><td className="p-3 text-muted-foreground">Henüz satış yok</td></tr>}
-            {soldList.slice(soldPage*PAGE_SIZE,(soldPage+1)*PAGE_SIZE).map((p) => <tr key={p.id} className="border-t"><td className="p-2">{p.name}</td><td className="p-2 text-right">{sold.get(p.id)?.q ?? 0}</td><td className="p-2 text-right">{money(sold.get(p.id)?.t ?? 0)}</td></tr>)}
-          </tbody></table></section>
-        <section><h2 className="mb-2 font-extrabold">Satılmayan ürünler</h2><Pager page={unsoldPage} total={unsold.length} onChange={setUnsoldPage}/>
-          <div className="max-h-[480px] overflow-y-auto rounded-md border"><table className="w-full bg-card text-sm"><tbody>
-            {unsold.slice(unsoldPage*PAGE_SIZE,(unsoldPage+1)*PAGE_SIZE).map((p) => <tr key={p.id} className="border-t"><td className="p-2">{p.name}</td><td className="p-2 text-right text-muted-foreground">{p.stock} stok</td></tr>)}
-          </tbody></table></div></section>
-        <section><h2 className="mb-2 font-extrabold">Tedarikçi bazlı alımlar</h2>
-          <table className="w-full rounded-md border bg-card text-sm"><tbody>
-            {bySup.size === 0 && <tr><td className="p-3 text-muted-foreground">Alım yok</td></tr>}
-            {[...bySup].map(([n, t]) => <tr key={n} className="border-t"><td className="p-2">{n}</td><td className="p-2 text-right">{money(t)}</td></tr>)}
-          </tbody></table></section>
-      </div>
+      <section>
+        <div className="mb-2 flex items-center justify-between"><h2 className="font-extrabold">Onay bekleyen siparişler</h2><Link to="/admin/siparisler" className="text-sm font-semibold text-accent underline">Tümü</Link></div>
+        <div className="overflow-x-auto rounded-md border"><table className="w-full bg-card text-sm"><thead className="bg-secondary text-left"><tr><th className="p-2">No</th><th className="p-2">Tarih</th><th className="p-2">Müşteri</th><th className="p-2">Durum</th><th className="p-2 text-right">Tutar</th></tr></thead><tbody>
+          {data.latest.length === 0 && <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">Bekleyen sipariş yok.</td></tr>}
+          {data.latest.map((o) => <tr key={o.id} className="border-t"><td className="p-2 font-semibold">#{o.order_no}</td><td className="p-2">{date(o.created_at)}</td><td className="p-2">{o.account?.company_name ?? "Standart müşteri"}</td><td className="p-2">{STATUS[o.status]}</td><td className="p-2 text-right font-semibold">{money(o.total)}</td></tr>)}
+        </tbody></table></div>
+      </section>
     </div>
   );
 }
