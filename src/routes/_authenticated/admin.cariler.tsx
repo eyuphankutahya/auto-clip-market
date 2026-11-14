@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { money } from "@/lib/format";
+import { fetchAll } from "@/lib/fetch-all";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,14 +21,13 @@ function Accounts() {
   const { data } = useQuery({
     queryKey: ["admin-accounts"],
     queryFn: async () => {
-      const [a, p, t] = await Promise.all([
-        supabase.from("customer_accounts").select("*").order("company_name"),
-        supabase.from("profiles").select("id,email,full_name").order("email"),
-        supabase.from("account_transactions").select("customer_account_id,type,amount"),
+      const [accounts, profiles, balances] = await Promise.all([
+        fetchAll((from, to) => supabase.from("customer_accounts").select("*").order("company_name").order("id").range(from, to)),
+        fetchAll((from, to) => supabase.from("profiles").select("id,email,full_name").order("email").order("id").range(from, to)),
+        fetchAll((from, to) => supabase.from("account_balances").select("customer_account_id,balance").order("customer_account_id").range(from, to)),
       ]);
-      const bal = new Map<string, number>();
-      (t.data ?? []).forEach((x) => bal.set(x.customer_account_id, (bal.get(x.customer_account_id) ?? 0) + (x.type === "debit" ? 1 : -1) * Number(x.amount)));
-      return { accounts: a.data ?? [], profiles: p.data ?? [], bal };
+      const bal = new Map(balances.map((b) => [b.customer_account_id ?? "", Number(b.balance ?? 0)]));
+      return { accounts, profiles, bal };
     },
   });
   const used = new Set(data?.accounts.map((a) => a.user_id));

@@ -11,17 +11,17 @@ function Dashboard() {
   const { data } = useQuery({
     queryKey: ["admin-dash"],
     queryFn: async () => {
-      const [p, items, pur] = await Promise.all([
+      const [p, sales, pur] = await Promise.all([
         fetchAll((from, to) => supabase.from("products").select("id,name,stock,min_stock,price").order("stock").order("id").range(from, to)),
-        supabase.from("order_items").select("product_id, quantity, unit_price, order:orders!inner(status)").in("order.status", ["approved", "shipped"]),
-        supabase.from("purchases").select("quantity, unit_cost, supplier:suppliers(name)"),
+        fetchAll((from, to) => supabase.from("product_sales").select("product_id, quantity, revenue").order("product_id").range(from, to)),
+        fetchAll((from, to) => supabase.from("purchases").select("quantity, unit_cost, supplier:suppliers(name)").order("id").range(from, to)),
       ]);
-      return { products: p, items: items.data ?? [], purchases: pur.data ?? [] };
+      return { products: p, sales, purchases: pur };
     },
   });
   if (!data) return <p className="text-muted-foreground">Yükleniyor…</p>;
   const sold = new Map<string, { q: number; t: number }>();
-  data.items.forEach((i) => { if (!i.product_id) return; const c = sold.get(i.product_id) ?? { q: 0, t: 0 }; sold.set(i.product_id, { q: c.q + i.quantity, t: c.t + i.quantity * Number(i.unit_price) }); });
+  data.sales.forEach((r) => { if (r.product_id) sold.set(r.product_id, { q: Number(r.quantity ?? 0), t: Number(r.revenue ?? 0) }); });
   const soldList = data.products.filter((p) => sold.has(p.id)).sort((a, b) => sold.get(b.id)!.q - sold.get(a.id)!.q);
   const unsold = data.products.filter((p) => !sold.has(p.id));
   const critical = data.products.filter((p) => p.stock <= p.min_stock);
