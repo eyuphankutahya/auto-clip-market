@@ -18,7 +18,7 @@ describe("stock import", () => {
   });
   it("updates stock of an existing product matched by KM No", () => {
     const plan = buildPlan([{ "KLİPS_MARKET": 208, "Stok Adedi": 40 }], cols, products);
-    expect(plan.updates).toEqual([{ id: "a", sku: "208", name: "Kapı Döşeme Klipsi", oldStock: 100, stock: 40, oldPrice: 0 }]);
+    expect(plan.updates).toEqual([{ id: "a", sku: "208", name: "Kapı Döşeme Klipsi", oldStock: 100, stock: 40, oldPrice: 0, revision: 0 }]);
   });
   it("counts rows with the same stock and price as unchanged", () => {
     const plan = buildPlan([{ "KLİPS_MARKET": "209", "Stok Adedi": 100, "Satış Fiyatı": 5 }], cols, products);
