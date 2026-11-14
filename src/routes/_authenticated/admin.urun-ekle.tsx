@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ProductPhotoUpload } from "@/components/site/ProductPhotoUpload";
 
 export const Route = createFileRoute("/_authenticated/admin/urun-ekle")({
   head: () => ({ meta: [
@@ -82,7 +83,7 @@ function NewProductPage() {
           <Field label="Kullanım yeri / ürün grubu" hint="Boş bırakılırsa ürün kontrol edilecekler listesine girer."><select className="h-9 w-full rounded-md border bg-background px-3 text-sm" value={form.category_id} onChange={(e) => set("category_id", e.target.value)}><option value="">Seçilmedi</option>{catalog?.categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></Field>
           <Field label="Satış fiyatı (₺)" hint="Boş bırakılırsa müşteriye 'Fiyat yakında' gösterilir."><Input type="number" min="0" step="0.01" value={form.price} onChange={(e) => set("price", e.target.value)} placeholder="Fiyat henüz yok" /></Field>
           <Field label="Paket içi adet" hint="Bilgi amaçlıdır; fiyat ve sipariş adedini değiştirmez."><Input type="number" min="1" step="1" value={form.package_quantity} onChange={(e) => set("package_quantity", e.target.value)} placeholder="Belirlenmedi" /></Field>
-          <Field label="Görsel adresi"><Input type="url" value={form.image_url} onChange={(e) => set("image_url", e.target.value)} placeholder="https://…" /></Field>
+          <Field label="Ürün fotoğrafı"><ProductPhotoUpload onChange={photos=>setForm(old=>({...old,...photos}))}/><Input value={form.image_url} onChange={(e) => setForm(old=>({...old,image_url:e.target.value,image_original_url:"",image_thumbnail_url:""}))} placeholder="Fotoğraf adresi (isteğe bağlı)" /></Field>
         </div>
         <div className="mt-4"><Field label="Açıklama"><Textarea value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="Ölçü, malzeme, renk veya kullanım bilgisi" /></Field></div>
       </Section>
