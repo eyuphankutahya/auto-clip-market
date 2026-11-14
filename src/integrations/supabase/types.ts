@@ -362,6 +362,7 @@ export type Database = {
           min_stock: number
           name: string
           needs_review: boolean
+          package_quantity: number | null
           price: number
           sku: string | null
           slug: string
@@ -377,6 +378,7 @@ export type Database = {
           min_stock?: number
           name: string
           needs_review?: boolean
+          package_quantity?: number | null
           price?: number
           sku?: string | null
           slug: string
@@ -392,6 +394,7 @@ export type Database = {
           min_stock?: number
           name?: string
           needs_review?: boolean
+          package_quantity?: number | null
           price?: number
           sku?: string | null
           slug?: string

@@ -50,6 +50,13 @@
       "when": 1794642633442,
       "tag": "0006_product_max_stock",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794642944448,
+      "tag": "0007_product_package_quantity",
+      "breakpoints": true
     }
   ]
 }
