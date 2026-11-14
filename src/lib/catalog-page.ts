@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchAll } from "@/lib/fetch-all";
 import type { CatalogProduct } from "@/lib/catalog";
 
-export type CatalogFilters = { q?: string; kategori?: string; marka?: string; model?: string; sayfa?: number; slug?: string };
+export type CatalogFilters = { q?: string | undefined; kategori?: string | undefined; marka?: string | undefined; model?: string | undefined; sayfa?: number | undefined; slug?: string | undefined };
 export const catalogPageQuery = (filters: CatalogFilters = {}) => queryOptions({
   queryKey: ["catalog-page", filters], staleTime: 60_000,
   queryFn: async () => {
