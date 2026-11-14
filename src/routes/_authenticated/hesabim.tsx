@@ -36,7 +36,7 @@ function Account() {
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-md border bg-card p-5 md:col-span-1">
           <div className="text-xs font-semibold uppercase tracking-wider text-accent">{type === "superadmin" ? "Süper admin" : type === "special" ? "Özel müşteri" : "Standart müşteri"}</div>
-          <div className="mt-1 font-display text-xl font-extrabold">{(user?.user_metadata?.full_name as string) || "Hoş geldiniz"}</div>
+          <div className="mt-1 font-display text-xl font-extrabold">{(user?.user_metadata?.["full_name"] as string) || "Hoş geldiniz"}</div>
           <div className="mt-3 space-y-1 text-sm text-muted-foreground">
             <div className="flex items-center gap-2"><Mail className="h-4 w-4" />{user?.email}</div>
             {user?.created_at && <div className="flex items-center gap-2"><CalendarDays className="h-4 w-4" />Üyelik: {date(user.created_at)}</div>}
@@ -88,5 +88,5 @@ function Account() {
 }
 
 function QuickLink({ to, icon, title, text }: { to: "/urunler" | "/sepet" | "/iletisim"; icon: React.ReactNode; title: string; text: string }) {
-  return <Link to={to} search={to === "/urunler" ? {} : undefined} className="rounded-md border bg-card p-4 transition-colors hover:border-accent"><div className="text-accent">{icon}</div><div className="mt-2 font-bold">{title}</div><p className="text-sm text-muted-foreground">{text}</p></Link>;
+  return <Link to={to} search={{}} className="rounded-md border bg-card p-4 transition-colors hover:border-accent"><div className="text-accent">{icon}</div><div className="mt-2 font-bold">{title}</div><p className="text-sm text-muted-foreground">{text}</p></Link>;
 }
