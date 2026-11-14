@@ -113,6 +113,20 @@
       "when": 1794647163638,
       "tag": "0015_stock_alert_preferences",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1794649582121,
+      "tag": "0016_admin_audit_and_bulk_operations",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794649771346,
+      "tag": "0017_admin_period_analytics",
+      "breakpoints": true
     }
   ]
 }

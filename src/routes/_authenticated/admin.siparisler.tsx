@@ -12,6 +12,9 @@ import { OrderDialog } from "@/components/site/OrderDialog";
 import { fetchAll } from "@/lib/fetch-all";
 import { downloadCsv } from "@/lib/csv";
 import { matchesCustomer, orderDateBounds, orderListHeader, orderListRow } from "@/lib/order-export";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BulkOrderActions } from "@/components/site/BulkOrderActions";
+import { toggleSelection } from "@/lib/admin-rules";
 
 export const Route = createFileRoute("/_authenticated/admin/siparisler")({ head: () => ({ meta: [{ title: "Sipariş Yönetimi — KlipsMarket" }, { name: "description", content: "Müşteri siparişlerini ve durumlarını yönetin." }, { property: "og:title", content: "Sipariş Yönetimi — KlipsMarket" }, { property: "og:description", content: "Müşteri siparişlerini ve durumlarını yönetin." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Orders });
 
@@ -25,6 +28,7 @@ function Orders() {
   const [to, setTo] = useState("");
   const [exporting, setExporting] = useState(false);
   const [openOrder, setOpenOrder] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
   const orderNo = /^\d+$/.test(q.trim()) ? Number(q.trim()) : null;
   const invalidDates = Boolean(from && to && from > to);
   const prepareQuery = async () => {
@@ -101,6 +105,8 @@ function Orders() {
       {error && <p role="alert" className="text-sm text-destructive">Siparişler yüklenemedi: {error.message}</p>}
       {isFetching && <p className="text-sm text-muted-foreground">Yükleniyor…</p>}
       {data && <Pager page={page} total={data.total} onChange={setPage} />}
+      {Boolean(data?.orders.length) && <label className="flex items-center gap-2 py-2 text-sm"><Checkbox aria-label="Bu sayfadaki siparişleri seç" checked={Boolean(data?.orders.length && data.orders.every(o => selected.includes(o.id)))} onCheckedChange={checked => setSelected(checked ? data?.orders.map(o => o.id) ?? [] : [])} />Bu sayfadaki siparişleri seç</label>}
+      {Boolean(data?.orders.some(o => selected.includes(o.id))) && <BulkOrderActions orders={data?.orders.filter(o => selected.includes(o.id)) ?? []} onSaved={() => { qc.invalidateQueries(); }} onClear={() => setSelected([])} />}
       {data?.orders.length === 0 && <p className="text-muted-foreground">Sipariş yok.</p>}
       {data?.orders.map((o) => {
         const u = data.profiles.get(o.user_id);
@@ -108,10 +114,10 @@ function Orders() {
           <div key={o.id} className="rounded-md border bg-card p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <div className="font-bold"><Button variant="link" onClick={() => setOpenOrder(o.id)} className="h-auto p-0 font-bold underline" aria-label={`Sipariş #${o.order_no} ayrıntıları`}>#{o.order_no}</Button> · {o.account?.company_name ?? u?.full_name ?? u?.email}</div>
+                <div className="flex items-center gap-2 font-bold"><Checkbox aria-label={`Sipariş #${o.order_no} seç`} checked={selected.includes(o.id)} onCheckedChange={() => setSelected(ids => toggleSelection(ids,o.id))} /><Button variant="link" onClick={() => setOpenOrder(o.id)} className="h-auto p-0 font-bold underline" aria-label={`Sipariş #${o.order_no} ayrıntıları`}>#{o.order_no}</Button><span>· {o.account?.company_name ?? u?.full_name ?? u?.email}</span></div>
                 <div className="text-xs text-muted-foreground">{date(o.created_at)} · {u?.email}{o.account ? ` · Cari (%${Number(o.discount_rate)})` : ""}</div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <span className="font-display text-lg font-extrabold">{money(o.total)}</span>
                 {o.status === "pending" && <Button size="sm" onClick={() => setStatus(o.id, "approved")}>Onayla</Button>}
                 {o.status === "approved" && <Button size="sm" onClick={() => setStatus(o.id, "shipped")}>Kargola</Button>}

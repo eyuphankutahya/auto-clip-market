@@ -62,6 +62,42 @@ export type Database = {
           },
         ]
       }
+      admin_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after_data: Json | null
+          before_data: Json | null
+          created_at: string
+          id: string
+          record_id: string | null
+          record_label: string
+          table_name: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string
+          id?: string
+          record_id?: string | null
+          record_label: string
+          table_name: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string
+          id?: string
+          record_id?: string | null
+          record_label?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
       admin_bootstrap: {
         Row: {
           claimed_at: string | null
@@ -765,6 +801,18 @@ export type Database = {
       }
     }
     Functions: {
+      admin_bulk_orders: {
+        Args: { _items: Json; _target: string }
+        Returns: number
+      }
+      admin_bulk_products: {
+        Args: { _items: Json; _patch: Json }
+        Returns: number
+      }
+      admin_period_analysis: {
+        Args: { _from: string; _previous_from: string; _to: string }
+        Returns: Json
+      }
       apply_import: {
         Args: { _creates: Json; _filename: string; _updates: Json }
         Returns: string

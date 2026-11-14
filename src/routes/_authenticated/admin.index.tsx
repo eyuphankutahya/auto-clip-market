@@ -7,6 +7,7 @@ import { Stat } from "@/components/site/CariStatement";
 import { useState } from "react";
 import { alertLevel, needsAlert } from "@/lib/stock-alerts";
 import { AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const T = "Yönetim Özeti — KlipsMarket";
 const D = "Günlük satış, bekleyen siparişler, kritik stok ve cari alacak özeti.";
@@ -39,7 +40,7 @@ function Overview() {
   const monthTotal = active.reduce((s, o) => s + Number(o.total), 0);
   const days = Array.from({ length: 30 }, (_, i) => { const d = new Date(data.since.getTime() + i * DAY); return { key: dayKey(d), total: 0 }; });
   const idx = new Map(days.map((d, i) => [d.key, i]));
-  active.forEach((o) => { const i = idx.get(dayKey(new Date(o.created_at))); if (i !== undefined) days[i]!.total += Number(o.total); });
+  active.forEach((o) => { const i = idx.get(dayKey(new Date(o.created_at))); const d = i === undefined ? undefined : days[i]; if (d) d.total += Number(o.total); });
   const max = Math.max(1, ...days.map((d) => d.total));
   return (
     <div className="space-y-8">
@@ -57,7 +58,7 @@ function Overview() {
         <div className="flex h-44 items-end gap-1" role="img" aria-label="Son 30 günlük satış grafiği">
           {days.map((d) => <div key={d.key} className="group relative flex-1"><div className="w-full rounded-t-sm bg-accent" style={{ height: `${Math.max(2, (d.total / max) * 160)}px`, opacity: d.total ? 1 : 0.2 }} /><span className="pointer-events-none absolute -top-8 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-sm bg-ink px-2 py-1 text-xs text-ink-foreground group-hover:block">{d.key}: {money(d.total)}</span></div>)}
         </div>
-        <div className="mt-1 flex justify-between text-xs text-muted-foreground"><span>{days[0]!.key}</span><span>{days[29]!.key}</span></div>
+        <div className="mt-1 flex justify-between text-xs text-muted-foreground"><span>{days[0]?.key}</span><span>{days[29]?.key}</span></div>
       </section>
       <section>
         <div className="mb-2 flex items-center justify-between"><h2 className="font-extrabold">Onay bekleyen siparişler</h2><Link to="/admin/siparisler" className="text-sm font-semibold text-accent underline">Tümü</Link></div>
@@ -91,7 +92,7 @@ function StockAlerts({ items }: { items: Alert[] }) {
             <span className="w-32 text-right text-muted-foreground">Önerilen alım: <b className="text-foreground">{need}</b></span>
           </li>); })}
       </ul>
-      {items.length > 10 && <button className="mt-2 text-sm font-semibold text-accent underline" onClick={() => setAll(!all)}>{all ? "Daha az göster" : `Tümünü göster (${items.length})`}</button>}
+      {items.length > 10 && <Button variant="link" className="mt-2 h-auto p-0" onClick={() => setAll(!all)}>{all ? "Daha az göster" : `Tümünü göster (${items.length})`}</Button>}
     </section>
   );
 }
