@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,14 +27,26 @@ function Cart() {
   const { user, account } = useAuth();
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
+  const inFlight = useRef(false);
   const navigate = useNavigate();
   const rate = account ? Number(account.discount_rate) : 0;
   const total = items.reduce((s, i) => s + discounted(i.price, rate) * i.quantity, 0);
   const order = async () => {
-    setBusy(true);
-    const { error } = await supabase.rpc("place_order", { _items: items.map((i) => ({ product_id: i.product_id, quantity: i.quantity })), _notes: notes });
-    setBusy(false);
+    if(inFlight.current) return;
+    inFlight.current = true; setBusy(true);
+    const payload = JSON.stringify({items,notes});
+    const stored = sessionStorage.getItem("order-request");
+    let request: {payload:string;key:string} | null = null;
+    try { request = stored ? JSON.parse(stored) : null; } catch { /* replace invalid key */ }
+    const key = request?.payload === payload ? request.key : crypto.randomUUID();
+    sessionStorage.setItem("order-request",JSON.stringify({payload,key}));
+    let error: {message:string} | null = null;
+    try { const result = await supabase.rpc("place_order_once", { _items: items.map((i) => ({ product_id: i.product_id, quantity: i.quantity })), _notes: notes, _request_key:key }); error=result.error; }
+    catch { error={message:"Sipariş yanıtı alınamadı; tekrar deneyebilirsiniz."}; }
+    finally { setBusy(false); inFlight.current=false; }
+
     if (error) { toast.error(error.message); return; }
+    sessionStorage.removeItem("order-request");
     clear();
     toast.success("Sipariş talebiniz alındı");
     navigate({ to: "/hesabim" });
@@ -54,7 +66,7 @@ function Cart() {
         ))}
       </div>
       <div className="mt-6 grid gap-6 md:grid-cols-2">
-        <Textarea placeholder="Sipariş notu (isteğe bağlı)" value={notes} onChange={(e) => setNotes(e.target.value)} />
+        <Textarea maxLength={2000} placeholder="Sipariş notu (isteğe bağlı)" value={notes} onChange={(e) => setNotes(e.target.value)} />
         <div className="rounded-md border bg-card p-5">
           {rate > 0 && <div className="text-sm text-muted-foreground">Cari iskonto %{rate} uygulandı</div>}
           <div className="flex justify-between font-display text-2xl font-extrabold"><span>Toplam</span><span>{money(total)}</span></div>

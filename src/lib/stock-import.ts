@@ -1,9 +1,9 @@
 // Pure logic for the admin bulk stock / product-card import (Excel or CSV rows → change plan).
 
 export type ImportRow = Record<string, unknown>;
-export type ExistingProduct = { id: string; sku: string | null; name: string; stock: number; price: number | string };
+export type ExistingProduct = { id: string; sku: string | null; name: string; stock: number; price: number | string; revision?: number };
 export type Columns = { sku?: string | undefined; name?: string | undefined; stock?: string | undefined; price?: string | undefined };
-export type Update = { id: string; sku: string | null; name: string; oldStock: number; stock?: number; oldPrice: number; price?: number };
+export type Update = { id: string; sku: string | null; name: string; oldStock: number; stock?: number; oldPrice: number; revision: number; price?: number };
 export type Create = { sku: string; name: string; stock: number; price: number };
 export type Problem = { row: number; reason: string };
 export type Plan = { updates: Update[]; creates: Create[]; unchanged: number; problems: Problem[] };
@@ -60,7 +60,7 @@ export function buildPlan(rows: ImportRow[], cols: Columns, products: ExistingPr
     }
     if (seen.has(p.id)) return void plan.problems.push({ row: rowNo, reason: `${p.sku ?? p.name} dosyada iki kez var` });
     seen.add(p.id);
-    const u: Update = { id: p.id, sku: p.sku, name: p.name, oldStock: p.stock, oldPrice: Number(p.price) };
+    const u: Update = { id: p.id, sku: p.sku, name: p.name, oldStock: p.stock, oldPrice: Number(p.price), revision: p.revision ?? 0 };
     if (stock !== undefined && stock !== p.stock) u.stock = stock;
     if (price !== undefined && price !== Number(p.price)) u.price = price;
     if (u.stock === undefined && u.price === undefined) plan.unchanged++;
