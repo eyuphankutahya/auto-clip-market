@@ -85,6 +85,13 @@
       "when": 1794645354083,
       "tag": "0011_catalog_pages_and_safe_operations",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794645381283,
+      "tag": "0012_atomic_import_and_rollback",
+      "breakpoints": true
     }
   ]
 }

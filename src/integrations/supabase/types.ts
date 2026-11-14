@@ -759,6 +759,10 @@ export type Database = {
       }
     }
     Functions: {
+      apply_import: {
+        Args: { _creates: Json; _filename: string; _updates: Json }
+        Returns: string
+      }
       catalog_norm: { Args: { _text: string }; Returns: string }
       catalog_page: {
         Args: {
@@ -797,6 +801,7 @@ export type Database = {
         Args: { _codes: Json; _product_id: string }
         Returns: undefined
       }
+      rollback_import: { Args: { _batch_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"
