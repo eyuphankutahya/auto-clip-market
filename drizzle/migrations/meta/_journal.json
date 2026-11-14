@@ -57,6 +57,13 @@
       "when": 1794642944448,
       "tag": "0007_product_package_quantity",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794643074819,
+      "tag": "0008_admin_product_creation",
+      "breakpoints": true
     }
   ]
 }
