@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
+import { OrderDialog } from "@/components/site/OrderDialog";
 
 export const Route = createFileRoute("/_authenticated/admin/siparisler")({ head: () => ({ meta: [{ title: "Sipariş Yönetimi — KlipsMarket" }, { name: "description", content: "Müşteri siparişlerini ve durumlarını yönetin." }, { property: "og:title", content: "Sipariş Yönetimi — KlipsMarket" }, { property: "og:description", content: "Müşteri siparişlerini ve durumlarını yönetin." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Orders });
 

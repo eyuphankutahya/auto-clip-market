@@ -4,9 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { date, money } from "@/lib/format";
 import { fetchAll } from "@/lib/fetch-all";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
-const STATUS: Record<string,string> = { pending:"Bekliyor", approved:"Onaylandı", shipped:"Kargolandı", cancelled:"İptal" };
+import { OrderDialog } from "@/components/site/OrderDialog";
 
 export function useCariData(accountId: string) {
   return useQuery({
