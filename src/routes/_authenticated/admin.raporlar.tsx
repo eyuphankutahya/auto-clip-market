@@ -42,7 +42,7 @@ function Reports() {
       <AdminAnalytics />
       <div className="grid gap-3 sm:grid-cols-4">
         <Stat label="Ürün sayısı" value={data.products.length} />
-        <Stat label="Kritik stok" value={critical.length} tone={critical.length ? "text-destructive" : ""} />
+        <Stat label="Minimum stok altı" value={critical.length} tone={critical.length ? "text-destructive" : ""} />
         <Stat label="Satış cirosu" value={money(revenue)} />
         <Stat label="Satılmayan ürün" value={unsold.length} />
       </div>
