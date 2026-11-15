@@ -49,7 +49,7 @@ function Overview() {
         <Stat label="Son 30 gün satış" value={money(monthTotal)} />
         <Stat label="Toplam cari alacak" value={money(data.receivable)} tone={data.receivable > 0 ? "text-destructive" : ""} />
         <Link to="/admin/siparisler" className="block hover:opacity-90"><Stat label="Bekleyen sipariş →" value={data.pending} tone={data.pending ? "text-warning" : ""} /></Link>
-        <Link to="/admin/eksik-stok" className="block hover:opacity-90"><Stat label={`Kritik stok (${data.out} tükendi) →`} value={data.critical} tone={data.critical ? "text-destructive" : ""} /></Link>
+        <Link to="/admin/eksik-stok" className="block hover:opacity-90"><Stat label={`Minimum stok altı (${data.out} tükendi) →`} value={data.critical} tone={data.critical ? "text-destructive" : ""} /></Link>
         <Link to="/admin/mesajlar" className="block hover:opacity-90"><Stat label="Son 7 gün mesaj →" value={data.messages} /></Link>
       </div>
       <StockAlerts items={data.alerts} />

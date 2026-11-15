@@ -15,13 +15,16 @@ function AccountDetail() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
   const { data: acc } = useQuery({ queryKey: ["account", id], queryFn: async () => (await supabase.from("customer_accounts").select("*").eq("id", id).single()).data });
+  const { data: note } = useQuery({ queryKey: ["account-note", id], queryFn: async () => (await supabase.from("customer_account_notes").select("notes").eq("customer_account_id", id).maybeSingle()).data });
   const [f, setF] = useState({ company_name: "", address: "", phone: "", notes: "", discount_rate: "0" });
   const [pay, setPay] = useState({ amount: "", method: "Havale", description: "" });
   const [payKey, setPayKey] = useState(() => crypto.randomUUID());
   const [paying, setPaying] = useState(false);
-  useEffect(() => { if (acc) setF({ company_name: acc.company_name, address: acc.address ?? "", phone: acc.phone ?? "", notes: acc.notes ?? "", discount_rate: String(acc.discount_rate) }); }, [acc]);
+  useEffect(() => { if (acc) setF({ company_name: acc.company_name, address: acc.address ?? "", phone: acc.phone ?? "", notes: note?.notes ?? "", discount_rate: String(acc.discount_rate) }); }, [acc, note]);
   const save = async () => {
-    const { error } = await supabase.from("customer_accounts").update({ ...f, discount_rate: Number(f.discount_rate) }).eq("id", id);
+    const { notes, ...rest } = f;
+    const { error } = await supabase.from("customer_accounts").update({ ...rest, discount_rate: Number(f.discount_rate) }).eq("id", id);
+    if (!error) { const r = await supabase.from("customer_account_notes").upsert({ customer_account_id: id, notes, updated_at: new Date().toISOString() }); if (r.error) { toast.error(r.error.message); return; } }
     if (error) toast.error(error.message); else { toast.success("Güncellendi"); qc.invalidateQueries(); }
   };
   const addPayment = async () => {
@@ -46,7 +49,7 @@ function AccountDetail() {
           <div><Label>Firma adı</Label><Input value={f.company_name} onChange={(e) => setF({ ...f, company_name: e.target.value })} /></div>
           <div className="grid grid-cols-2 gap-3"><div><Label>Telefon</Label><Input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div><div><Label>İskonto (%)</Label><Input type="number" value={f.discount_rate} onChange={(e) => setF({ ...f, discount_rate: e.target.value })} /></div></div>
           <div><Label>Adres</Label><Textarea value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} /></div>
-          <div><Label>Açıklama</Label><Textarea value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>
+          <div><Label>İç not (yalnızca yönetici görür)</Label><Textarea value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>
           <Button onClick={save}>Güncelle</Button>
         </div>
         <div className="grid content-start gap-3 rounded-md border bg-card p-4">
