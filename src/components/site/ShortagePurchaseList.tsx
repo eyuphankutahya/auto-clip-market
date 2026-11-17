@@ -7,7 +7,7 @@ import { groupPurchaseLines, purchaseLine, type PurchaseLine, type PurchaseProdu
 type Props = { lines: PurchaseLine[]; products: PurchaseProduct[]; onChange: (lines: PurchaseLine[]) => void; onDownload: () => void; exporting: boolean };
 
 export function ShortagePurchaseList({ lines, products, onChange, onDownload, exporting }: Props) {
-  const groups = groupPurchaseLines([...lines].sort(compareProductCodes));
+  const groups = groupPurchaseLines([...lines].sort((a, b) => compareProductCodes({ sku: a.sku, id: a.productId }, { sku: b.sku, id: b.productId })));
   return <section className="space-y-4 border-t pt-5" aria-label="Alım listesi">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h2 className="text-xl font-bold">Alım listesi <span className="text-sm font-normal text-muted-foreground">{lines.length} ürün · {groups.length} tedarikçi</span></h2>
