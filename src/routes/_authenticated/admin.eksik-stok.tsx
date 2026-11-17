@@ -84,7 +84,7 @@ function Shortages() {
     try {
       const XLSX = await import("xlsx");
       const book = XLSX.utils.book_new();
-      const rows = groupPurchaseLines([...purchaseLines].sort(compareProductCodes)).flatMap((g) => g.lines.map((l) => ({ "Tedarikçi": l.supplierName, "KM No": l.sku ?? "", "Stok Açıklaması": l.name, "Firma kodları": l.codes.join(" · "), "Alım Adedi": l.quantity })));
+      const rows = groupPurchaseLines([...purchaseLines].sort((a, b) => compareProductCodes({ sku: a.sku, id: a.productId }, { sku: b.sku, id: b.productId }))).flatMap((g) => g.lines.map((l) => ({ "Tedarikçi": l.supplierName, "KM No": l.sku ?? "", "Stok Açıklaması": l.name, "Firma kodları": l.codes.join(" · "), "Alım Adedi": l.quantity })));
       const sheet = XLSX.utils.json_to_sheet(rows);
       sheet["!cols"] = [{ wch: 22 }, { wch: 12 }, { wch: 60 }, { wch: 30 }, { wch: 16 }];
       XLSX.utils.book_append_sheet(book, sheet, "Alım Listesi");
