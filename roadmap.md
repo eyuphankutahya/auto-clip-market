@@ -1,4 +1,6 @@
 # Roadmap
+- [ ] Keep vehicle brands only: stop using vehicle models in catalog, admin forms and exports; models remain in the database as deprecated
+- [x] Keep shortage and purchase-list quantities in multiples of 100 with − / + steps and rounded-up suggestions; browser-verified 100→200→100, typed 150 rejected, purchase list stepper, desktop and phone scroll of the last column
 - [x] Replace lower purchase form with inline product quantity selection in multiples of 100; 200-unit save, stock readback, removal and mobile verified
 - [x] Add selectable shortage products with per-product supplier assignments and grouped purchase-list export; admin selection of 14/STAR and 397B/BARUTCU, quantity edit, removal, two-row Excel and mobile verified; 8 tests passed
 - [x] Add and verify audit user/action/date filters and complete filtered CSV export; authenticated 16-row download, details and mobile layout checked

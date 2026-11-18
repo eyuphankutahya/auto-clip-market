@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Download, ListPlus, RefreshCw } from "lucide-react";
+import { Download, ListPlus, Minus, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAll } from "@/lib/fetch-all";
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ShortagePurchaseList } from "@/components/site/ShortagePurchaseList";
 import { groupPurchaseLines, mergePurchaseLines, purchaseLine, type PurchaseLine } from "@/lib/purchase-list";
+import { changePurchaseQuantity, isPurchaseQuantity, roundUpPurchaseQuantity } from "@/lib/purchase-quantity";
 
 const shortageQuery = queryOptions({
   queryKey: ["admin-stock-shortages"],
@@ -72,7 +73,7 @@ function Shortages() {
 
   function addSelected() {
     try {
-      const added = data.products.filter((p) => selected.includes(p.id)).map((p) => purchaseLine(p, supplierFor(p), quantities[p.id] ?? replenishmentQuantity(p)));
+      const added = data.products.filter((p) => selected.includes(p.id)).map((p) => purchaseLine(p, supplierFor(p), quantities[p.id] ?? roundUpPurchaseQuantity(replenishmentQuantity(p))));
       setPurchaseLines((old) => mergePurchaseLines(old, added));
       setSelected([]);
       toast.success(`${added.length} ürün alım listesine eklendi.`);
@@ -101,7 +102,7 @@ function Shortages() {
         "KM No": p.sku ?? "", "Stok Açıklaması": p.name,
         "Durum": p.stock === 0 ? "Tükendi" : "Minimum altı",
         "Mevcut Stok": p.stock, "Min Stok": p.min_stock, "Max Stok": p.max_stock ?? "",
-        "Alım Adedi": quantities[p.id] ?? replenishmentQuantity(p),
+        "Alım Adedi": quantities[p.id] ?? roundUpPurchaseQuantity(replenishmentQuantity(p)),
         "Tedarikçi ve Kodları": p.suppliers.filter(s=>!supplier || s.supplier_id===supplier).map((s) => `${s.name}${s.code ? `: ${s.code}` : ""}`).join("\n"),
       }));
       const sheet = XLSX.utils.json_to_sheet(rows);
@@ -134,7 +135,7 @@ function Shortages() {
         <div className="space-y-2"><Label htmlFor="shortage-status">Stok durumu</Label><select id="shortage-status" className="h-9 w-full rounded-md border bg-background px-3 text-sm" value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }}><option value="all">Tüm eksikler</option><option value="empty">Tükenenler</option><option value="low">Minimum altındakiler</option></select></div>
         <div className="space-y-2"><Label htmlFor="shortage-supplier">Tedarikçi</Label><select id="shortage-supplier" className="h-9 w-full rounded-md border bg-background px-3 text-sm" value={supplier} onChange={(e) => { setSupplier(e.target.value); setPage(0); }}><option value="">Tüm tedarikçiler</option>{data.suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
       </div>
-      <p className="text-sm text-muted-foreground">Alım hedefi: maksimum stok; maksimum belirlenmemişse minimum stok. Stok sınırı 0 olan tükenmiş ürünlerde alım adedi belirlenmemiştir.</p>
+      <p className="text-sm text-muted-foreground">Alım hedefi: maksimum stok; maksimum belirlenmemişse minimum stok. Alım adetleri 100 ve katları olarak seçilir; öneri, hedefe göre bir üst 100 katına yuvarlanır.</p>
       <Pager page={currentPage} total={list.length} onChange={setPage} />
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={addSelected} disabled={!selected.length || isFetching}><ListPlus />Seçilenleri listeye ekle ({selected.length})</Button>
@@ -144,17 +145,21 @@ function Shortages() {
       {list.length === 0 ? <p className="border-y py-12 text-center text-muted-foreground">{data.products.length ? "Filtrelere uygun eksik ürün bulunamadı." : "Stoğu tükenen veya minimumun altına düşen ürün yok."}</p> : (
         <div className="overflow-x-auto rounded-md border">
           <table className="w-full bg-card text-sm">
-            <thead className="bg-secondary text-left"><tr><th className="px-3 py-3"><Checkbox aria-label="Bu sayfadaki ürünleri seç" checked={allVisibleSelected ? true : visible.some((p) => selected.includes(p.id)) ? "indeterminate" : false} onCheckedChange={(checked) => setSelected((old) => checked === true ? [...new Set([...old, ...visible.map((p) => p.id)])] : old.filter((id) => !visible.some((p) => p.id === id)))} /></th>{["KM No", "Ürün", "Durum", "Stok", "Min / Max", "Önerilen alım", "Alınacak tedarikçi", "Tedarikçi / Kod"].map((h) => <th key={h} className="whitespace-nowrap px-3 py-3">{h}</th>)}</tr></thead>
-            <tbody>{visible.map((p) => <tr key={p.id} className="border-t align-top">
+            <thead className="bg-secondary text-left"><tr><th className="px-3 py-3"><Checkbox aria-label="Bu sayfadaki ürünleri seç" checked={allVisibleSelected ? true : visible.some((p) => selected.includes(p.id)) ? "indeterminate" : false} onCheckedChange={(checked) => setSelected((old) => checked === true ? [...new Set([...old, ...visible.map((p) => p.id)])] : old.filter((id) => !visible.some((p) => p.id === id)))} /></th>{["KM No", "Ürün", "Durum", "Stok", "Min / Max", "Alım adedi", "Alınacak tedarikçi", "Tedarikçi / Kod"].map((h) => <th key={h} className="whitespace-nowrap px-3 py-3">{h}</th>)}</tr></thead>
+            <tbody>{visible.map((p) => { const quantity = quantities[p.id] ?? roundUpPurchaseQuantity(replenishmentQuantity(p)); return <tr key={p.id} className="border-t align-top">
               <td className="px-3 py-3"><Checkbox aria-label={`${p.sku ?? p.name} ürününü seç`} checked={selected.includes(p.id)} onCheckedChange={(checked) => setSelected((old) => checked === true ? [...new Set([...old, p.id])] : old.filter((id) => id !== p.id))} /></td>
               <td className="whitespace-nowrap px-3 py-3 font-oem">{p.sku ?? "—"}</td>
               <td className="min-w-48 px-3 py-3 font-semibold">{p.name}</td>
               <td className={`whitespace-nowrap px-3 py-3 ${p.stock === 0 ? "text-destructive" : "text-warning"}`}>{p.stock === 0 ? "Tükendi" : "Minimum altı"}</td>
               <td className="px-3 py-3">{p.stock}</td><td className="whitespace-nowrap px-3 py-3">{p.min_stock} / {p.max_stock ?? "—"}</td>
-              <td className="px-3 py-3"><Input aria-label={`${p.sku ?? p.name} alım adedi`} type="number" min={0} max={100000} step={1} className="w-24" value={quantities[p.id] ?? replenishmentQuantity(p)} onChange={e=>{const n=Number(e.target.value);if(Number.isInteger(n) && n>=0 && n<=100000)setQuantities(old=>({...old,[p.id]:n}));}}/></td>
+              <td className="px-3 py-3"><div className="flex items-center gap-1">
+                <Button size="icon" variant="outline" title="100 azalt" aria-label={`${p.sku ?? p.name} alım adedini 100 azalt`} disabled={quantity === 100} onClick={() => setQuantities((old) => ({ ...old, [p.id]: changePurchaseQuantity(quantity, -1, 100000) }))}><Minus /></Button>
+                <Input aria-label={`${p.sku ?? p.name} alım adedi`} type="number" min={100} max={100000} step={100} className="w-24 text-center" value={quantity} onChange={e=>{const n=Number(e.target.value);if(isPurchaseQuantity(n) && n<=100000)setQuantities(old=>({...old,[p.id]:n}));}}/>
+                <Button size="icon" variant="outline" title="100 artır" aria-label={`${p.sku ?? p.name} alım adedini 100 artır`} disabled={quantity >= 100000} onClick={() => setQuantities((old) => ({ ...old, [p.id]: changePurchaseQuantity(quantity, 1, 100000) }))}><Plus /></Button>
+              </div></td>
               <td className="px-3 py-3"><select aria-label={`${p.sku ?? p.name} alınacak tedarikçi`} className="h-9 w-40 rounded-md border bg-background px-2 text-sm" value={supplierFor(p)} onChange={(e) => setAssigned((old) => ({ ...old, [p.id]: e.target.value }))}><option value="">Tedarikçi seçin</option>{[...new Map(p.suppliers.map((s) => [s.supplier_id, s])).values()].map((s) => <option key={s.supplier_id} value={s.supplier_id}>{s.name}</option>)}</select></td>
               <td className="min-w-44 px-3 py-3">{p.suppliers.length ? p.suppliers.filter(s=>!supplier || s.supplier_id===supplier).map((s, i) => <div key={`${s.supplier_id}-${i}`} className="break-words">{s.name}{s.code && <span className="font-oem text-xs"> · {s.code}</span>}</div>) : <span className="text-muted-foreground">Tedarikçi yok</span>}</td>
-            </tr>)}</tbody>
+            </tr>; })}</tbody>
           </table>
         </div>
       )}
