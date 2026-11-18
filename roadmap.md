@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Replace lower purchase form with inline product quantity selection in multiples of 100; verify save and stock readback on desktop/mobile
+- [x] Replace lower purchase form with inline product quantity selection in multiples of 100; 200-unit save, stock readback, removal and mobile verified
 - [x] Add selectable shortage products with per-product supplier assignments and grouped purchase-list export; admin selection of 14/STAR and 397B/BARUTCU, quantity edit, removal, two-row Excel and mobile verified; 8 tests passed
 - [x] Add and verify audit user/action/date filters and complete filtered CSV export; authenticated 16-row download, details and mobile layout checked
 - [x] Verify configured stock-threshold warnings in the admin overview; 85 warning products, displayed stocks strictly below thresholds, boundary tests passed
