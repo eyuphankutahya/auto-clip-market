@@ -14,7 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ShortagePurchaseList } from "@/components/site/ShortagePurchaseList";
 import { ProductImage } from "@/components/site/ProductImage";
-import { groupPurchaseLines, mergePurchaseLines, purchaseLine, type PurchaseLine } from "@/lib/purchase-list";
+import { groupPurchaseLines, purchaseLine } from "@/lib/purchase-list";
+import { usePurchaseDraft, type PurchaseDraftChange } from "@/lib/purchase-draft";
 import { changePurchaseQuantity, isPurchaseQuantity, roundUpPurchaseQuantity } from "@/lib/purchase-quantity";
 
 const sortOptions = {
@@ -48,7 +49,8 @@ const shortageQuery = queryOptions({
       rows.push({ supplier_id: link.supplier_id, name: names.get(link.supplier_id) ?? "—", code: link.code });
       byProduct.set(link.product_id, rows);
     }
-    return { products: products.filter(isStockShortage).sort(compareProductCodes).map((p) => ({ ...p, suppliers: byProduct.get(p.id) ?? [] })), suppliers };
+    const purchaseProducts = products.map((p) => ({ ...p, suppliers: byProduct.get(p.id) ?? [] }));
+    return { products: purchaseProducts.filter(isStockShortage).sort(compareProductCodes), purchaseProducts, suppliers };
   },
 });
 
@@ -61,10 +63,15 @@ export const Route = createFileRoute("/_authenticated/admin/eksik-stok")({
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),
   loader: ({ context }) => context.queryClient.ensureQueryData(shortageQuery),
-  component: Shortages,
+  component: ShortagePage,
 });
 
-function Shortages() {
+function ShortagePage() {
+  const { adminUserId } = Route.useRouteContext();
+  return <Shortages key={adminUserId} adminUserId={adminUserId} />;
+}
+
+function Shortages({ adminUserId }: { adminUserId: string }) {
   const { data, refetch, isFetching } = useSuspenseQuery(shortageQuery);
   const [query, setQuery] = useState("");
   const [supplier, setSupplier] = useState("");
@@ -75,7 +82,10 @@ function Shortages() {
   const [quantities,setQuantities]=useState<Record<string,number>>({});
   const [selected, setSelected] = useState<string[]>([]);
   const [assigned, setAssigned] = useState<Record<string, string>>({});
-  const [purchaseLines, setPurchaseLines] = useState<PurchaseLine[]>([]);
+  const { query: draft, save: saveDraft } = usePurchaseDraft(adminUserId);
+  const purchaseLines = draft.data ?? [];
+  const draftBusy = draft.isFetching || saveDraft.isPending;
+  const draftDisabled = draftBusy || !draft.isSuccess;
   const [purchaseExporting, setPurchaseExporting] = useState(false);
   const supplierFor = (p: typeof data.products[number]) => assigned[p.id] ?? (supplier && p.suppliers.some((s) => s.supplier_id === supplier) ? supplier : new Set(p.suppliers.map((s) => s.supplier_id)).size === 1 ? p.suppliers[0]?.supplier_id ?? "" : "");
   const list = useMemo(() => {
@@ -101,12 +111,23 @@ function Shortages() {
   const visible = list.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
   const allVisibleSelected = visible.length > 0 && visible.every((p) => selected.includes(p.id));
 
-  function addToList(products: typeof data.products) {
-    if (!products.length) return;
+  async function changeDraft(change: PurchaseDraftChange) {
+    if (draftDisabled) return false;
+    try {
+      await saveDraft.mutateAsync(change);
+      return true;
+    } catch {
+      toast.error("Alım listesi kaydedilemedi. Lütfen tekrar deneyin.");
+      return false;
+    }
+  }
+
+  async function addToList(products: typeof data.products) {
+    if (!products.length || draftDisabled) return;
     try {
       const added = products.map((p) => purchaseLine(p, supplierFor(p), purchaseQuantity(p, quantities)));
       const addedIds = new Set(added.map((line) => line.productId));
-      setPurchaseLines((old) => mergePurchaseLines(old, added));
+      if (!(await changeDraft({ upsert: added }))) return;
       setSelected((old) => old.filter((id) => !addedIds.has(id)));
       toast.success(`${added.length} ürün alım listesine eklendi.`);
     } catch (error) { toast.error(error instanceof Error ? error.message : "Ürünler listeye eklenemedi."); }
@@ -149,12 +170,9 @@ function Shortages() {
 
   return (
     <div className="min-w-0 space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-extrabold">Eksik stok listesi</h1>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => { void refetch().catch(() => toast.error("Stok bilgileri yenilenemedi.")); }} disabled={isFetching} title="Stokları yenile" aria-label="Stokları yenile"><RefreshCw className={isFetching ? "animate-spin motion-reduce:animate-none" : ""} /></Button>
-          <Button variant="outline" onClick={download} disabled={!list.length || exporting || isFetching}><Download />{exporting ? "Hazırlanıyor…" : "Eksik stokları indir"}</Button>
-        </div>
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button variant="outline" onClick={() => { void refetch().catch(() => toast.error("Stok bilgileri yenilenemedi.")); }} disabled={isFetching} title="Stokları yenile" aria-label="Stokları yenile"><RefreshCw className={isFetching ? "animate-spin motion-reduce:animate-none" : ""} /></Button>
+        <Button variant="outline" onClick={download} disabled={!list.length || exporting || isFetching}><Download />{exporting ? "Hazırlanıyor…" : "Eksik stokları indir"}</Button>
       </div>
       <div className="flex flex-wrap gap-x-6 gap-y-2 border-y py-4 text-sm">
         <span><b>{data.products.filter((p) => p.stock === 0).length}</b> tükenen ürün</span>
@@ -179,9 +197,14 @@ function Shortages() {
       <p className="text-sm text-muted-foreground">Alım hedefi: maksimum stok; maksimum belirlenmemişse minimum stok. Alım adetleri 100 ve katları olarak seçilir; öneri, hedefe göre bir üst 100 katına yuvarlanır.</p>
       <Pager page={currentPage} total={list.length} onChange={setPage} />
       <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={() => addToList(data.products.filter((p) => selected.includes(p.id)))} disabled={!selected.length || isFetching}><ListPlus />Seçilenleri listeye ekle ({selected.length})</Button>
+        <Button onClick={() => addToList(data.products.filter((p) => selected.includes(p.id)))} disabled={!selected.length || isFetching || draftDisabled}><ListPlus />Seçilenleri listeye ekle ({selected.length})</Button>
         {selected.length > 0 && <Button variant="ghost" onClick={() => setSelected([])}>Seçimi kaldır</Button>}
-        <span className="text-sm text-muted-foreground">Alım listesinde {purchaseLines.length} ürün</span>
+        {draft.data && <span className="text-sm text-muted-foreground">Alım listesinde {purchaseLines.length} ürün</span>}
+        {saveDraft.isPending && <span role="status" className="text-sm text-muted-foreground">Alım listesi kaydediliyor…</span>}
+        {draft.isError && <div role="alert" className="flex items-center gap-2 text-sm text-destructive">
+          Alım listesi yüklenemedi.
+          <Button size="sm" variant="outline" disabled={draft.isFetching} onClick={() => { void draft.refetch(); }}>Tekrar dene</Button>
+        </div>}
       </div>
       {list.length === 0 ? <p className="border-y py-12 text-center text-muted-foreground">{data.products.length ? "Filtrelere uygun eksik ürün bulunamadı." : "Stoğu tükenen veya minimumun altına düşen ürün yok."}</p> : (
         <div className="overflow-x-auto rounded-md border">
@@ -208,7 +231,7 @@ function Shortages() {
               <td className="px-3 py-3"><select aria-label={`${p.sku ?? p.name} alınacak tedarikçi`} className="h-9 w-40 rounded-md border bg-background px-2 text-sm" value={supplierFor(p)} onChange={(e) => setAssigned((old) => ({ ...old, [p.id]: e.target.value }))}><option value="">Tedarikçi seçin</option>{[...new Map(p.suppliers.map((s) => [s.supplier_id, s])).values()].map((s) => <option key={s.supplier_id} value={s.supplier_id}>{s.name}</option>)}</select></td>
               <td className="min-w-44 px-3 py-3">{p.suppliers.length ? p.suppliers.filter(s=>!supplier || s.supplier_id===supplier).map((s, i) => <div key={`${s.supplier_id}-${i}`} className="break-words">{s.name}{s.code && <span className="font-oem text-xs"> · {s.code}</span>}</div>) : <span className="text-muted-foreground">Tedarikçi yok</span>}</td>
               <td className="px-3 py-3 text-right">
-                <Button type="button" variant="outline" size="sm" onClick={() => addToList([p])} disabled={!p.suppliers.length || isFetching} aria-label={`${p.sku ?? p.name} ürününü listeye ekle`} title={p.suppliers.length ? "Alım listesine ekle" : "Ürüne tedarikçi bağlı değil"}>
+                <Button type="button" variant="outline" size="sm" onClick={() => addToList([p])} disabled={!p.suppliers.length || isFetching || draftDisabled} aria-label={`${p.sku ?? p.name} ürününü listeye ekle`} title={p.suppliers.length ? "Alım listesine ekle" : "Ürüne tedarikçi bağlı değil"}>
                   <ListPlus aria-hidden="true" />Listeye ekle
                 </Button>
               </td>
@@ -217,7 +240,8 @@ function Shortages() {
         </div>
       )}
       <Pager page={currentPage} total={list.length} onChange={setPage} />
-      <ShortagePurchaseList lines={purchaseLines} products={data.products} onChange={setPurchaseLines} onDownload={downloadPurchaseList} exporting={purchaseExporting} />
+      {draft.isPending && <p role="status" className="text-sm text-muted-foreground">Alım listesi yükleniyor…</p>}
+      {draft.data && <ShortagePurchaseList lines={purchaseLines} products={data.purchaseProducts} onChange={changeDraft} onDownload={downloadPurchaseList} exporting={purchaseExporting} disabled={draftDisabled} />}
     </div>
   );
 }

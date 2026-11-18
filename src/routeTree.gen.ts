@@ -33,10 +33,21 @@ import { Route as AuthenticatedAdminIslemGecmisiRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminMesajlarRouteImport } from './routes/_authenticated/admin.mesajlar'
 import { Route as AuthenticatedAdminRaporlarRouteImport } from './routes/_authenticated/admin.raporlar'
 import { Route as AuthenticatedAdminSiparislerRouteImport } from './routes/_authenticated/admin.siparisler'
+import { Route as AuthenticatedAdminStokHareketleriRouteImport } from './routes/_authenticated/admin.stok-hareketleri'
 import { Route as AuthenticatedAdminStokUyarilariRouteImport } from './routes/_authenticated/admin.stok-uyarilari'
+import { Route as AuthenticatedAdminTedarikciSiparisleriRouteImport } from './routes/_authenticated/admin.tedarikci-siparisleri'
 import { Route as AuthenticatedAdminUrunEkleRouteImport } from './routes/_authenticated/admin.urun-ekle'
 import { Route as AuthenticatedAdminUrunlerRouteImport } from './routes/_authenticated/admin.urunler'
 import { Route as AuthenticatedAdminCariIdRouteImport } from './routes/_authenticated/admin.cari.$id'
+import { Route as AuthenticatedAdminRaporlarIndexRouteImport } from './routes/_authenticated/admin.raporlar.index'
+import { Route as AuthenticatedAdminRaporlarSatilanUrunlerRouteImport } from './routes/_authenticated/admin.raporlar.satilan-urunler'
+import { Route as AuthenticatedAdminRaporlarSatilmayanUrunlerRouteImport } from './routes/_authenticated/admin.raporlar.satilmayan-urunler'
+import { Route as AuthenticatedAdminRaporlarStokDurumuRouteImport } from './routes/_authenticated/admin.raporlar.stok-durumu'
+import { Route as AuthenticatedAdminRaporlarTedarikciAlimlariRouteImport } from './routes/_authenticated/admin.raporlar.tedarikci-alimlari'
+import { Route as AuthenticatedAdminTedarikciSiparisleriIndexRouteImport } from './routes/_authenticated/admin.tedarikci-siparisleri.index'
+import { Route as AuthenticatedAdminTedarikciSiparisleriIdRouteImport } from './routes/_authenticated/admin.tedarikci-siparisleri.$id'
+import { Route as AuthenticatedAdminTedarikciSiparisleriMalKabulleriRouteImport } from './routes/_authenticated/admin.tedarikci-siparisleri.mal-kabulleri'
+import { Route as AuthenticatedAdminTedarikciSiparisleriYeniRouteImport } from './routes/_authenticated/admin.tedarikci-siparisleri.yeni'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -166,10 +177,22 @@ const AuthenticatedAdminSiparislerRoute =
     path: '/siparisler',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminStokHareketleriRoute =
+  AuthenticatedAdminStokHareketleriRouteImport.update({
+    id: '/stok-hareketleri',
+    path: '/stok-hareketleri',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminStokUyarilariRoute =
   AuthenticatedAdminStokUyarilariRouteImport.update({
     id: '/stok-uyarilari',
     path: '/stok-uyarilari',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminTedarikciSiparisleriRoute =
+  AuthenticatedAdminTedarikciSiparisleriRouteImport.update({
+    id: '/tedarikci-siparisleri',
+    path: '/tedarikci-siparisleri',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminUrunEkleRoute =
@@ -189,6 +212,60 @@ const AuthenticatedAdminCariIdRoute =
     id: '/cari/$id',
     path: '/cari/$id',
     getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminRaporlarIndexRoute =
+  AuthenticatedAdminRaporlarIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminRaporlarRoute,
+  } as any)
+const AuthenticatedAdminRaporlarSatilanUrunlerRoute =
+  AuthenticatedAdminRaporlarSatilanUrunlerRouteImport.update({
+    id: '/satilan-urunler',
+    path: '/satilan-urunler',
+    getParentRoute: () => AuthenticatedAdminRaporlarRoute,
+  } as any)
+const AuthenticatedAdminRaporlarSatilmayanUrunlerRoute =
+  AuthenticatedAdminRaporlarSatilmayanUrunlerRouteImport.update({
+    id: '/satilmayan-urunler',
+    path: '/satilmayan-urunler',
+    getParentRoute: () => AuthenticatedAdminRaporlarRoute,
+  } as any)
+const AuthenticatedAdminRaporlarStokDurumuRoute =
+  AuthenticatedAdminRaporlarStokDurumuRouteImport.update({
+    id: '/stok-durumu',
+    path: '/stok-durumu',
+    getParentRoute: () => AuthenticatedAdminRaporlarRoute,
+  } as any)
+const AuthenticatedAdminRaporlarTedarikciAlimlariRoute =
+  AuthenticatedAdminRaporlarTedarikciAlimlariRouteImport.update({
+    id: '/tedarikci-alimlari',
+    path: '/tedarikci-alimlari',
+    getParentRoute: () => AuthenticatedAdminRaporlarRoute,
+  } as any)
+const AuthenticatedAdminTedarikciSiparisleriIndexRoute =
+  AuthenticatedAdminTedarikciSiparisleriIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminTedarikciSiparisleriRoute,
+  } as any)
+const AuthenticatedAdminTedarikciSiparisleriIdRoute =
+  AuthenticatedAdminTedarikciSiparisleriIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminTedarikciSiparisleriRoute,
+  } as any)
+const AuthenticatedAdminTedarikciSiparisleriMalKabulleriRoute =
+  AuthenticatedAdminTedarikciSiparisleriMalKabulleriRouteImport.update({
+    id: '/mal-kabulleri',
+    path: '/mal-kabulleri',
+    getParentRoute: () => AuthenticatedAdminTedarikciSiparisleriRoute,
+  } as any)
+const AuthenticatedAdminTedarikciSiparisleriYeniRoute =
+  AuthenticatedAdminTedarikciSiparisleriYeniRouteImport.update({
+    id: '/yeni',
+    path: '/yeni',
+    getParentRoute: () => AuthenticatedAdminTedarikciSiparisleriRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -212,13 +289,24 @@ export interface FileRoutesByFullPath {
   '/admin/eksik-stok': typeof AuthenticatedAdminEksikStokRoute
   '/admin/islem-gecmisi': typeof AuthenticatedAdminIslemGecmisiRoute
   '/admin/mesajlar': typeof AuthenticatedAdminMesajlarRoute
-  '/admin/raporlar': typeof AuthenticatedAdminRaporlarRoute
+  '/admin/raporlar': typeof AuthenticatedAdminRaporlarRouteWithChildren
   '/admin/siparisler': typeof AuthenticatedAdminSiparislerRoute
+  '/admin/stok-hareketleri': typeof AuthenticatedAdminStokHareketleriRoute
   '/admin/stok-uyarilari': typeof AuthenticatedAdminStokUyarilariRoute
+  '/admin/tedarikci-siparisleri': typeof AuthenticatedAdminTedarikciSiparisleriRouteWithChildren
   '/admin/urun-ekle': typeof AuthenticatedAdminUrunEkleRoute
   '/admin/urunler': typeof AuthenticatedAdminUrunlerRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/cari/$id': typeof AuthenticatedAdminCariIdRoute
+  '/admin/raporlar/satilan-urunler': typeof AuthenticatedAdminRaporlarSatilanUrunlerRoute
+  '/admin/raporlar/satilmayan-urunler': typeof AuthenticatedAdminRaporlarSatilmayanUrunlerRoute
+  '/admin/raporlar/stok-durumu': typeof AuthenticatedAdminRaporlarStokDurumuRoute
+  '/admin/raporlar/tedarikci-alimlari': typeof AuthenticatedAdminRaporlarTedarikciAlimlariRoute
+  '/admin/tedarikci-siparisleri/$id': typeof AuthenticatedAdminTedarikciSiparisleriIdRoute
+  '/admin/tedarikci-siparisleri/mal-kabulleri': typeof AuthenticatedAdminTedarikciSiparisleriMalKabulleriRoute
+  '/admin/tedarikci-siparisleri/yeni': typeof AuthenticatedAdminTedarikciSiparisleriYeniRoute
+  '/admin/raporlar/': typeof AuthenticatedAdminRaporlarIndexRoute
+  '/admin/tedarikci-siparisleri/': typeof AuthenticatedAdminTedarikciSiparisleriIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -240,13 +328,22 @@ export interface FileRoutesByTo {
   '/admin/eksik-stok': typeof AuthenticatedAdminEksikStokRoute
   '/admin/islem-gecmisi': typeof AuthenticatedAdminIslemGecmisiRoute
   '/admin/mesajlar': typeof AuthenticatedAdminMesajlarRoute
-  '/admin/raporlar': typeof AuthenticatedAdminRaporlarRoute
   '/admin/siparisler': typeof AuthenticatedAdminSiparislerRoute
+  '/admin/stok-hareketleri': typeof AuthenticatedAdminStokHareketleriRoute
   '/admin/stok-uyarilari': typeof AuthenticatedAdminStokUyarilariRoute
   '/admin/urun-ekle': typeof AuthenticatedAdminUrunEkleRoute
   '/admin/urunler': typeof AuthenticatedAdminUrunlerRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/cari/$id': typeof AuthenticatedAdminCariIdRoute
+  '/admin/raporlar/satilan-urunler': typeof AuthenticatedAdminRaporlarSatilanUrunlerRoute
+  '/admin/raporlar/satilmayan-urunler': typeof AuthenticatedAdminRaporlarSatilmayanUrunlerRoute
+  '/admin/raporlar/stok-durumu': typeof AuthenticatedAdminRaporlarStokDurumuRoute
+  '/admin/raporlar/tedarikci-alimlari': typeof AuthenticatedAdminRaporlarTedarikciAlimlariRoute
+  '/admin/tedarikci-siparisleri/$id': typeof AuthenticatedAdminTedarikciSiparisleriIdRoute
+  '/admin/tedarikci-siparisleri/mal-kabulleri': typeof AuthenticatedAdminTedarikciSiparisleriMalKabulleriRoute
+  '/admin/tedarikci-siparisleri/yeni': typeof AuthenticatedAdminTedarikciSiparisleriYeniRoute
+  '/admin/raporlar': typeof AuthenticatedAdminRaporlarIndexRoute
+  '/admin/tedarikci-siparisleri': typeof AuthenticatedAdminTedarikciSiparisleriIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -271,13 +368,24 @@ export interface FileRoutesById {
   '/_authenticated/admin/eksik-stok': typeof AuthenticatedAdminEksikStokRoute
   '/_authenticated/admin/islem-gecmisi': typeof AuthenticatedAdminIslemGecmisiRoute
   '/_authenticated/admin/mesajlar': typeof AuthenticatedAdminMesajlarRoute
-  '/_authenticated/admin/raporlar': typeof AuthenticatedAdminRaporlarRoute
+  '/_authenticated/admin/raporlar': typeof AuthenticatedAdminRaporlarRouteWithChildren
   '/_authenticated/admin/siparisler': typeof AuthenticatedAdminSiparislerRoute
+  '/_authenticated/admin/stok-hareketleri': typeof AuthenticatedAdminStokHareketleriRoute
   '/_authenticated/admin/stok-uyarilari': typeof AuthenticatedAdminStokUyarilariRoute
+  '/_authenticated/admin/tedarikci-siparisleri': typeof AuthenticatedAdminTedarikciSiparisleriRouteWithChildren
   '/_authenticated/admin/urun-ekle': typeof AuthenticatedAdminUrunEkleRoute
   '/_authenticated/admin/urunler': typeof AuthenticatedAdminUrunlerRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/cari/$id': typeof AuthenticatedAdminCariIdRoute
+  '/_authenticated/admin/raporlar/satilan-urunler': typeof AuthenticatedAdminRaporlarSatilanUrunlerRoute
+  '/_authenticated/admin/raporlar/satilmayan-urunler': typeof AuthenticatedAdminRaporlarSatilmayanUrunlerRoute
+  '/_authenticated/admin/raporlar/stok-durumu': typeof AuthenticatedAdminRaporlarStokDurumuRoute
+  '/_authenticated/admin/raporlar/tedarikci-alimlari': typeof AuthenticatedAdminRaporlarTedarikciAlimlariRoute
+  '/_authenticated/admin/tedarikci-siparisleri/$id': typeof AuthenticatedAdminTedarikciSiparisleriIdRoute
+  '/_authenticated/admin/tedarikci-siparisleri/mal-kabulleri': typeof AuthenticatedAdminTedarikciSiparisleriMalKabulleriRoute
+  '/_authenticated/admin/tedarikci-siparisleri/yeni': typeof AuthenticatedAdminTedarikciSiparisleriYeniRoute
+  '/_authenticated/admin/raporlar/': typeof AuthenticatedAdminRaporlarIndexRoute
+  '/_authenticated/admin/tedarikci-siparisleri/': typeof AuthenticatedAdminTedarikciSiparisleriIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -304,11 +412,22 @@ export interface FileRouteTypes {
     | '/admin/mesajlar'
     | '/admin/raporlar'
     | '/admin/siparisler'
+    | '/admin/stok-hareketleri'
     | '/admin/stok-uyarilari'
+    | '/admin/tedarikci-siparisleri'
     | '/admin/urun-ekle'
     | '/admin/urunler'
     | '/admin/'
     | '/admin/cari/$id'
+    | '/admin/raporlar/satilan-urunler'
+    | '/admin/raporlar/satilmayan-urunler'
+    | '/admin/raporlar/stok-durumu'
+    | '/admin/raporlar/tedarikci-alimlari'
+    | '/admin/tedarikci-siparisleri/$id'
+    | '/admin/tedarikci-siparisleri/mal-kabulleri'
+    | '/admin/tedarikci-siparisleri/yeni'
+    | '/admin/raporlar/'
+    | '/admin/tedarikci-siparisleri/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -330,13 +449,22 @@ export interface FileRouteTypes {
     | '/admin/eksik-stok'
     | '/admin/islem-gecmisi'
     | '/admin/mesajlar'
-    | '/admin/raporlar'
     | '/admin/siparisler'
+    | '/admin/stok-hareketleri'
     | '/admin/stok-uyarilari'
     | '/admin/urun-ekle'
     | '/admin/urunler'
     | '/admin'
     | '/admin/cari/$id'
+    | '/admin/raporlar/satilan-urunler'
+    | '/admin/raporlar/satilmayan-urunler'
+    | '/admin/raporlar/stok-durumu'
+    | '/admin/raporlar/tedarikci-alimlari'
+    | '/admin/tedarikci-siparisleri/$id'
+    | '/admin/tedarikci-siparisleri/mal-kabulleri'
+    | '/admin/tedarikci-siparisleri/yeni'
+    | '/admin/raporlar'
+    | '/admin/tedarikci-siparisleri'
   id:
     | '__root__'
     | '/'
@@ -362,11 +490,22 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/mesajlar'
     | '/_authenticated/admin/raporlar'
     | '/_authenticated/admin/siparisler'
+    | '/_authenticated/admin/stok-hareketleri'
     | '/_authenticated/admin/stok-uyarilari'
+    | '/_authenticated/admin/tedarikci-siparisleri'
     | '/_authenticated/admin/urun-ekle'
     | '/_authenticated/admin/urunler'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/cari/$id'
+    | '/_authenticated/admin/raporlar/satilan-urunler'
+    | '/_authenticated/admin/raporlar/satilmayan-urunler'
+    | '/_authenticated/admin/raporlar/stok-durumu'
+    | '/_authenticated/admin/raporlar/tedarikci-alimlari'
+    | '/_authenticated/admin/tedarikci-siparisleri/$id'
+    | '/_authenticated/admin/tedarikci-siparisleri/mal-kabulleri'
+    | '/_authenticated/admin/tedarikci-siparisleri/yeni'
+    | '/_authenticated/admin/raporlar/'
+    | '/_authenticated/admin/tedarikci-siparisleri/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -554,11 +693,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSiparislerRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/stok-hareketleri': {
+      id: '/_authenticated/admin/stok-hareketleri'
+      path: '/stok-hareketleri'
+      fullPath: '/admin/stok-hareketleri'
+      preLoaderRoute: typeof AuthenticatedAdminStokHareketleriRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/stok-uyarilari': {
       id: '/_authenticated/admin/stok-uyarilari'
       path: '/stok-uyarilari'
       fullPath: '/admin/stok-uyarilari'
       preLoaderRoute: typeof AuthenticatedAdminStokUyarilariRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/tedarikci-siparisleri': {
+      id: '/_authenticated/admin/tedarikci-siparisleri'
+      path: '/tedarikci-siparisleri'
+      fullPath: '/admin/tedarikci-siparisleri'
+      preLoaderRoute: typeof AuthenticatedAdminTedarikciSiparisleriRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/urun-ekle': {
@@ -582,8 +735,121 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCariIdRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/raporlar/': {
+      id: '/_authenticated/admin/raporlar/'
+      path: '/'
+      fullPath: '/admin/raporlar/'
+      preLoaderRoute: typeof AuthenticatedAdminRaporlarIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRaporlarRoute
+    }
+    '/_authenticated/admin/raporlar/satilan-urunler': {
+      id: '/_authenticated/admin/raporlar/satilan-urunler'
+      path: '/satilan-urunler'
+      fullPath: '/admin/raporlar/satilan-urunler'
+      preLoaderRoute: typeof AuthenticatedAdminRaporlarSatilanUrunlerRouteImport
+      parentRoute: typeof AuthenticatedAdminRaporlarRoute
+    }
+    '/_authenticated/admin/raporlar/satilmayan-urunler': {
+      id: '/_authenticated/admin/raporlar/satilmayan-urunler'
+      path: '/satilmayan-urunler'
+      fullPath: '/admin/raporlar/satilmayan-urunler'
+      preLoaderRoute: typeof AuthenticatedAdminRaporlarSatilmayanUrunlerRouteImport
+      parentRoute: typeof AuthenticatedAdminRaporlarRoute
+    }
+    '/_authenticated/admin/raporlar/stok-durumu': {
+      id: '/_authenticated/admin/raporlar/stok-durumu'
+      path: '/stok-durumu'
+      fullPath: '/admin/raporlar/stok-durumu'
+      preLoaderRoute: typeof AuthenticatedAdminRaporlarStokDurumuRouteImport
+      parentRoute: typeof AuthenticatedAdminRaporlarRoute
+    }
+    '/_authenticated/admin/raporlar/tedarikci-alimlari': {
+      id: '/_authenticated/admin/raporlar/tedarikci-alimlari'
+      path: '/tedarikci-alimlari'
+      fullPath: '/admin/raporlar/tedarikci-alimlari'
+      preLoaderRoute: typeof AuthenticatedAdminRaporlarTedarikciAlimlariRouteImport
+      parentRoute: typeof AuthenticatedAdminRaporlarRoute
+    }
+    '/_authenticated/admin/tedarikci-siparisleri/': {
+      id: '/_authenticated/admin/tedarikci-siparisleri/'
+      path: '/'
+      fullPath: '/admin/tedarikci-siparisleri/'
+      preLoaderRoute: typeof AuthenticatedAdminTedarikciSiparisleriIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminTedarikciSiparisleriRoute
+    }
+    '/_authenticated/admin/tedarikci-siparisleri/$id': {
+      id: '/_authenticated/admin/tedarikci-siparisleri/$id'
+      path: '/$id'
+      fullPath: '/admin/tedarikci-siparisleri/$id'
+      preLoaderRoute: typeof AuthenticatedAdminTedarikciSiparisleriIdRouteImport
+      parentRoute: typeof AuthenticatedAdminTedarikciSiparisleriRoute
+    }
+    '/_authenticated/admin/tedarikci-siparisleri/mal-kabulleri': {
+      id: '/_authenticated/admin/tedarikci-siparisleri/mal-kabulleri'
+      path: '/mal-kabulleri'
+      fullPath: '/admin/tedarikci-siparisleri/mal-kabulleri'
+      preLoaderRoute: typeof AuthenticatedAdminTedarikciSiparisleriMalKabulleriRouteImport
+      parentRoute: typeof AuthenticatedAdminTedarikciSiparisleriRoute
+    }
+    '/_authenticated/admin/tedarikci-siparisleri/yeni': {
+      id: '/_authenticated/admin/tedarikci-siparisleri/yeni'
+      path: '/yeni'
+      fullPath: '/admin/tedarikci-siparisleri/yeni'
+      preLoaderRoute: typeof AuthenticatedAdminTedarikciSiparisleriYeniRouteImport
+      parentRoute: typeof AuthenticatedAdminTedarikciSiparisleriRoute
+    }
   }
 }
+
+interface AuthenticatedAdminRaporlarRouteChildren {
+  AuthenticatedAdminRaporlarSatilanUrunlerRoute: typeof AuthenticatedAdminRaporlarSatilanUrunlerRoute
+  AuthenticatedAdminRaporlarSatilmayanUrunlerRoute: typeof AuthenticatedAdminRaporlarSatilmayanUrunlerRoute
+  AuthenticatedAdminRaporlarStokDurumuRoute: typeof AuthenticatedAdminRaporlarStokDurumuRoute
+  AuthenticatedAdminRaporlarTedarikciAlimlariRoute: typeof AuthenticatedAdminRaporlarTedarikciAlimlariRoute
+  AuthenticatedAdminRaporlarIndexRoute: typeof AuthenticatedAdminRaporlarIndexRoute
+}
+
+const AuthenticatedAdminRaporlarRouteChildren: AuthenticatedAdminRaporlarRouteChildren =
+  {
+    AuthenticatedAdminRaporlarSatilanUrunlerRoute:
+      AuthenticatedAdminRaporlarSatilanUrunlerRoute,
+    AuthenticatedAdminRaporlarSatilmayanUrunlerRoute:
+      AuthenticatedAdminRaporlarSatilmayanUrunlerRoute,
+    AuthenticatedAdminRaporlarStokDurumuRoute:
+      AuthenticatedAdminRaporlarStokDurumuRoute,
+    AuthenticatedAdminRaporlarTedarikciAlimlariRoute:
+      AuthenticatedAdminRaporlarTedarikciAlimlariRoute,
+    AuthenticatedAdminRaporlarIndexRoute: AuthenticatedAdminRaporlarIndexRoute,
+  }
+
+const AuthenticatedAdminRaporlarRouteWithChildren =
+  AuthenticatedAdminRaporlarRoute._addFileChildren(
+    AuthenticatedAdminRaporlarRouteChildren,
+  )
+
+interface AuthenticatedAdminTedarikciSiparisleriRouteChildren {
+  AuthenticatedAdminTedarikciSiparisleriIdRoute: typeof AuthenticatedAdminTedarikciSiparisleriIdRoute
+  AuthenticatedAdminTedarikciSiparisleriMalKabulleriRoute: typeof AuthenticatedAdminTedarikciSiparisleriMalKabulleriRoute
+  AuthenticatedAdminTedarikciSiparisleriYeniRoute: typeof AuthenticatedAdminTedarikciSiparisleriYeniRoute
+  AuthenticatedAdminTedarikciSiparisleriIndexRoute: typeof AuthenticatedAdminTedarikciSiparisleriIndexRoute
+}
+
+const AuthenticatedAdminTedarikciSiparisleriRouteChildren: AuthenticatedAdminTedarikciSiparisleriRouteChildren =
+  {
+    AuthenticatedAdminTedarikciSiparisleriIdRoute:
+      AuthenticatedAdminTedarikciSiparisleriIdRoute,
+    AuthenticatedAdminTedarikciSiparisleriMalKabulleriRoute:
+      AuthenticatedAdminTedarikciSiparisleriMalKabulleriRoute,
+    AuthenticatedAdminTedarikciSiparisleriYeniRoute:
+      AuthenticatedAdminTedarikciSiparisleriYeniRoute,
+    AuthenticatedAdminTedarikciSiparisleriIndexRoute:
+      AuthenticatedAdminTedarikciSiparisleriIndexRoute,
+  }
+
+const AuthenticatedAdminTedarikciSiparisleriRouteWithChildren =
+  AuthenticatedAdminTedarikciSiparisleriRoute._addFileChildren(
+    AuthenticatedAdminTedarikciSiparisleriRouteChildren,
+  )
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAktarimRoute: typeof AuthenticatedAdminAktarimRoute
@@ -592,9 +858,11 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminEksikStokRoute: typeof AuthenticatedAdminEksikStokRoute
   AuthenticatedAdminIslemGecmisiRoute: typeof AuthenticatedAdminIslemGecmisiRoute
   AuthenticatedAdminMesajlarRoute: typeof AuthenticatedAdminMesajlarRoute
-  AuthenticatedAdminRaporlarRoute: typeof AuthenticatedAdminRaporlarRoute
+  AuthenticatedAdminRaporlarRoute: typeof AuthenticatedAdminRaporlarRouteWithChildren
   AuthenticatedAdminSiparislerRoute: typeof AuthenticatedAdminSiparislerRoute
+  AuthenticatedAdminStokHareketleriRoute: typeof AuthenticatedAdminStokHareketleriRoute
   AuthenticatedAdminStokUyarilariRoute: typeof AuthenticatedAdminStokUyarilariRoute
+  AuthenticatedAdminTedarikciSiparisleriRoute: typeof AuthenticatedAdminTedarikciSiparisleriRouteWithChildren
   AuthenticatedAdminUrunEkleRoute: typeof AuthenticatedAdminUrunEkleRoute
   AuthenticatedAdminUrunlerRoute: typeof AuthenticatedAdminUrunlerRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -608,9 +876,13 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminEksikStokRoute: AuthenticatedAdminEksikStokRoute,
   AuthenticatedAdminIslemGecmisiRoute: AuthenticatedAdminIslemGecmisiRoute,
   AuthenticatedAdminMesajlarRoute: AuthenticatedAdminMesajlarRoute,
-  AuthenticatedAdminRaporlarRoute: AuthenticatedAdminRaporlarRoute,
+  AuthenticatedAdminRaporlarRoute: AuthenticatedAdminRaporlarRouteWithChildren,
   AuthenticatedAdminSiparislerRoute: AuthenticatedAdminSiparislerRoute,
+  AuthenticatedAdminStokHareketleriRoute:
+    AuthenticatedAdminStokHareketleriRoute,
   AuthenticatedAdminStokUyarilariRoute: AuthenticatedAdminStokUyarilariRoute,
+  AuthenticatedAdminTedarikciSiparisleriRoute:
+    AuthenticatedAdminTedarikciSiparisleriRouteWithChildren,
   AuthenticatedAdminUrunEkleRoute: AuthenticatedAdminUrunEkleRoute,
   AuthenticatedAdminUrunlerRoute: AuthenticatedAdminUrunlerRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,

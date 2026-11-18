@@ -6,7 +6,7 @@ import { Download, FileUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { catalogQuery } from "@/lib/catalog";
 import { compareProductCodes } from "@/lib/catalog-rules";
-import { money, slugify } from "@/lib/format";
+import { istanbulDay, money } from "@/lib/format";
 import { buildPlan, detectColumns, type Columns, type ImportRow, type Plan } from "@/lib/stock-import";
 import { ImportHistory } from "@/components/site/ImportHistory";
 import { Button } from "@/components/ui/button";
@@ -38,13 +38,18 @@ function StockImport() {
   const plan: Plan | null = cat && rows.length ? buildPlan(rows, cols, cat.products) : null;
 
   const read = async (f: File) => {
-    const XLSX = await import("xlsx");
-    const wb = XLSX.read(await f.arrayBuffer());
-    const sheet = wb.Sheets[wb.SheetNames[0] ?? ""];
-    const json = sheet ? XLSX.utils.sheet_to_json<ImportRow>(sheet, { defval: "" }) : [];
-    const hs = json[0] ? Object.keys(json[0]) : [];
-    setFile(f.name); setRows(json); setHeaders(hs); setCols(detectColumns(hs));
-    if (!json.length) toast.error("Dosyanın ilk sayfasında satır bulunamadı");
+    try {
+      const XLSX = await import("xlsx");
+      const wb = XLSX.read(await f.arrayBuffer(), { raw: true });
+      const sheet = wb.Sheets[wb.SheetNames[0] ?? ""];
+      const json = sheet ? XLSX.utils.sheet_to_json<ImportRow>(sheet, { defval: "" }) : [];
+      const hs = json[0] ? Object.keys(json[0]) : [];
+      setFile(f.name); setRows(json); setHeaders(hs); setCols(detectColumns(hs));
+      if (!json.length) toast.error("Dosyanın ilk sayfasında satır bulunamadı");
+    } catch {
+      setFile(""); setRows([]); setHeaders([]); setCols({});
+      toast.error("Dosya okunamadı. Excel veya CSV dosyanızı kontrol edin.");
+    }
   };
 
   const template = async () => {
@@ -56,7 +61,7 @@ function StockImport() {
     const ws = XLSX.utils.json_to_sheet(data);
     ws["!cols"] = [{ wch: 10 }, { wch: 50 }, { wch: 12 }, { wch: 12 }];
     XLSX.utils.book_append_sheet(wb, ws, "Stok");
-    XLSX.writeFile(wb, `klipsmarket-stok-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    XLSX.writeFile(wb, `klipsmarket-stok-${istanbulDay()}.xlsx`);
   };
 
   const apply = async () => {
@@ -101,6 +106,7 @@ function StockImport() {
           <Button variant="outline" onClick={template} disabled={!cat}><Download className="h-4 w-4" />Mevcut stok listesini indir</Button>
         </div>
         <p className="text-xs text-muted-foreground">İpucu: "Mevcut stok listesini indir" ile tüm ürünleri Excel olarak alın, stok ve fiyat sütunlarını doldurup aynı dosyayı geri yükleyin.</p>
+        <p className="text-xs text-muted-foreground">Metin hücrelerinde stok adedini 1234, fiyatı 1234,50 biçiminde yazın. 1.234 gibi belirsiz değer içeren satırlar önizlemede işaretlenir.</p>
 
         {file && plan && (
           <div className="space-y-4 rounded-md border bg-card p-4">

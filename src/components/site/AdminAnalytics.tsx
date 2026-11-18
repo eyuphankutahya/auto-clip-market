@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { analysisPeriods, percentageChange } from "@/lib/admin-rules";
-import { money } from "@/lib/format";
+import { istanbulDay, money, shiftCalendarDay } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,9 +17,10 @@ const schema=z.object({ revenue:n,previous_revenue:n,order_count:n,quantity:n,pa
  products:z.array(z.object({product_id:z.string().nullable(),sku:z.string(),name:z.string(),quantity:n,revenue:n})),
  accounts:z.array(z.object({id:z.string(),name:z.string(),debit:n,credit:n,balance:n})),
  daily:z.array(z.object({date_key:z.string(),total:n})),methods:z.array(z.object({method:z.string(),amount:n})) });
-const day=(d:Date)=>new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
 export function AdminAnalytics(){
- const [from,setFrom]=useState(()=>day(new Date(Date.now()-29*864e5))),[to,setTo]=useState(()=>day(new Date()));
+ const [range,setRange]=useState(()=>{const to=istanbulDay();return {from:shiftCalendarDay(to,-29),to};});
+ const {from,to}=range;
+ const selectRecent=(days:number)=>{const to=istanbulDay();setRange({from:shiftCalendarDay(to,1-days),to});};
  const [tab,setTab]=useState("customers");
  const invalid=!from||!to||from>to;
  const {data,error,isFetching}=useQuery({queryKey:["admin-period-analysis",from,to],enabled:!invalid,queryFn:async()=>{
@@ -29,8 +30,8 @@ export function AdminAnalytics(){
  const growth=data?percentageChange(data.revenue,data.previous_revenue):null;
  const exportData=async()=>{if(invalid)return;const period=analysisPeriods(from,to);const full=await supabase.rpc("admin_period_analysis",{_from:period.from,_to:period.to,_previous_from:period.previousFrom,_limit:null} as never);if(full.error)return;const data=schema.parse(full.data);const header=tab==="customers"?["Müşteri","Sipariş","Ciro (TL)"]:tab==="products"?["KM No","Ürün","Adet","Ciro (TL)"]:["Cari","Toplam borç (TL)","Toplam ödeme (TL)","Bakiye (TL)"];const rows=tab==="customers"?data.customers.map(r=>[r.name,r.orders,r.revenue]):tab==="products"?data.products.map(r=>[r.sku,r.name,r.quantity,r.revenue]):data.accounts.map(r=>[r.name,r.debit,r.credit,r.balance]);downloadCsv(`analiz-${tab}-${from}-${to}.csv`,header,rows);};
  return <section className="space-y-5 border-b pb-8"><div className="flex flex-wrap items-end gap-3"><h2 className="mr-auto font-display text-lg font-extrabold">Satış ve cari analizi</h2>
- <label className="text-xs">Başlangıç<Input aria-label="Analiz başlangıç" type="date" value={from} onChange={e=>setFrom(e.target.value)}/></label><label className="text-xs">Bitiş<Input aria-label="Analiz bitiş" type="date" value={to} onChange={e=>setTo(e.target.value)}/></label>
- <Button variant="outline" size="sm" onClick={()=>{setFrom(day(new Date(Date.now()-6*864e5)));setTo(day(new Date()));}}>Son 7 gün</Button><Button variant="outline" size="sm" onClick={()=>{setFrom(day(new Date(Date.now()-29*864e5)));setTo(day(new Date()));}}>Son 30 gün</Button>
+ <label className="text-xs">Başlangıç<Input aria-label="Analiz başlangıç" type="date" value={from} onChange={e=>setRange({...range,from:e.target.value})}/></label><label className="text-xs">Bitiş<Input aria-label="Analiz bitiş" type="date" value={to} onChange={e=>setRange({...range,to:e.target.value})}/></label>
+ <Button variant="outline" size="sm" onClick={()=>selectRecent(7)}>Son 7 gün</Button><Button variant="outline" size="sm" onClick={()=>selectRecent(30)}>Son 30 gün</Button>
  </div>{invalid&&<p role="alert" className="text-destructive">Geçerli bir tarih aralığı seçin.</p>}{error&&<p role="alert" className="text-destructive">{error.message}</p>}{isFetching&&<p className="text-sm text-muted-foreground">Yükleniyor…</p>}
  {data&&<><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Stat label="Dönem cirosu" value={money(data.revenue)}/><Stat label="Sipariş / satılan adet" value={`${data.order_count} / ${data.quantity}`}/><Stat label="Dönem tahsilatı" value={money(data.payments)}/><Stat label="Güncel cari alacak" value={money(data.receivable)}/></div>
  <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground"><p>Önceki eşit dönem: <b className="text-foreground">{money(data.previous_revenue)}</b> · <span className={growth!==null&&growth<0?"text-destructive":"text-success"}>{growth===null?"Karşılaştırılacak önceki satış yok":`${growth>0?"+":""}%${growth}`}</span></p><p>Önceki dönem tahsilatı: <b className="text-foreground">{money(data.previous_payments)}</b></p><p>{data.customer_count} müşteri · Ortalama sipariş <b className="text-foreground">{money(data.order_count?data.revenue/data.order_count:0)}</b></p></div>

@@ -50,49 +50,50 @@ function Index() {
   const products = [...(productPage.data?.products ?? [])].sort((a, b) =>
     Number(Boolean(b.image_thumbnail_url || b.image_url)) - Number(Boolean(a.image_thumbnail_url || a.image_url))).slice(0, 8);
   return (
-    <div className="mx-auto max-w-7xl space-y-8 px-4 py-5 sm:space-y-10 sm:px-6 sm:py-8">
-      <section aria-labelledby="home-title">
-        <div className="relative isolate overflow-hidden rounded-2xl bg-ink text-ink-foreground">
-          <img src={hero} alt="" width={1600} height={912} fetchPriority="high" className="absolute inset-y-0 right-0 -z-20 h-full w-full object-cover object-[62%_center] brightness-125 md:w-[58%]" />
-          <div aria-hidden="true" className="absolute inset-0 -z-10 bg-ink/85 md:bg-transparent md:bg-linear-to-r md:from-ink md:from-36% md:via-ink/60 md:via-53% md:to-transparent md:to-78%" />
-          <div className="px-6 pt-10 pb-16 sm:px-10 sm:pt-12 sm:pb-19 lg:px-14 lg:pt-16 lg:pb-23">
-            <h1 id="home-title" className="max-w-[15ch] text-4xl font-extrabold leading-[1.04] tracking-tight text-balance sm:text-5xl lg:text-6xl">Oto klips ve bağlantı elemanları</h1>
-            <p className="mt-4 max-w-sm text-sm leading-relaxed text-ink-foreground/85 sm:text-lg">Perakende ve toplu alım için araç markasına ve kullanım yerine göre ürün kataloğu.</p>
-            <Link to="/urunler" search={{}} className="mt-5 inline-flex min-h-9 items-center gap-2 rounded-sm text-sm font-semibold text-ink-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4">
-              Tüm ürünleri incele <ArrowRight aria-hidden="true" className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-        <div className="relative mx-3 -mt-7 rounded-xl border bg-card p-3 shadow-lg shadow-ink/10 sm:mx-8 sm:p-4 lg:mx-12 lg:-mt-8 lg:px-5">
-          <form role="search" onSubmit={(e) => {
+    <div className="mx-auto max-w-7xl space-y-10 px-4 py-5 sm:space-y-14 sm:px-6 sm:py-8">
+      <section aria-labelledby="home-title" className="relative isolate overflow-hidden rounded-2xl bg-[#0c182d] text-white shadow-lg shadow-ink/15">
+        <img src={hero} alt="" width={1600} height={912} fetchPriority="high" className="absolute right-0 top-0 -z-20 h-52 w-full object-cover object-[65%_44%] brightness-150 sm:h-60 lg:h-full lg:w-[62%]" />
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-linear-to-b from-transparent from-10% via-[#0c182d] via-43% to-[#0c182d] lg:bg-linear-to-r lg:from-[#0c182d] lg:from-37% lg:via-[#0c182d]/60 lg:via-56% lg:to-transparent lg:to-79%" />
+        <div className="px-5 pb-7 pt-26 sm:px-10 sm:pb-10 sm:pt-30 lg:px-12 lg:py-16 xl:px-16">
+          <h1 id="home-title" className="max-w-[17ch] text-[clamp(2rem,6.2vw,4rem)] font-extrabold leading-[1.04] tracking-tight">
+            Oto klips ve <span className="block text-highlight">bağlantı elemanları</span>
+          </h1>
+          <p className="mt-4 max-w-md text-sm leading-relaxed text-slate-200 sm:text-base">
+            Kapı döşemesi, tampon ve daha fazlası için aracınıza uygun klipsi bulun.
+          </p>
+          <form role="search" action="/urunler" method="get" onSubmit={(e) => {
             e.preventDefault();
             void navigate({ to: "/urunler", search: { q: q.trim() || undefined } });
-          }} className="space-y-2 sm:flex sm:items-center sm:gap-4 sm:space-y-0">
-            <Label htmlFor="home-product-search" className="flex gap-2 px-1 font-semibold sm:px-0 sm:text-base">
-              <Search aria-hidden="true" className="h-4 w-4 shrink-0 text-primary sm:h-5 sm:w-5" />Katalogda ürün ara
-            </Label>
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <Input id="home-product-search" type="search" name="q" value={q} onChange={(e) => setQ(e.target.value)} maxLength={200} placeholder="KM No, OEM no veya ürün adı" className="h-11 min-w-0 flex-1 bg-background pl-3 shadow-none" />
-              <Button type="submit" size="lg" className="h-11 shrink-0 px-4 sm:px-7">Ara <ArrowRight aria-hidden="true" className="hidden sm:block" /></Button>
+          }} className="mt-6 max-w-lg">
+            <Label htmlFor="home-product-search" className="sr-only">Katalogda ürün ara</Label>
+            <div className="flex min-w-0 items-center gap-1 rounded-xl bg-card p-1.5 text-foreground shadow-xl shadow-black/15 sm:gap-2">
+              <Search aria-hidden="true" className="ml-2 h-5 w-5 shrink-0 text-primary" />
+              <Input id="home-product-search" type="search" name="q" value={q} onChange={(e) => setQ(e.target.value)} maxLength={200} placeholder="KM No, OEM veya ürün adı" className="h-11 min-w-0 flex-1 border-0 bg-transparent px-1 shadow-none sm:px-2" />
+              <Button type="submit" size="lg" className="h-11 shrink-0 rounded-lg bg-highlight px-4 text-ink hover:bg-highlight/85 sm:px-6">Ara <ArrowRight aria-hidden="true" className="hidden sm:block" /></Button>
             </div>
           </form>
+          <Link to="/urunler" search={{}} className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-sm text-sm font-semibold text-white underline-offset-4 hover:text-highlight hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-highlight">
+            Tüm ürünleri incele <ArrowRight aria-hidden="true" className="h-4 w-4" />
+          </Link>
         </div>
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-5">
-        <section aria-labelledby="home-categories" className="rounded-xl border bg-card p-4 shadow-sm sm:p-6">
-          <h2 id="home-categories" className="text-xl font-extrabold sm:text-2xl">Kullanım yerine göre</h2>
+      <div className="space-y-5">
+        <section aria-labelledby="home-categories">
+          <h2 id="home-categories" className="text-2xl font-extrabold tracking-tight sm:text-[2rem]">Kullanım yerine göre</h2>
           {filters.data ? (
             categories.length ? <>
-              <ul id="home-category-list" className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+              <ul id="home-category-list" className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-6">
                 {visibleCategories.map((category) => {
                   const Icon = categoryIcons.get(category.slug) ?? Package;
                   return (
                     <li key={category.id} className="min-w-0">
-                      <Link to="/urunler" search={{ kategori: category.slug }} className="group flex h-full min-h-19 min-w-0 items-center gap-2 rounded-lg border bg-card px-2.5 py-3 text-sm font-semibold transition hover:border-accent/70 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:gap-3 sm:px-3">
-                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-secondary text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground sm:h-10 sm:w-10"><Icon aria-hidden="true" className="h-4 w-4 sm:h-5 sm:w-5" /></span>
-                        <span className="min-w-0 break-words leading-snug">{category.slug === "camurluk" ? "Çamurluk / Davlumbaz" : category.name}</span>
-                        <ChevronRight aria-hidden="true" className="ml-auto hidden h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 xl:block" />
+                      <Link to="/urunler" search={{ kategori: category.slug }} className="group flex h-full min-h-28 min-w-0 flex-col items-start justify-between gap-3 rounded-xl border bg-card p-3.5 text-sm font-semibold shadow-xs transition hover:border-primary/55 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:p-4">
+                        <span className="grid h-9 w-9 place-items-center rounded-lg bg-secondary text-primary transition-colors group-hover:bg-highlight group-hover:text-ink"><Icon aria-hidden="true" className="h-[1.125rem] w-[1.125rem]" /></span>
+                        <span className="flex w-full items-center justify-between gap-1.5">
+                          <span className="min-w-0 break-words leading-snug">{category.slug === "camurluk" ? "Çamurluk / Davlumbaz" : category.name}</span>
+                          <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 motion-reduce:transform-none" />
+                        </span>
                       </Link>
                     </li>
                   );
@@ -106,34 +107,34 @@ function Index() {
           ) : filters.isError ? (
             <div role="alert" className="mt-4 flex flex-wrap items-center gap-3 text-sm"><p>Kategoriler ve markalar yüklenemedi.</p><Button type="button" size="sm" variant="outline" onClick={() => void filters.refetch()}>Tekrar dene</Button></div>
           ) : (
-            <div role="status" className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div role="status" className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               <span className="sr-only">Kategoriler yükleniyor…</span>
-              {Array.from({ length: 6 }, (_, index) => <Skeleton key={index} className="h-18 rounded-lg" />)}
+              {Array.from({ length: 6 }, (_, index) => <Skeleton key={index} className="h-28 rounded-xl" />)}
             </div>
           )}
         </section>
-        <section aria-labelledby="home-brands" className="rounded-xl border bg-linear-to-br from-secondary to-card p-4 shadow-sm sm:p-6">
-          <span className="mb-3 grid h-10 w-10 shrink-0 place-items-center rounded-lg border bg-card text-primary"><CarFront aria-hidden="true" className="h-5 w-5" /></span>
-          <h2 id="home-brands" className="text-lg font-extrabold">Araç markasına göre</h2>
+        <section aria-labelledby="home-brands" className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-secondary p-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border bg-card text-primary"><CarFront aria-hidden="true" className="h-5 w-5" /></span>
+            <h2 id="home-brands" className="text-lg font-extrabold">Araç markasına göre</h2>
+          </div>
           <form onSubmit={(e) => {
             e.preventDefault();
             if (brand && brands.some((entry) => entry.slug === brand)) void navigate({ to: "/urunler", search: { marka: brand } });
-          }} className="mt-4 space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="home-brand">Araç markası</Label>
-              <select id="home-brand" value={brand} onChange={(e) => setBrand(e.target.value)} disabled={!brands.length} className="h-11 w-full rounded-md border bg-card px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-65">
+          }} className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap">
+              <Label htmlFor="home-brand" className="sr-only">Araç markası</Label>
+              <select id="home-brand" value={brand} onChange={(e) => setBrand(e.target.value)} disabled={!brands.length} className="h-11 min-w-0 flex-[1_1_10rem] rounded-lg border bg-card px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-65 sm:w-52 sm:flex-auto">
                 <option value="">{filters.data ? (brands.length ? "Marka seçin" : "Marka bulunamadı") : filters.isError ? "Markalar yüklenemedi" : "Markalar yükleniyor…"}</option>
                 {brands.map((entry) => <option key={entry.id} value={entry.slug}>{entry.name}</option>)}
               </select>
-            </div>
-            <Button type="submit" className="w-full" disabled={!brand || !brands.length}>Ürünleri göster <ArrowRight aria-hidden="true" /></Button>
+              <Button type="submit" className="h-11 grow rounded-lg sm:grow-0" disabled={!brand || !brands.length}>Ürünleri göster <ArrowRight aria-hidden="true" /></Button>
           </form>
         </section>
       </div>
 
-      <section aria-labelledby="home-products" className="border-t pt-6 sm:pt-8">
+      <section aria-labelledby="home-products">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <h2 id="home-products" className="text-xl font-extrabold sm:text-2xl">Katalogdan ürünler</h2>
+          <h2 id="home-products" className="text-2xl font-extrabold tracking-tight sm:text-[2rem]">Katalogdan ürünler</h2>
           <Link to="/urunler" search={{}} className="inline-flex min-h-9 items-center gap-1.5 rounded-sm text-sm font-semibold text-primary hover:underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">Tüm ürünler <ArrowRight aria-hidden="true" className="h-4 w-4" /></Link>
         </div>
         {productPage.data ? (
@@ -149,15 +150,15 @@ function Index() {
         )}
       </section>
 
-      <section aria-labelledby="home-wholesale" className="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-ink p-5 text-ink-foreground sm:p-7">
+      <section aria-labelledby="home-wholesale" className="flex flex-wrap items-center justify-between gap-4 rounded-xl border-s-4 border-highlight bg-ink p-5 text-ink-foreground sm:p-8">
         <div className="flex items-start gap-3 sm:items-center">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-ink-foreground/10 text-ink-foreground"><Building2 aria-hidden="true" className="h-5 w-5" /></span>
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-ink-foreground/10 text-highlight"><Building2 aria-hidden="true" className="h-5 w-5" /></span>
           <div>
             <h2 id="home-wholesale" className="text-lg font-extrabold">Toplu alım ve cari hesap</h2>
             <p className="mt-1 text-sm text-ink-foreground/80">Firmanız için ürün, adet ve fiyat taleplerinizi iletin.</p>
           </div>
         </div>
-        <Button asChild variant="secondary"><Link to="/iletisim" hash="mesaj">Talep oluştur <ArrowRight aria-hidden="true" /></Link></Button>
+        <Button asChild className="h-11 rounded-lg bg-highlight text-ink hover:bg-highlight/85"><Link to="/iletisim" hash="mesaj">Talep oluştur <ArrowRight aria-hidden="true" /></Link></Button>
       </section>
     </div>
   );

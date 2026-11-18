@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { date, money } from "@/lib/format";
 import { fetchAll } from "@/lib/fetch-all";
 import { OrderDialog } from "@/components/site/OrderDialog";
+import { Button } from "@/components/ui/button";
 
 export function useCariData(accountId: string) {
   return useQuery({
@@ -20,10 +21,14 @@ export function useCariData(accountId: string) {
 }
 
 export function CariStatement({ accountId }: { accountId: string }) {
-  const { data } = useCariData(accountId);
+  const { data, isError, isFetching, refetch } = useCariData(accountId);
   const [historyPage,setHistoryPage]=useState(0);
   const [openOrder,setOpenOrder]=useState<string|null>(null);
-  if (!data) return <p className="text-muted-foreground">Yükleniyor…</p>;
+  const errorNotice = isError && <div role="alert" className="flex flex-wrap items-center gap-2 rounded-md border bg-card p-4 text-sm">
+    {data ? "Cari ekstre yenilenemedi. Son yüklenen hareketler gösteriliyor." : "Cari ekstre yüklenemedi."}
+    <Button size="sm" variant="outline" disabled={isFetching} onClick={() => void refetch()}>Tekrar dene</Button>
+  </div>;
+  if (!data) return errorNotice || <p role="status" className="text-muted-foreground">Cari ekstre yükleniyor…</p>;
   const debit = data.tx.filter((t) => t.type === "debit").reduce((s, t) => s + Number(t.amount), 0);
   const credit = data.tx.filter((t) => t.type === "credit").reduce((s, t) => s + Number(t.amount), 0);
   let run = 0;
@@ -42,6 +47,7 @@ export function CariStatement({ accountId }: { accountId: string }) {
   ].sort((a,b)=>b.date.localeCompare(a.date));
   return (
     <div className="space-y-8">
+      {errorNotice}
       <OrderDialog order={data.orders.find(o=>o.id===openOrder) ?? null} onClose={()=>setOpenOrder(null)} />
       <section><h3 className="mb-3 font-bold">Geçmiş hareketler</h3><div className="overflow-x-auto border"><table className="w-full bg-card text-sm"><thead className="bg-secondary text-left"><tr>{["Tarih","Sipariş No","Ürünler","Toplam adet","Tutar","Ödeme bilgisi"].map(h=><th key={h} className="whitespace-nowrap p-3">{h}</th>)}</tr></thead><tbody>{history.slice(historyPage*PAGE_SIZE,(historyPage+1)*PAGE_SIZE).map(row=><tr key={row.id} className="border-t"><td className="whitespace-nowrap p-3">{date(row.date)}</td><td className="whitespace-nowrap p-3">{row.orderId ? <button type="button" onClick={()=>setOpenOrder(row.orderId)} className="font-semibold text-primary underline underline-offset-2 hover:opacity-80">#{row.orderNo}</button> : "—"}</td><td className="min-w-40 p-3">{row.name}</td><td className="p-3">{row.quantity ?? "—"}</td><td className="whitespace-nowrap p-3">{money(row.price)}</td><td className="min-w-40 p-3">{row.payment}</td></tr>)}</tbody></table>{!history.length && <p className="p-6 text-muted-foreground">Henüz hareket yok.</p>}</div><Pager page={historyPage} total={history.length} onChange={setHistoryPage}/></section>
 

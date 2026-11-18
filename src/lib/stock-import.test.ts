@@ -16,6 +16,18 @@ describe("stock import", () => {
     expect(parseNumber("12,5 TL")).toBe(12.5);
     expect(parseNumber("")).toBeUndefined();
   });
+  it("rejects ambiguous and coerced text amounts", () => {
+    for (const value of ["1.234", "1L2", "0x10", "1e3", "12 34", "12,345", "TL"]) {
+      expect(parseNumber(value)).toBeNaN();
+    }
+    expect(parseNumber("12.50")).toBe(12.5);
+    expect(parseNumber("12 TL", false)).toBeNaN();
+  });
+  it("reports the source row and column for a price beyond kuruş precision", () => {
+    const plan = buildPlan([{ __rowNum__: 8, "KLİPS_MARKET": "208", "Satış Fiyatı": 2.345 }], cols, products);
+    expect(plan.problems).toMatchObject([{ row: 9, reason: expect.stringContaining("Satış Fiyatı") }]);
+    expect(plan.updates).toHaveLength(0);
+  });
   it("updates stock of an existing product matched by KM No", () => {
     const plan = buildPlan([{ "KLİPS_MARKET": 208, "Stok Adedi": 40 }], cols, products);
     expect(plan.updates).toEqual([{ id: "a", sku: "208", name: "Kapı Döşeme Klipsi", oldStock: 100, stock: 40, oldPrice: 0, revision: 0 }]);

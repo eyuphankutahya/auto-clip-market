@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Download, Printer } from "lucide-react";
 import { OrderDialog } from "@/components/site/OrderDialog";
+import { PendingOrderStock } from "@/components/site/PendingOrderStock";
 import { fetchAll } from "@/lib/fetch-all";
 import { downloadCsv } from "@/lib/csv";
 import { matchesCustomer, orderDateBounds, orderListHeader, orderListRow } from "@/lib/order-export";
@@ -16,6 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { BulkOrderActions } from "@/components/site/BulkOrderActions";
 import { bulkOrderTargets, toggleSelection } from "@/lib/admin-rules";
 import { updateOrderStatuses } from "@/lib/admin-order-actions";
+import { pendingOrderDemandQuery, pendingOrderStock } from "@/lib/admin-order-demand";
 
 export const Route = createFileRoute("/_authenticated/admin/siparisler")({ head: () => ({ meta: [{ title: "Sipariş Yönetimi — KlipsMarket" }, { name: "description", content: "Müşteri siparişlerini ve durumlarını yönetin." }, { property: "og:title", content: "Sipariş Yönetimi — KlipsMarket" }, { property: "og:description", content: "Müşteri siparişlerini ve durumlarını yönetin." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Orders });
 
@@ -67,6 +69,19 @@ function Orders() {
       return { orders: o.data ?? [], total: o.count ?? 0, profiles: new Map((p.data ?? []).map((x) => [x.id, x])) };
     },
   });
+  const hasPending = data?.orders.some((order) => order.status === "pending") ?? false;
+  const demand = useQuery({ ...pendingOrderDemandQuery, enabled: hasPending });
+  const openedOrder = data?.orders.find((order) => order.id === openOrder) ?? null;
+  const selectedOrders = data?.orders.filter((order) => selected.includes(order.id)) ?? [];
+  const selectedStock = pendingOrderStock(
+    selectedOrders.filter((order) => order.status === "pending").flatMap((order) => order.items),
+    demand.data,
+  );
+  const approvalWarning = selectedStock.some((line) => line.unavailable)
+    ? "Seçili siparişlerde satışa uygun olmayan ürün var."
+    : selectedStock.some((line) => line.insufficient)
+      ? "Mevcut stok, seçili siparişlerin toplam adedini karşılamıyor."
+      : undefined;
   const exportOrders = async () => {
     setExporting(true);
     try {
@@ -99,7 +114,11 @@ function Orders() {
   };
   return (
     <div className="space-y-3">
-      <OrderDialog order={data?.orders.find((order) => order.id === openOrder) ?? null} onClose={() => setOpenOrder(null)} />
+      <OrderDialog order={openedOrder} onClose={() => setOpenOrder(null)} additionalDetails={openedOrder?.status === "pending" && <>
+        {demand.isError && <p role="alert" className="text-sm text-destructive">{demand.data ? "Stok ve talep yenilenemedi. Son yüklenen bilgiler gösteriliyor." : "Stok ve talep bilgisi yüklenemedi."}</p>}
+        {demand.isPending && <p role="status" className="text-sm text-muted-foreground">Stok ve talep bilgisi yükleniyor…</p>}
+        {demand.data && <PendingOrderStock rows={pendingOrderStock(openedOrder.items, demand.data)} />}
+      </>} />
       <div className="flex flex-wrap items-end gap-3">
         <label className="text-xs">Başlangıç tarihi<Input aria-label="Başlangıç tarihi" type="date" value={from} onChange={e => { setFrom(e.target.value); setPage(0); }} /></label>
         <label className="text-xs">Bitiş tarihi<Input aria-label="Bitiş tarihi" type="date" value={to} onChange={e => { setTo(e.target.value); setPage(0); }} /></label>
@@ -116,12 +135,23 @@ function Orders() {
       {error && <p role="alert" className="text-sm text-destructive">Siparişler yüklenemedi: {error.message}</p>}
       {isFetching && <p className="text-sm text-muted-foreground">Yükleniyor…</p>}
       {data && <Pager page={page} total={data.total} onChange={setPage} />}
+      {hasPending && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-card px-3 py-2 text-sm">
+          {demand.isError ? <p role="alert" className="text-destructive">{demand.data ? "Stok ve talep yenilenemedi. Son yüklenen bilgiler gösteriliyor." : "Stok ve bekleyen talep bilgisi yüklenemedi."}</p>
+            : <p className="text-muted-foreground">{demand.isPending ? "Stok ve bekleyen talep bilgisi yükleniyor…" : "Bekleyen talep, liste filtrelerinden bağımsız olarak tüm onay bekleyen siparişleri kapsar."}</p>}
+          <Button type="button" size="sm" variant="outline" disabled={demand.isFetching} onClick={() => void demand.refetch()}>{demand.isError ? "Tekrar dene" : "Stok ve talebi yenile"}</Button>
+        </div>
+      )}
       {Boolean(data?.orders.length) && <label className="flex items-center gap-2 py-2 text-sm"><Checkbox aria-label="Bu sayfadaki siparişleri seç" checked={Boolean(data?.orders.length && data.orders.every(o => selected.includes(o.id)))} onCheckedChange={checked => setSelected(checked ? data?.orders.map(o => o.id) ?? [] : [])} />Bu sayfadaki siparişleri seç</label>}
-      {Boolean(data?.orders.some(o => selected.includes(o.id))) && <BulkOrderActions orders={data?.orders.filter(o => selected.includes(o.id)) ?? []} onSaved={() => { qc.invalidateQueries(); }} onClear={() => setSelected([])} />}
+      {selectedOrders.length > 0 && <BulkOrderActions orders={selectedOrders} approvalWarning={approvalWarning} onSaved={() => { qc.invalidateQueries(); }} onClear={() => setSelected([])} />}
       {data?.orders.length === 0 && <p className="text-muted-foreground">Sipariş yok.</p>}
       {data?.orders.map((o) => {
         const u = data.profiles.get(o.user_id);
         const availableStatuses = Object.keys(bulkOrderTargets).filter((target) => bulkOrderTargets[target]?.includes(o.status));
+        const stock = o.status === "pending" ? pendingOrderStock(o.items, demand.data) : [];
+        const unavailable = stock.some((line) => line.unavailable);
+        const insufficient = stock.some((line) => line.insufficient);
+        const competing = stock.some((line) => line.competing);
         return (
           <div key={o.id} className="rounded-md border bg-card p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -139,6 +169,10 @@ function Orders() {
                 </select>
               </div>
             </div>
+            {(unavailable || insufficient || competing) && <div className={`mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md px-3 py-2 text-sm ${unavailable || insufficient ? "bg-destructive/10 text-destructive" : "bg-amber-50 text-amber-900"}`}>
+              <span className="font-medium">{unavailable ? "Bazı ürünler satışa uygun değil." : insufficient ? "Bazı ürünlerde bu sipariş için stok yetersiz." : "Bazı ürünlerde toplam bekleyen talep mevcut stoğu aşıyor."}</span>
+              <Button variant="link" className="h-auto p-0 text-current underline" onClick={() => setOpenOrder(o.id)}>Stok ayrıntılarını gör<span className="sr-only">, sipariş #{o.order_no}</span></Button>
+            </div>}
             <ul className="mt-2 text-sm text-muted-foreground">{o.items.map((i) => <li key={i.id}>{i.quantity} × {i.product_name} — {money(i.unit_price)}</li>)}</ul>
             {o.notes && <p className="mt-2 text-sm">Not: {o.notes}</p>}
           </div>

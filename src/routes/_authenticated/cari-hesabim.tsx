@@ -11,7 +11,8 @@ export const Route = createFileRoute("/_authenticated/cari-hesabim")({
 });
 
 function CariPortal() {
-  const { account } = useAuth();
+  const { account, loading } = useAuth();
+  if (loading) return <p role="status" className="mx-auto max-w-6xl px-4 py-10 text-muted-foreground">Cari hesap bilgileri yükleniyor…</p>;
   if (!account) return (
     <div className="mx-auto max-w-3xl px-4 py-16 text-center">
       <h1 className="text-2xl font-extrabold">Cari hesabınız bulunmuyor</h1>

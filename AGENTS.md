@@ -52,7 +52,7 @@ use the editor.
 - Catalog display pagination uses a URL page parameter after shared filtering and natural code ordering; filter changes reset it — keeps pages shareable without accumulating rendered product cards.
 - Product photos share one image viewer for catalog and detail views, using contain-fit originals and an accessible dialog — preserves visible product details and consistent keyboard/touch behavior.
 - Shortage reports are read-only, include zero stock or stock strictly below minimum, and suggest replenishment to maximum (or minimum when unset) without multiplying package quantities — separates purchase planning from stock movements.
-- Shortage purchase drafts are screen-local, keyed by product, and grouped by an explicitly assigned linked supplier; exports contain only draft lines and never change stock — keeps selective procurement separate from receipts.
+- Shortage purchase drafts belong to the signed-in administrator, are saved per product, and are grouped by the assigned supplier; exports contain only draft lines — keeps selective procurement separate from receipts.
 - Purchase receipt rows and shortage purchase drafts use shared quantity-step helpers (100 and its multiples) and submit through existing purchase inserts; stock triggers remain authoritative — keeps inline entry separate from stock calculations.
 - Public catalog pages use the catalog_page RPC with database natural ordering; full-list admin tools retain fetchAll and the shared comparator — avoids transferring the full catalog to visitors.
 - Photo uploads preserve originals in private storage and create separate detail/thumbnail variants; database rows contain paths only — preserves inspection quality without storing image bytes in tables.

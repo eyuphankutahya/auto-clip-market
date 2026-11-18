@@ -33,6 +33,7 @@
   --color-warning: var(--warning);
   --color-ink: var(--ink);
   --color-ink-foreground: var(--ink-foreground);
+  --color-highlight: #ffcf69;
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

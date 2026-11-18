@@ -14,7 +14,14 @@ export const Route = createFileRoute("/_authenticated/admin/cari/$id")({ head: (
 function AccountDetail() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
-  const { data: acc } = useQuery({ queryKey: ["account", id], queryFn: async () => (await supabase.from("customer_accounts").select("*").eq("id", id).single()).data });
+  const { data: acc, isError: accountFailed, isFetching: accountFetching, refetch: refetchAccount } = useQuery({
+    queryKey: ["account", id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("customer_accounts").select("*").eq("id", id).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
   const { data: note, isError: noteFailed, refetch: refetchNote } = useQuery({
     queryKey: ["account-note", id],
     queryFn: async () => {
@@ -54,11 +61,16 @@ function AccountDetail() {
       setPay({ amount: "", method: "Havale", description: "" }); setPayKey(crypto.randomUUID()); qc.invalidateQueries();
     } finally { setPaying(false); }
   };
-  if (!acc) return <p className="text-muted-foreground">Yükleniyor…</p>;
+  const accountWarning = accountFailed && <div role="alert" className="flex flex-wrap items-center gap-2 text-sm">
+    {acc ? "Cari hesap yenilenemedi. Son yüklenen bilgiler gösteriliyor." : "Cari hesap yüklenemedi."}
+    <Button size="sm" variant="outline" disabled={accountFetching} onClick={() => void refetchAccount()}>Tekrar dene</Button>
+  </div>;
+  if (!acc) return accountWarning || <p role="status" className="text-muted-foreground">{acc === null ? "Cari hesap bulunamadı." : "Cari hesap yükleniyor…"}</p>;
   return (
     <div className="space-y-8">
       <Link to="/admin/cariler" className="text-sm text-accent">← Cari hesaplar</Link>
       <h2 className="text-2xl font-extrabold">{acc.company_name}</h2>
+      {accountWarning}
       <div className="grid gap-6 md:grid-cols-2">
         <div className="grid gap-3 rounded-md border bg-card p-4">
           <h3 className="font-extrabold">Cari bilgileri</h3>

@@ -1,6 +1,20 @@
 const tl = new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" });
+const istanbulCalendar = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Europe/Istanbul",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
 export const money = (n: number | string | null | undefined) => tl.format(Number(n ?? 0));
-export const date = (d: string) => new Date(d).toLocaleDateString("tr-TR");
+export const date = (d: string) => new Date(d).toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul" });
+export const istanbulDay = (value: Date = new Date()) => istanbulCalendar.format(value);
+export const istanbulDayStart = (day: string) => new Date(`${day}T00:00:00+03:00`).toISOString();
+
+export function shiftCalendarDay(day: string, offset: number) {
+  const value = new Date(`${day}T00:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + offset);
+  return value.toISOString().slice(0, 10);
+}
 export function discounted(price: number, rate: number) {
   const cents = Math.round(price * 100);
   const multiplier = 10000 - Math.round(rate * 100);

@@ -24,13 +24,19 @@ export function detectColumns(headers: string[]): Columns {
   };
 }
 
-/** Parses "1.234,50", "12,5", "100" or numbers. Returns undefined for empty cells, NaN for junk. */
-export function parseNumber(v: unknown): number | undefined {
-  if (v === null || v === undefined || String(v).trim() === "") return undefined;
+/** Parses unambiguous decimal text or a native spreadsheet number. */
+export function parseNumber(v: unknown, allowCurrency = true): number | undefined {
+  if (v == null) return undefined;
   if (typeof v === "number") return v;
-  let s = String(v).trim().replace(/[₺\sTL]/gi, "");
-  if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
-  return s === "" ? undefined : Number(s);
+  if (typeof v !== "string") return NaN;
+  const input = v.trim();
+  if (!input) return undefined;
+  const value = allowCurrency ? input.replace(/^₺\s*|\s*(?:₺|TL)$/gi, "") : input;
+  if (/^-?\d+(?:\.\d{1,2})?$/.test(value)) return Number(value);
+  if (/^-?(?:\d+|\d{1,3}(?:\.\d{3})+),\d{1,2}$/.test(value)) {
+    return Number(value.replace(/\./g, "").replace(",", "."));
+  }
+  return NaN;
 }
 
 /** Matches each row to a unique product by KM No or, when missing, normalized name. */
@@ -47,14 +53,20 @@ export function buildPlan(rows: ImportRow[], cols: Columns, products: ExistingPr
   const seen = new Set<string>();
 
   rows.forEach((r, i) => {
-    const rowNo = i + 2; // header is row 1
+    // SheetJS retains the source row number even when it skips blank rows.
+    const sourceRow = r["__rowNum__"];
+    const rowNo = typeof sourceRow === "number" ? sourceRow + 1 : i + 2;
     const sku = cols.sku ? key(r[cols.sku]) : "";
     const name = cols.name ? String(r[cols.name] ?? "").trim() : "";
     if (!sku && !name) return; // blank line
-    const stock = cols.stock ? parseNumber(r[cols.stock]) : undefined;
+    const stock = cols.stock ? parseNumber(r[cols.stock], false) : undefined;
     const price = cols.price ? parseNumber(r[cols.price]) : undefined;
-    if (stock !== undefined && (!Number.isInteger(stock) || stock < 0)) return void plan.problems.push({ row: rowNo, reason: `Stok adedi geçersiz: ${String(r[cols.stock!])}` });
-    if (price !== undefined && (!Number.isFinite(price) || price < 0)) return void plan.problems.push({ row: rowNo, reason: `Fiyat geçersiz: ${String(r[cols.price!])}` });
+    if (stock !== undefined && (!Number.isInteger(stock) || stock < 0 || stock > 2147483647)) {
+      return void plan.problems.push({ row: rowNo, reason: `“${cols.stock}” sütununda geçersiz stok adedi: ${String(r[cols.stock!])}. Tam sayıyı ayırıcısız yazın (ör. 1234).` });
+    }
+    if (price !== undefined && (!Number.isFinite(price) || price < 0 || price > 9999999999.99 || Number(price.toFixed(2)) !== price)) {
+      return void plan.problems.push({ row: rowNo, reason: `“${cols.price}” sütununda geçersiz fiyat: ${String(r[cols.price!])}. En çok iki ondalık basamak kullanın (ör. 1234,50).` });
+    }
 
     const matches = (sku ? bySku.get(sku) : byName.get(norm(name))) ?? [];
     if (matches.length > 1) {

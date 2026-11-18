@@ -1,10 +1,10 @@
-import { date, STATUS } from "./format";
+import { date, istanbulDayStart, shiftCalendarDay, STATUS } from "./format";
 import type { OrderDetails } from "@/components/site/OrderDialog";
 
 export function orderDateBounds(from: string, to: string) {
   return {
-    from: from ? new Date(`${from}T00:00:00+03:00`).toISOString() : undefined,
-    to: to ? new Date(new Date(`${to}T00:00:00+03:00`).getTime() + 86400000).toISOString() : undefined,
+    from: from ? istanbulDayStart(from) : undefined,
+    to: to ? istanbulDayStart(shiftCalendarDay(to, 1)) : undefined,
   };
 }
 
