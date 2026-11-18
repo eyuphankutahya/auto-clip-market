@@ -36,7 +36,7 @@ export function ProductCard({ p }: { p: CatalogProduct }) {
             </>) : <div className="font-display text-sm font-bold text-muted-foreground">Fiyat yakında</div>}
             <div className={p.stock > 0 ? "text-xs text-success" : "text-xs text-destructive"}>{p.stock > 0 ? "Stokta" : "Stok yok"}</div>
           </div>
-          <Button size="sm" disabled={!isOrderable(p.price, p.stock)} onClick={() => { if (add({ product_id: p.id, name: p.name, price: Number(p.price), stock: p.stock })) toast.success("Sepete eklendi"); else toast.error(`Stokta en fazla ${p.stock} adet var`); }}>
+          <Button size="sm" disabled={!isOrderable(p.price, p.stock)} onClick={() => { if (add({ product_id: p.id, name: p.name, sku: p.sku, price: Number(p.price), stock: p.stock })) toast.success("Sepete eklendi"); else toast.error(`Stokta en fazla ${p.stock} adet var`); }}>
             <Plus className="h-4 w-4" />Sepet
           </Button>
         </div>

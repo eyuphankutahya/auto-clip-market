@@ -3,16 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchAll } from "@/lib/fetch-all";
 import { compareProductCodes } from "@/lib/catalog-rules";
 
-const productSelect = "*, category:categories(id,name,slug), oems:product_oem_numbers(id,oem), vehicles:product_vehicles(id,brand_id,model_id,brand:brands(name,slug),model:vehicle_models(name))";
+const productSelect = "*, category:categories(id,name,slug), oems:product_oem_numbers(id,oem), vehicles:product_vehicles(id,brand_id,model_id,brand:brands(name,slug))";
 
 async function fetchCatalog() {
-  const [products, c, b, m] = await Promise.all([
+  const [products, categories, brands] = await Promise.all([
     fetchAll((from, to) => supabase.from("products").select(productSelect).order("name").order("id").range(from, to)),
     supabase.from("categories").select("*").order("sort"),
-    supabase.from("brands").select("*").order("name"),
-    fetchAll((from, to) => supabase.from("vehicle_models").select("*").order("name").order("id").range(from, to)),
+    fetchAll((from, to) => supabase.from("brands").select("*").order("name").order("id").range(from, to)),
   ]);
-  return { products: products.sort(compareProductCodes), categories: c.data ?? [], brands: b.data ?? [], models: m };
+  if (categories.error) throw new Error(categories.error.message);
+  return { products: products.sort(compareProductCodes), categories: categories.data ?? [], brands };
 }
 export const catalogQuery = queryOptions({ queryKey: ["catalog"], queryFn: fetchCatalog, staleTime: 60_000 });
 export type Catalog = Awaited<ReturnType<typeof fetchCatalog>>;

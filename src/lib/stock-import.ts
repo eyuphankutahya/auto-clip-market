@@ -1,7 +1,7 @@
 // Pure logic for the admin bulk stock / product-card import (Excel or CSV rows → change plan).
 
 export type ImportRow = Record<string, unknown>;
-export type ExistingProduct = { id: string; sku: string | null; name: string; stock: number; price: number | string; revision?: number };
+export type ExistingProduct = { id: string; sku: string | null; name: string; stock: number; price: number | string; revision?: number; is_active?: boolean };
 export type Columns = { sku?: string | undefined; name?: string | undefined; stock?: string | undefined; price?: string | undefined };
 export type Update = { id: string; sku: string | null; name: string; oldStock: number; stock?: number; oldPrice: number; revision: number; price?: number };
 export type Create = { sku: string; name: string; stock: number; price: number };
@@ -33,10 +33,16 @@ export function parseNumber(v: unknown): number | undefined {
   return s === "" ? undefined : Number(s);
 }
 
-/** Matches each row to a product by KM No (then exact name) and lists what will change. */
+/** Matches each row to a unique product by KM No or, when missing, normalized name. */
 export function buildPlan(rows: ImportRow[], cols: Columns, products: ExistingProduct[]): Plan {
-  const bySku = new Map(products.filter((p) => p.sku).map((p) => [key(p.sku), p]));
-  const byName = new Map(products.map((p) => [norm(p.name), p]));
+  const bySku = new Map<string, ExistingProduct[]>();
+  const byName = new Map<string, ExistingProduct[]>();
+  for (const product of products) {
+    const sku = key(product.sku);
+    const name = norm(product.name);
+    if (sku) bySku.set(sku, [...(bySku.get(sku) ?? []), product]);
+    if (name) byName.set(name, [...(byName.get(name) ?? []), product]);
+  }
   const plan: Plan = { updates: [], creates: [], unchanged: 0, problems: [] };
   const seen = new Set<string>();
 
@@ -48,9 +54,14 @@ export function buildPlan(rows: ImportRow[], cols: Columns, products: ExistingPr
     const stock = cols.stock ? parseNumber(r[cols.stock]) : undefined;
     const price = cols.price ? parseNumber(r[cols.price]) : undefined;
     if (stock !== undefined && (!Number.isInteger(stock) || stock < 0)) return void plan.problems.push({ row: rowNo, reason: `Stok adedi geçersiz: ${String(r[cols.stock!])}` });
-    if (price !== undefined && (Number.isNaN(price) || price < 0)) return void plan.problems.push({ row: rowNo, reason: `Fiyat geçersiz: ${String(r[cols.price!])}` });
+    if (price !== undefined && (!Number.isFinite(price) || price < 0)) return void plan.problems.push({ row: rowNo, reason: `Fiyat geçersiz: ${String(r[cols.price!])}` });
 
-    const p = (sku && bySku.get(sku)) || (!sku && name ? byName.get(norm(name)) : undefined);
+    const matches = (sku ? bySku.get(sku) : byName.get(norm(name))) ?? [];
+    if (matches.length > 1) {
+      plan.problems.push({ row: rowNo, reason: sku ? `KM No ${sku} birden fazla kartla eşleşiyor` : `"${name}" birden fazla kartla eşleşiyor; KM No yazın` });
+      return;
+    }
+    const p = matches[0];
     if (!p) {
       if (!sku || !name) return void plan.problems.push({ row: rowNo, reason: sku ? `KM No ${sku} sitede yok; yeni kart için ürün adı gerekli` : `"${name}" bulunamadı; KM No yazın` });
       if (seen.has(sku)) return void plan.problems.push({ row: rowNo, reason: `KM No ${sku} dosyada iki kez var` });
@@ -60,6 +71,10 @@ export function buildPlan(rows: ImportRow[], cols: Columns, products: ExistingPr
     }
     if (seen.has(p.id)) return void plan.problems.push({ row: rowNo, reason: `${p.sku ?? p.name} dosyada iki kez var` });
     seen.add(p.id);
+    if (p.is_active === false) {
+      plan.problems.push({ row: rowNo, reason: `${p.sku ?? p.name}: Ürün pasif. Aktarımdan önce ürün yönetiminde tekrar satışa açın.` });
+      return;
+    }
     const u: Update = { id: p.id, sku: p.sku, name: p.name, oldStock: p.stock, oldPrice: Number(p.price), revision: p.revision ?? 0 };
     if (stock !== undefined && stock !== p.stock) u.stock = stock;
     if (price !== undefined && price !== Number(p.price)) u.price = price;

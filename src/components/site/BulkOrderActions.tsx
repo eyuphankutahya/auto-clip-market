@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { updateOrderStatuses } from "@/lib/admin-order-actions";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { eligibleOrderIds } from "@/lib/admin-rules";
@@ -15,9 +15,8 @@ export function BulkOrderActions({ orders, onSaved, onClear }: { orders: { id: s
     if (!target || !eligible.length) return;
     setBusy(true);
     try {
-      const result = await supabase.rpc("admin_bulk_orders", { _items: eligible.map(o => ({ id: o.id, status: o.status })), _target: target });
-      if (result.error) throw new Error(result.error.message);
-      toast.success(`${result.data} sipariş güncellendi`); setTarget(null); onClear(); onSaved();
+      const count = await updateOrderStatuses(eligible, target);
+      toast.success(`${count} sipariş güncellendi`); setTarget(null); onClear(); onSaved();
     } catch (error) { toast.error(error instanceof Error ? error.message : "Kaydedilemedi"); }
     finally { setBusy(false); }
   };

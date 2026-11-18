@@ -1,6 +1,6 @@
 export type StockLevel = { stock: number; min_stock: number; max_stock: number | null };
 
-export function isStockShortage(product: StockLevel) {
+export function isStockShortage(product: Pick<StockLevel, "stock" | "min_stock">) {
   return product.stock === 0 || product.stock < product.min_stock;
 }
 

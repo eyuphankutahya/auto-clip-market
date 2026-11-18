@@ -20,6 +20,21 @@ describe("stock import", () => {
     const plan = buildPlan([{ "KLİPS_MARKET": 208, "Stok Adedi": 40 }], cols, products);
     expect(plan.updates).toEqual([{ id: "a", sku: "208", name: "Kapı Döşeme Klipsi", oldStock: 100, stock: 40, oldPrice: 0, revision: 0 }]);
   });
+  it("rejects an ambiguous normalized name but still matches an explicit KM No", () => {
+    const catalog = [...products, { id: "c", sku: "210", name: "Fitil-Klipsi", stock: 5, price: 10 }];
+    const plan = buildPlan([
+      { "Stok Açıklaması": "Fitil Klipsi", "Stok Adedi": 30 },
+      { "KLİPS_MARKET": "210", "Stok Adedi": 40 },
+    ], cols, catalog);
+    expect(plan.problems).toEqual([{ row: 2, reason: '"Fitil Klipsi" birden fazla kartla eşleşiyor; KM No yazın' }]);
+    expect(plan.updates).toMatchObject([{ id: "c", stock: 40 }]);
+  });
+  it("requires explicit reactivation before updating a passive product", () => {
+    const plan = buildPlan([{ "KLİPS_MARKET": "208", "Stok Adedi": 40 }], cols, [{ ...products[0]!, is_active: false }]);
+    expect(plan.updates).toHaveLength(0);
+    expect(plan.creates).toHaveLength(0);
+    expect(plan.problems[0]?.reason).toContain("Ürün pasif");
+  });
   it("counts rows with the same stock and price as unchanged", () => {
     const plan = buildPlan([{ "KLİPS_MARKET": "209", "Stok Adedi": 100, "Satış Fiyatı": 5 }], cols, products);
     expect(plan.updates).toHaveLength(0);

@@ -10,6 +10,7 @@ import { downloadCsv } from "@/lib/csv";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AdminAnalytics } from "@/components/site/AdminAnalytics";
+import { isStockShortage } from "@/lib/stock-shortages";
 
 export const Route = createFileRoute("/_authenticated/admin/raporlar")({ head: () => ({ meta: [{ title: "Stok ve Satış Raporları — KlipsMarket" }, { name: "description", content: "Stok seviyeleri ve ürün satış raporları." }, { property: "og:title", content: "Stok ve Satış Raporları — KlipsMarket" }, { property: "og:description", content: "Stok seviyeleri ve ürün satış raporları." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Reports });
 
@@ -21,7 +22,7 @@ function Reports() {
     queryKey: ["admin-dash"],
     queryFn: async () => {
       const [p, sales, pur] = await Promise.all([
-        fetchAll((from, to) => supabase.from("products").select("id,name,stock,min_stock,price").order("stock").order("id").range(from, to)),
+        fetchAll((from, to) => supabase.from("products").select("id,name,stock,min_stock,is_active").order("stock").order("id").range(from, to)),
         fetchAll((from, to) => supabase.from("product_sales").select("product_id, quantity, revenue").order("product_id").range(from, to)),
         fetchAll((from, to) => supabase.from("purchases").select("quantity, unit_cost, supplier:suppliers(name)").order("id").range(from, to)),
       ]);
@@ -33,7 +34,7 @@ function Reports() {
   data.sales.forEach((r) => { if (r.product_id) sold.set(r.product_id, { q: Number(r.quantity ?? 0), t: Number(r.revenue ?? 0) }); });
   const soldList = data.products.filter((p) => sold.has(p.id)).sort((a, b) => (sold.get(b.id)?.q ?? 0) - (sold.get(a.id)?.q ?? 0));
   const unsold = data.products.filter((p) => !sold.has(p.id));
-  const critical = data.products.filter((p) => p.stock <= p.min_stock);
+  const critical = data.products.filter((p) => p.is_active && isStockShortage(p));
   const bySup = new Map<string, number>();
   data.purchases.forEach((x) => { const n = x.supplier?.name ?? "—"; bySup.set(n, (bySup.get(n) ?? 0) + x.quantity * Number(x.unit_cost)); });
   const revenue = [...sold.values()].reduce((s, v) => s + v.t, 0);
@@ -42,7 +43,7 @@ function Reports() {
       <AdminAnalytics />
       <div className="grid gap-3 sm:grid-cols-4">
         <Stat label="Ürün sayısı" value={data.products.length} />
-        <Stat label="Minimum stok altı" value={critical.length} tone={critical.length ? "text-destructive" : ""} />
+        <Stat label="Eksik veya tükenmiş stok" value={critical.length} tone={critical.length ? "text-destructive" : ""} />
         <Stat label="Satış cirosu" value={money(revenue)} />
         <Stat label="Satılmayan ürün" value={unsold.length} />
       </div>
@@ -52,7 +53,7 @@ function Reports() {
         <table className="w-full bg-card text-sm">
           <thead className="bg-secondary text-left"><tr><th className="p-2">Ürün</th><th className="p-2 text-right">Stok</th><th className="p-2 text-right">Kritik seviye</th><th className="p-2 text-right">Durum</th></tr></thead>
           <tbody>{data.products.slice(stockPage*PAGE_SIZE,(stockPage+1)*PAGE_SIZE).map((p) => <tr key={p.id} className="border-t"><td className="p-2">{p.name}</td><td className="p-2 text-right font-semibold">{p.stock}</td><td className="p-2 text-right text-muted-foreground">{p.min_stock}</td>
-            <td className="p-2 text-right">{p.stock <= 0 ? <span className="text-destructive font-semibold">Tükendi</span> : p.stock <= p.min_stock ? <span className="text-warning font-semibold">Kritik</span> : <span className="text-success">Yeterli</span>}</td></tr>)}</tbody>
+            <td className="p-2 text-right">{!p.is_active ? <span className="text-muted-foreground">Satışa kapalı</span> : p.stock === 0 ? <span className="text-destructive font-semibold">Tükendi</span> : isStockShortage(p) ? <span className="text-warning font-semibold">Kritik</span> : <span className="text-success">Yeterli</span>}</td></tr>)}</tbody>
         </table>
         </div>
       </section>

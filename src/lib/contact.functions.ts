@@ -6,14 +6,14 @@ export const submitContact = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => contactSchema.parse(input))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    // Simple abuse guard: max 3 messages per e-mail in 10 minutes, 30 site-wide.
+    const email = data.email.toLowerCase();
     const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-    const [mine, all] = await Promise.all([
-      supabaseAdmin.from("contact_submissions").select("id", { count: "exact", head: true }).eq("email", data.email).gte("created_at", since),
-      supabaseAdmin.from("contact_submissions").select("id", { count: "exact", head: true }).gte("created_at", since),
-    ]);
-    if ((mine.count ?? 0) >= 3 || (all.count ?? 0) >= 30) throw new Error("Çok fazla mesaj gönderildi. Lütfen birkaç dakika sonra tekrar deneyin.");
-    const { error } = await supabaseAdmin.from("contact_submissions").insert(data);
+    const { data: recent, error: readError } = await supabaseAdmin.from("contact_submissions").select("email").gte("created_at", since).order("created_at", { ascending: false }).limit(30);
+    if (readError) throw new Error("Mesajınız kaydedilemedi. Lütfen tekrar deneyin.");
+    if (recent.length >= 30 || recent.filter((message) => message.email.toLowerCase() === email).length >= 3) {
+      throw new Error("Çok fazla mesaj gönderildi. Lütfen birkaç dakika sonra tekrar deneyin.");
+    }
+    const { error } = await supabaseAdmin.from("contact_submissions").insert({ ...data, email });
     if (error) throw new Error("Mesajınız kaydedilemedi. Lütfen tekrar deneyin.");
     return { success: true };
   });

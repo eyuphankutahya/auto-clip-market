@@ -7,20 +7,22 @@ import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { resolveProductPhoto } from "@/lib/product-photo";
 
-export function ProductImage({ src, original, name, detail = false }: { src: string | null; original?: string | null; name: string; detail?: boolean }) {
-  const [failed, setFailed] = useState(false);
+export function ProductImage({ src, original, name, detail = false, compact = false }: { src: string | null; original?: string | null; name: string; detail?: boolean; compact?: boolean }) {
+  const [failedSource, setFailedSource] = useState<string>();
   const [open,setOpen] = useState(false);
-  const {data:display}=useQuery({queryKey:["product-photo",src],queryFn:()=>resolveProductPhoto(src),staleTime:3000000});
-  const {data:large}=useQuery({queryKey:["product-photo",original ?? src],queryFn:()=>resolveProductPhoto(original ?? src),enabled:open,staleTime:3000000});
-  const frame = cn("relative grid w-full place-items-center overflow-hidden bg-secondary", detail ? "aspect-square rounded-md border" : "aspect-[4/3]");
-  if (!src || failed) return <div className={frame}><Package className={cn("text-muted-foreground", detail ? "h-24 w-24" : "h-12 w-12")} /><span className="sr-only">{name} — fotoğraf yok</span></div>;
+  const { data: display, isError: displayError } = useQuery({ queryKey: ["product-photo", src], queryFn: () => resolveProductPhoto(src), enabled: Boolean(src), staleTime: 3000000 });
+  const { data: large, isError: largeError } = useQuery({ queryKey: ["product-photo", original ?? src], queryFn: () => resolveProductPhoto(original ?? src), enabled: open, staleTime: 3000000 });
+  const zoomSource = large ?? (largeError ? display : undefined);
+  const frame = cn("relative grid w-full place-items-center overflow-hidden bg-secondary", detail || compact ? "aspect-square rounded-md border" : "aspect-[4/3]");
+  const placeholder = <Package aria-hidden="true" className={cn("text-muted-foreground", compact ? "h-5 w-5" : detail ? "h-24 w-24" : "h-12 w-12")} />;
+  if (!src || displayError || (display && failedSource === display)) return <div className={frame}>{placeholder}<span className="sr-only">{name} fotoğrafı görüntülenemiyor</span></div>;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button type="button" variant="ghost" aria-label={`${name} fotoğrafını büyüt`} title="Fotoğrafı büyüt" className={cn(frame, "group/image h-auto p-0 hover:bg-secondary")}>
-          {display && <img src={display} alt={name} loading={detail ? "eager" : "lazy"} onError={() => setFailed(true)} className="h-full w-full object-contain transition-transform duration-300 group-hover/image:scale-110 group-focus-visible/image:scale-110 motion-reduce:transition-none" />}
-          <span className="absolute bottom-3 right-3 grid h-8 w-8 place-items-center rounded-sm border bg-background/90 text-foreground"><ZoomIn className="h-4 w-4" /></span>
+          {display ? <img src={display} alt={name} loading={detail ? "eager" : "lazy"} onError={() => setFailedSource(display)} className="h-full w-full object-contain transition-transform duration-300 group-hover/image:scale-110 group-focus-visible/image:scale-110 motion-reduce:transition-none" /> : compact && placeholder}
+          <span className={cn("absolute grid place-items-center rounded-sm border bg-background/90 text-foreground", compact ? "bottom-1 right-1 h-4 w-4" : "bottom-3 right-3 h-8 w-8")}><ZoomIn className={compact ? "h-3 w-3" : "h-4 w-4"} /></span>
         </Button>
       </DialogTrigger>
       <DialogPortal>
@@ -31,7 +33,7 @@ export function ProductImage({ src, original, name, detail = false }: { src: str
             <DialogClose asChild><Button variant="ghost" size="icon" aria-label="Fotoğrafı kapat" title="Kapat" className="shrink-0"><X /></Button></DialogClose>
           </div>
           <div className="min-h-0 overflow-auto p-2 sm:p-4">
-            {large ? <img src={large} alt={name} className="mx-auto max-h-[75dvh] w-full object-contain" /> : <p className="p-8 text-muted-foreground">Fotoğraf yükleniyor…</p>}
+            {zoomSource ? <img src={zoomSource} alt={name} className="mx-auto max-h-[75dvh] w-full object-contain" /> : <p className="p-8 text-muted-foreground">{largeError ? "Fotoğraf yüklenemedi." : "Fotoğraf yükleniyor…"}</p>}
           </div>
         </DialogPrimitive.Content>
       </DialogPortal>

@@ -1,6 +1,6 @@
 type LinkedProduct = {
   category: { slug: string } | null;
-  vehicles: { brand_id: string; model_id: string | null }[];
+  vehicles: { brand_id: string }[];
 };
 
 const codeCollator = new Intl.Collator("tr", { numeric: true, sensitivity: "base" });
@@ -15,13 +15,10 @@ export function compareProductCodes(a: { sku: string | null; id: string }, b: { 
 
 export function matchesCatalogFilters(
   product: LinkedProduct,
-  filters: { category?: string | undefined; brandId?: string | undefined; modelId?: string | undefined },
+  filters: { category?: string | undefined; brandId?: string | undefined },
 ) {
   if (filters.category && product.category?.slug !== filters.category) return false;
   if (filters.brandId && !product.vehicles.some((v) => v.brand_id === filters.brandId)) return false;
-  if (filters.modelId && !product.vehicles.some((v) =>
-    v.model_id === filters.modelId || (v.brand_id === filters.brandId && v.model_id === null),
-  )) return false;
   return true;
 }
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { catalogQuery } from "@/lib/catalog";
+import { catalogFiltersQuery } from "@/lib/catalog-page";
 import { buildNewProductArgs, emptyNewProduct, type NewProductForm } from "@/lib/new-product";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,21 +41,21 @@ function Section({ title, description, children }: { title: string; description:
 }
 
 function NewProductPage() {
-  const { data: catalog } = useQuery(catalogQuery);
+  const { data: catalog } = useQuery(catalogFiltersQuery);
   const { data: suppliers } = useQuery(suppliersQuery);
   const [form, setForm] = useState<NewProductForm>({ ...emptyNewProduct });
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
   const qc = useQueryClient();
   const set = <K extends keyof NewProductForm>(key: K, value: NewProductForm[K]) => setForm((old) => ({ ...old, [key]: value }));
-  const toggle = (key: "brands" | "models", id: string) => set(key, form[key].includes(id) ? form[key].filter((item) => item !== id) : [...form[key], id]);
+  const toggleBrand = (id: string) => setForm((old) => ({ ...old, brands: old.brands.includes(id) ? old.brands.filter((item) => item !== id) : [...old.brands, id] }));
 
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!catalog || busy) return;
     setBusy(true);
     try {
-      const args = buildNewProductArgs(form, catalog.models);
+      const args = buildNewProductArgs(form);
       const { error } = await supabase.rpc("create_product_with_photos", args);
       if (error) throw error;
       await qc.invalidateQueries();
@@ -100,12 +100,9 @@ function NewProductPage() {
         <Textarea className="font-oem min-h-24" value={form.oems} onChange={(e) => set("oems", e.target.value)} placeholder="Örn. 123456789, 987654321" />
       </Section>
 
-      <Section title="Uyumlu araçlar" description="Tüm modeller için markayı, yalnızca belirli araçlar için modelleri seçin. Birden fazla seçim yapabilirsiniz.">
+      <Section title="Uyumlu araç markaları" description="Ürünün uyumlu olduğu markaları seçin.">
         <div className="grid max-h-96 gap-4 overflow-y-auto rounded-md border p-4 sm:grid-cols-2 lg:grid-cols-3">
-          {catalog?.brands.map((brand) => <div key={brand.id}>
-            <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={form.brands.includes(brand.id)} onChange={() => toggle("brands", brand.id)} />{brand.name} <span className="font-normal text-muted-foreground">(tümü)</span></label>
-            <div className="ml-5 mt-1 space-y-1">{catalog.models.filter((model) => model.brand_id === brand.id).map((model) => <label key={model.id} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.models.includes(model.id)} onChange={() => toggle("models", model.id)} />{model.name}</label>)}</div>
-          </div>)}
+          {catalog?.brands.map((brand) => <label key={brand.id} className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={form.brands.includes(brand.id)} onChange={() => toggleBrand(brand.id)} />{brand.name}</label>)}
         </div>
       </Section>
 

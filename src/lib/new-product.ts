@@ -20,24 +20,20 @@ export type NewProductForm = {
   image_thumbnail_url?: string;
   oems: string;
   brands: string[];
-  models: string[];
   sups: ProductSupplierInput;
 };
 
 export const emptyNewProduct: NewProductForm = {
   sku: "", name: "", description: "", price: "", stock: "0", min_stock: "50",
   max_stock: "", package_quantity: "", category_id: "", image_url: "", oems: "",
-  brands: [], models: [], sups: {},
+  brands: [], sups: {},
 };
 
 export function parseOemNumbers(value: string): string[] {
   return [...new Set(value.split(/[,;\n]/).map((oem) => oem.trim()).filter(Boolean))];
 }
 
-export function buildNewProductArgs(
-  form: NewProductForm,
-  models: { id: string; brand_id: string }[],
-) {
+export function buildNewProductArgs(form: NewProductForm) {
   const name = form.name.trim();
   if (!name) throw new Error("Ürün adı zorunludur");
 
@@ -52,13 +48,7 @@ export function buildNewProductArgs(
   const limitsError = validateStockLimits(minStock, maxStock);
   if (limitsError) throw new Error(limitsError);
 
-  const vehicles = [
-    ...form.brands.map((brand_id) => ({ brand_id, model_id: null })),
-    ...form.models.flatMap((modelId) => {
-      const model = models.find((item) => item.id === modelId);
-      return model ? [{ brand_id: model.brand_id, model_id: model.id }] : [];
-    }),
-  ];
+  const vehicles = [...new Set(form.brands)].map((brand_id) => ({ brand_id, model_id: null }));
 
   return {
     _product: {

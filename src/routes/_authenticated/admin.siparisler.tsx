@@ -14,7 +14,8 @@ import { downloadCsv } from "@/lib/csv";
 import { matchesCustomer, orderDateBounds, orderListHeader, orderListRow } from "@/lib/order-export";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BulkOrderActions } from "@/components/site/BulkOrderActions";
-import { toggleSelection } from "@/lib/admin-rules";
+import { bulkOrderTargets, toggleSelection } from "@/lib/admin-rules";
+import { updateOrderStatuses } from "@/lib/admin-order-actions";
 
 export const Route = createFileRoute("/_authenticated/admin/siparisler")({ head: () => ({ meta: [{ title: "Sipariş Yönetimi — KlipsMarket" }, { name: "description", content: "Müşteri siparişlerini ve durumlarını yönetin." }, { property: "og:title", content: "Sipariş Yönetimi — KlipsMarket" }, { property: "og:description", content: "Müşteri siparişlerini ve durumlarını yönetin." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Orders });
 
@@ -29,6 +30,7 @@ function Orders() {
   const [exporting, setExporting] = useState(false);
   const [openOrder, setOpenOrder] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
+  const [savingStatus, setSavingStatus] = useState(false);
   const orderNo = /^\d+$/.test(q.trim()) ? Number(q.trim()) : null;
   const invalidDates = Boolean(from && to && from > to);
   const prepareQuery = async () => {
@@ -80,11 +82,20 @@ function Orders() {
     } catch (err) { toast.error(err instanceof Error ? err.message : "CSV indirilemedi."); }
     finally { setExporting(false); }
   };
-  const setStatus = async (id: string, status: string) => {
-    const { error } = await supabase.from("orders").update({ status }).eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Durum güncellendi");
-    qc.invalidateQueries();
+  const setStatus = async (order: { id: string; status: string; order_no: number }, target: string) => {
+    if (savingStatus || !bulkOrderTargets[target]?.includes(order.status)) return;
+    if (target === "cancelled" && !confirm(`Sipariş #${order.order_no} iptal edilsin mi?`)) return;
+    setSavingStatus(true);
+    try {
+      await updateOrderStatuses([order], target);
+      toast.success("Durum güncellendi");
+      await qc.invalidateQueries();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Sipariş durumu güncellenemedi.");
+      await qc.invalidateQueries({ queryKey: ["admin-orders"] });
+    } finally {
+      setSavingStatus(false);
+    }
   };
   return (
     <div className="space-y-3">
@@ -110,6 +121,7 @@ function Orders() {
       {data?.orders.length === 0 && <p className="text-muted-foreground">Sipariş yok.</p>}
       {data?.orders.map((o) => {
         const u = data.profiles.get(o.user_id);
+        const availableStatuses = Object.keys(bulkOrderTargets).filter((target) => bulkOrderTargets[target]?.includes(o.status));
         return (
           <div key={o.id} className="rounded-md border bg-card p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -119,11 +131,11 @@ function Orders() {
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <span className="font-display text-lg font-extrabold">{money(o.total)}</span>
-                {o.status === "pending" && <Button size="sm" onClick={() => setStatus(o.id, "approved")}>Onayla</Button>}
-                {o.status === "approved" && <Button size="sm" onClick={() => setStatus(o.id, "shipped")}>Kargola</Button>}
+                {o.status === "pending" && <Button size="sm" disabled={savingStatus} onClick={() => void setStatus(o, "approved")}>Onayla</Button>}
+                {o.status === "approved" && <Button size="sm" disabled={savingStatus} onClick={() => void setStatus(o, "shipped")}>Kargola</Button>}
                 <Button size="icon" variant="ghost" aria-label="Yazdır" onClick={() => printOrder(o, o.account?.company_name ?? u?.full_name ?? u?.email ?? "")}><Printer className="h-4 w-4" /></Button>
-                <select aria-label="Durum" value={o.status} onChange={(e) => setStatus(o.id, e.target.value)} className="rounded-md border bg-background px-2 py-1.5 text-sm">
-                  {Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                <select aria-label="Durum" value={o.status} disabled={savingStatus || !availableStatuses.length} onChange={(e) => void setStatus(o, e.target.value)} className="rounded-md border bg-background px-2 py-1.5 text-sm">
+                  {[o.status, ...availableStatuses].map((key) => <option key={key} value={key}>{STATUS[key]}</option>)}
                 </select>
               </div>
             </div>

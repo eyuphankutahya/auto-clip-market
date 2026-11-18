@@ -27,8 +27,14 @@ export function CariStatement({ accountId }: { accountId: string }) {
   const debit = data.tx.filter((t) => t.type === "debit").reduce((s, t) => s + Number(t.amount), 0);
   const credit = data.tx.filter((t) => t.type === "credit").reduce((s, t) => s + Number(t.amount), 0);
   let run = 0;
-  const bought = new Map<string, { q: number; t: number }>();
-  data.orders.forEach((o) => o.items.forEach((i) => { const c = bought.get(i.product_name) ?? { q: 0, t: 0 }; bought.set(i.product_name, { q: c.q + i.quantity, t: c.t + i.quantity * Number(i.unit_price) }); }));
+  const bought = new Map<string, { name: string; sku: string | null; q: number; t: number }>();
+  for (const order of data.orders) {
+    for (const item of order.items) {
+      const key = item.product_id ?? item.id;
+      const previous = bought.get(key);
+      bought.set(key, { name: item.product_name, sku: item.product?.sku ?? null, q: (previous?.q ?? 0) + item.quantity, t: (previous?.t ?? 0) + item.quantity * Number(item.unit_price) });
+    }
+  }
   const payments = data.tx.filter((t) => t.type === "credit");
   const history = [
     ...data.orders.map(order=>({id:order.id,date:order.created_at,name:order.items.length===1?order.items[0]?.product_name ?? "Ürün":`${order.items.length} kalem ürün`,quantity:order.items.reduce((t,i)=>t+i.quantity,0),price:Number(order.total),payment:"Cari borç",orderId:order.id as string|null,orderNo:order.order_no as number|null})),
@@ -62,7 +68,7 @@ export function CariStatement({ accountId }: { accountId: string }) {
           <h3 className="mb-2 font-extrabold">Alınan ürünler</h3>
           <table className="w-full rounded-md border bg-card text-sm"><tbody>
             {bought.size === 0 && <tr><td className="p-4 text-center text-muted-foreground">Henüz yok</td></tr>}
-            {[...bought].map(([n, v]) => <tr key={n} className="border-t"><td className="p-2">{n}</td><td className="p-2 text-right">{v.q} adet</td><td className="p-2 text-right">{money(v.t)}</td></tr>)}
+            {[...bought].map(([id, v]) => <tr key={id} className="border-t"><td className="p-2">{v.sku ? `${v.sku} · ` : ""}{v.name}</td><td className="p-2 text-right">{v.q} adet</td><td className="p-2 text-right">{money(v.t)}</td></tr>)}
           </tbody></table>
         </section>
         <section>

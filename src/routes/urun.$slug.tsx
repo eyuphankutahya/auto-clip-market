@@ -24,16 +24,16 @@ export const Route = createFileRoute("/urun/$slug")({
 
 function ProductPage() {
   const { slug } = Route.useParams();
-  const { data, isLoading } = useQuery(catalogPageQuery({ slug }));
+  const { data, isLoading, isError, refetch } = useQuery(catalogPageQuery({ slug }));
   const { add } = useCart();
   const { account } = useAuth();
   const [qty, setQty] = useState(1);
   const p = data?.products.find((x) => x.slug === slug);
   if (isLoading) return <p className="p-10 text-muted-foreground">Yükleniyor…</p>;
+  if (isError) return <div role="alert" className="space-y-3 p-10"><p>Ürün bilgileri yüklenemedi.</p><Button variant="outline" onClick={() => void refetch()}>Tekrar dene</Button></div>;
   if (!p) return <div className="p-10">Ürün bulunamadı. <Link to="/urunler" search={{}} className="text-accent">Ürünlere dön</Link></div>;
   const rate = account ? Number(account.discount_rate) : 0;
-  const byBrand = new Map<string, string[]>();
-  p.vehicles.forEach((v) => { const k = v.brand?.name ?? ""; byBrand.set(k, [...(byBrand.get(k) ?? []), v.model?.name ?? "Tüm modeller"]); });
+  const brands = [...new Set(p.vehicles.flatMap((vehicle) => vehicle.brand ? [vehicle.brand.name] : []))];
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-4 py-10 md:grid-cols-2">
       <ProductImage src={p.image_url} original={p.image_original_url} name={p.name} detail />
@@ -53,14 +53,12 @@ function ProductPage() {
         </div>
         <div className="mt-6 flex gap-2">
           <Input type="number" min={1} max={Math.max(1, p.stock)} value={qty} onChange={(e) => setQty(clampQty(Number(e.target.value), p.stock))} className="w-28" aria-label="Adet" />
-          <Button size="lg" disabled={!isOrderable(p.price, p.stock)} onClick={() => { if (add({ product_id: p.id, name: p.name, price: Number(p.price), stock: p.stock }, qty)) toast.success("Sepete eklendi"); else toast.error(`Stokta en fazla ${p.stock} adet var (sepetinizdekiler dahil)`); }}>Sepete ekle</Button>
+          <Button size="lg" disabled={!isOrderable(p.price, p.stock)} onClick={() => { if (add({ product_id: p.id, name: p.name, sku: p.sku, price: Number(p.price), stock: p.stock }, qty)) toast.success("Sepete eklendi"); else toast.error(`Stokta en fazla ${p.stock} adet var (sepetinizdekiler dahil)`); }}>Sepete ekle</Button>
         </div>
         <div className="mt-10">
-          <h2 className="mb-3 text-lg font-extrabold">Uyumlu araçlar</h2>
-          {byBrand.size === 0 ? <p className="text-sm text-muted-foreground">Belirtilmemiş.</p> : (
-            <table className="w-full text-sm"><tbody>
-              {[...byBrand].map(([b, ms]) => <tr key={b} className="border-b"><td className="py-2 pr-4 font-semibold">{b}</td><td className="py-2 text-muted-foreground">{ms.join(", ")}</td></tr>)}
-            </tbody></table>
+          <h2 className="mb-3 text-lg font-extrabold">Uyumlu araç markaları</h2>
+          {brands.length === 0 ? <p className="text-sm text-muted-foreground">Belirtilmemiş.</p> : (
+            <ul className="flex flex-wrap gap-2 text-sm">{brands.map((brand) => <li key={brand} className="rounded-sm border px-3 py-1">{brand}</li>)}</ul>
           )}
         </div>
       </div>

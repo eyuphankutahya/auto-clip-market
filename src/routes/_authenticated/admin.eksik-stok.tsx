@@ -6,21 +6,38 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAll } from "@/lib/fetch-all";
 import { compareProductCodes } from "@/lib/catalog-rules";
-import { isStockShortage, replenishmentQuantity } from "@/lib/stock-shortages";
+import { isStockShortage, replenishmentQuantity, type StockLevel } from "@/lib/stock-shortages";
 import { Pager, PAGE_SIZE } from "@/components/site/Pager";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ShortagePurchaseList } from "@/components/site/ShortagePurchaseList";
+import { ProductImage } from "@/components/site/ProductImage";
 import { groupPurchaseLines, mergePurchaseLines, purchaseLine, type PurchaseLine } from "@/lib/purchase-list";
 import { changePurchaseQuantity, isPurchaseQuantity, roundUpPurchaseQuantity } from "@/lib/purchase-quantity";
+
+const sortOptions = {
+  sku: "KM No · artan",
+  stockAsc: "Stok · azdan çoğa",
+  stockDesc: "Stok · çoktan aza",
+  nameAsc: "Ürün adı · A–Z",
+  nameDesc: "Ürün adı · Z–A",
+  quantityAsc: "Alım adedi · azdan çoğa",
+  quantityDesc: "Alım adedi · çoktan aza",
+};
+
+const productNameCollator = new Intl.Collator("tr", { sensitivity: "base" });
+
+function purchaseQuantity(product: StockLevel & { id: string }, quantities: Record<string, number>) {
+  return quantities[product.id] ?? roundUpPurchaseQuantity(replenishmentQuantity(product));
+}
 
 const shortageQuery = queryOptions({
   queryKey: ["admin-stock-shortages"],
   queryFn: async () => {
     const [products, links, suppliers] = await Promise.all([
-      fetchAll((from, to) => supabase.from("products").select("id,sku,name,stock,min_stock,max_stock").order("id").range(from, to)),
+      fetchAll((from, to) => supabase.from("products").select("id,sku,name,stock,min_stock,max_stock,image_url,image_thumbnail_url,image_original_url").eq("is_active", true).order("id").range(from, to)),
       fetchAll((from, to) => supabase.from("product_supplier_codes").select("product_id,supplier_id,code").order("id").range(from, to)),
       fetchAll((from, to) => supabase.from("suppliers").select("id,name").order("name").order("id").range(from, to)),
     ]);
@@ -52,6 +69,7 @@ function Shortages() {
   const [query, setQuery] = useState("");
   const [supplier, setSupplier] = useState("");
   const [status, setStatus] = useState("all");
+  const [sort, setSort] = useState<keyof typeof sortOptions>("sku");
   const [page, setPage] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [quantities,setQuantities]=useState<Record<string,number>>({});
@@ -60,22 +78,36 @@ function Shortages() {
   const [purchaseLines, setPurchaseLines] = useState<PurchaseLine[]>([]);
   const [purchaseExporting, setPurchaseExporting] = useState(false);
   const supplierFor = (p: typeof data.products[number]) => assigned[p.id] ?? (supplier && p.suppliers.some((s) => s.supplier_id === supplier) ? supplier : new Set(p.suppliers.map((s) => s.supplier_id)).size === 1 ? p.suppliers[0]?.supplier_id ?? "" : "");
-  const list = useMemo(() => data.products.filter((p) => {
-    if (status === "empty" && p.stock !== 0) return false;
-    if (status === "low" && p.stock === 0) return false;
-    if (supplier && !p.suppliers.some((s) => s.supplier_id === supplier)) return false;
+  const list = useMemo(() => {
     const term = query.trim().toLocaleLowerCase("tr");
-    return !term || `${p.sku ?? ""} ${p.name} ${p.suppliers.map((s) => s.code ?? "").join(" ")}`.toLocaleLowerCase("tr").includes(term);
-  }), [data, query, supplier, status]);
+    return data.products.filter((p) => {
+      if (status === "empty" && p.stock !== 0) return false;
+      if (status === "low" && p.stock === 0) return false;
+      if (supplier && !p.suppliers.some((s) => s.supplier_id === supplier)) return false;
+      return !term || `${p.sku ?? ""} ${p.name} ${p.suppliers.map((s) => s.code ?? "").join(" ")}`.toLocaleLowerCase("tr").includes(term);
+    }).sort((a, b) => {
+      switch (sort) {
+        case "stockAsc": return a.stock - b.stock || compareProductCodes(a, b);
+        case "stockDesc": return b.stock - a.stock || compareProductCodes(a, b);
+        case "nameAsc": return productNameCollator.compare(a.name, b.name) || compareProductCodes(a, b);
+        case "nameDesc": return productNameCollator.compare(b.name, a.name) || compareProductCodes(a, b);
+        case "quantityAsc": return purchaseQuantity(a, quantities) - purchaseQuantity(b, quantities) || compareProductCodes(a, b);
+        case "quantityDesc": return purchaseQuantity(b, quantities) - purchaseQuantity(a, quantities) || compareProductCodes(a, b);
+        default: return compareProductCodes(a, b);
+      }
+    });
+  }, [data.products, query, supplier, status, sort, quantities]);
   const currentPage = Math.min(page, Math.max(0, Math.ceil(list.length / PAGE_SIZE) - 1));
   const visible = list.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
   const allVisibleSelected = visible.length > 0 && visible.every((p) => selected.includes(p.id));
 
-  function addSelected() {
+  function addToList(products: typeof data.products) {
+    if (!products.length) return;
     try {
-      const added = data.products.filter((p) => selected.includes(p.id)).map((p) => purchaseLine(p, supplierFor(p), quantities[p.id] ?? roundUpPurchaseQuantity(replenishmentQuantity(p))));
+      const added = products.map((p) => purchaseLine(p, supplierFor(p), purchaseQuantity(p, quantities)));
+      const addedIds = new Set(added.map((line) => line.productId));
       setPurchaseLines((old) => mergePurchaseLines(old, added));
-      setSelected([]);
+      setSelected((old) => old.filter((id) => !addedIds.has(id)));
       toast.success(`${added.length} ürün alım listesine eklendi.`);
     } catch (error) { toast.error(error instanceof Error ? error.message : "Ürünler listeye eklenemedi."); }
   }
@@ -102,7 +134,7 @@ function Shortages() {
         "KM No": p.sku ?? "", "Stok Açıklaması": p.name,
         "Durum": p.stock === 0 ? "Tükendi" : "Minimum altı",
         "Mevcut Stok": p.stock, "Min Stok": p.min_stock, "Max Stok": p.max_stock ?? "",
-        "Alım Adedi": quantities[p.id] ?? roundUpPurchaseQuantity(replenishmentQuantity(p)),
+        "Alım Adedi": purchaseQuantity(p, quantities),
         "Tedarikçi ve Kodları": p.suppliers.filter(s=>!supplier || s.supplier_id===supplier).map((s) => `${s.name}${s.code ? `: ${s.code}` : ""}`).join("\n"),
       }));
       const sheet = XLSX.utils.json_to_sheet(rows);
@@ -130,26 +162,42 @@ function Shortages() {
         <span><b>{list.length}</b> listelenen ürün</span>
       </div>
       <div className="flex flex-wrap gap-2"><Button variant={!supplier?"secondary":"outline"} size="sm" onClick={()=>{setSupplier("");setPage(0);}}>Tüm tedarikçiler</Button>{data.suppliers.map(s=><Button key={s.id} variant={supplier===s.id?"secondary":"outline"} size="sm" onClick={()=>{setSupplier(s.id);setPage(0);}}>{s.name}</Button>)}</div>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <div className="space-y-2"><Label htmlFor="shortage-search">KM No / ürün / tedarikçi kodu</Label><Input id="shortage-search" value={query} maxLength={200} onChange={(e) => { setQuery(e.target.value); setPage(0); }} /></div>
         <div className="space-y-2"><Label htmlFor="shortage-status">Stok durumu</Label><select id="shortage-status" className="h-9 w-full rounded-md border bg-background px-3 text-sm" value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }}><option value="all">Tüm eksikler</option><option value="empty">Tükenenler</option><option value="low">Minimum altındakiler</option></select></div>
         <div className="space-y-2"><Label htmlFor="shortage-supplier">Tedarikçi</Label><select id="shortage-supplier" className="h-9 w-full rounded-md border bg-background px-3 text-sm" value={supplier} onChange={(e) => { setSupplier(e.target.value); setPage(0); }}><option value="">Tüm tedarikçiler</option>{data.suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+        <div className="space-y-2">
+          <Label htmlFor="shortage-sort">Sıralama</Label>
+          <select id="shortage-sort" className="h-9 w-full rounded-md border bg-background px-3 text-sm" value={sort} onChange={(e) => {
+            setSort(e.target.value as keyof typeof sortOptions);
+            setPage(0);
+          }}>
+            {Object.entries(sortOptions).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+        </div>
       </div>
       <p className="text-sm text-muted-foreground">Alım hedefi: maksimum stok; maksimum belirlenmemişse minimum stok. Alım adetleri 100 ve katları olarak seçilir; öneri, hedefe göre bir üst 100 katına yuvarlanır.</p>
       <Pager page={currentPage} total={list.length} onChange={setPage} />
       <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={addSelected} disabled={!selected.length || isFetching}><ListPlus />Seçilenleri listeye ekle ({selected.length})</Button>
+        <Button onClick={() => addToList(data.products.filter((p) => selected.includes(p.id)))} disabled={!selected.length || isFetching}><ListPlus />Seçilenleri listeye ekle ({selected.length})</Button>
         {selected.length > 0 && <Button variant="ghost" onClick={() => setSelected([])}>Seçimi kaldır</Button>}
         <span className="text-sm text-muted-foreground">Alım listesinde {purchaseLines.length} ürün</span>
       </div>
       {list.length === 0 ? <p className="border-y py-12 text-center text-muted-foreground">{data.products.length ? "Filtrelere uygun eksik ürün bulunamadı." : "Stoğu tükenen veya minimumun altına düşen ürün yok."}</p> : (
         <div className="overflow-x-auto rounded-md border">
           <table className="w-full bg-card text-sm">
-            <thead className="bg-secondary text-left"><tr><th className="px-3 py-3"><Checkbox aria-label="Bu sayfadaki ürünleri seç" checked={allVisibleSelected ? true : visible.some((p) => selected.includes(p.id)) ? "indeterminate" : false} onCheckedChange={(checked) => setSelected((old) => checked === true ? [...new Set([...old, ...visible.map((p) => p.id)])] : old.filter((id) => !visible.some((p) => p.id === id)))} /></th>{["KM No", "Ürün", "Durum", "Stok", "Min / Max", "Alım adedi", "Alınacak tedarikçi", "Tedarikçi / Kod"].map((h) => <th key={h} className="whitespace-nowrap px-3 py-3">{h}</th>)}</tr></thead>
-            <tbody>{visible.map((p) => { const quantity = quantities[p.id] ?? roundUpPurchaseQuantity(replenishmentQuantity(p)); return <tr key={p.id} className="border-t align-top">
+            <thead className="bg-secondary text-left"><tr><th className="px-3 py-3"><Checkbox aria-label="Bu sayfadaki ürünleri seç" checked={allVisibleSelected ? true : visible.some((p) => selected.includes(p.id)) ? "indeterminate" : false} onCheckedChange={(checked) => setSelected((old) => checked === true ? [...new Set([...old, ...visible.map((p) => p.id)])] : old.filter((id) => !visible.some((p) => p.id === id)))} /></th>{["KM No", "Ürün", "Durum", "Stok", "Min / Max", "Alım adedi", "Alınacak tedarikçi", "Tedarikçi / Kod"].map((h) => <th key={h} className="whitespace-nowrap px-3 py-3">{h}</th>)}<th scope="col" className="whitespace-nowrap px-3 py-3 text-right">Alım listesi</th></tr></thead>
+            <tbody>{visible.map((p) => { const quantity = purchaseQuantity(p, quantities); return <tr key={p.id} className="border-t align-top">
               <td className="px-3 py-3"><Checkbox aria-label={`${p.sku ?? p.name} ürününü seç`} checked={selected.includes(p.id)} onCheckedChange={(checked) => setSelected((old) => checked === true ? [...new Set([...old, p.id])] : old.filter((id) => id !== p.id))} /></td>
               <td className="whitespace-nowrap px-3 py-3 font-oem">{p.sku ?? "—"}</td>
-              <td className="min-w-48 px-3 py-3 font-semibold">{p.name}</td>
+              <td className="min-w-56 px-3 py-3 font-semibold">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 shrink-0 sm:w-14">
+                    <ProductImage src={p.image_thumbnail_url || p.image_url || p.image_original_url} original={p.image_original_url || p.image_url} name={p.name} compact />
+                  </div>
+                  <span className="min-w-0 break-words">{p.name}</span>
+                </div>
+              </td>
               <td className={`whitespace-nowrap px-3 py-3 ${p.stock === 0 ? "text-destructive" : "text-warning"}`}>{p.stock === 0 ? "Tükendi" : "Minimum altı"}</td>
               <td className="px-3 py-3">{p.stock}</td><td className="whitespace-nowrap px-3 py-3">{p.min_stock} / {p.max_stock ?? "—"}</td>
               <td className="px-3 py-3"><div className="flex items-center gap-1">
@@ -159,6 +207,11 @@ function Shortages() {
               </div></td>
               <td className="px-3 py-3"><select aria-label={`${p.sku ?? p.name} alınacak tedarikçi`} className="h-9 w-40 rounded-md border bg-background px-2 text-sm" value={supplierFor(p)} onChange={(e) => setAssigned((old) => ({ ...old, [p.id]: e.target.value }))}><option value="">Tedarikçi seçin</option>{[...new Map(p.suppliers.map((s) => [s.supplier_id, s])).values()].map((s) => <option key={s.supplier_id} value={s.supplier_id}>{s.name}</option>)}</select></td>
               <td className="min-w-44 px-3 py-3">{p.suppliers.length ? p.suppliers.filter(s=>!supplier || s.supplier_id===supplier).map((s, i) => <div key={`${s.supplier_id}-${i}`} className="break-words">{s.name}{s.code && <span className="font-oem text-xs"> · {s.code}</span>}</div>) : <span className="text-muted-foreground">Tedarikçi yok</span>}</td>
+              <td className="px-3 py-3 text-right">
+                <Button type="button" variant="outline" size="sm" onClick={() => addToList([p])} disabled={!p.suppliers.length || isFetching} aria-label={`${p.sku ?? p.name} ürününü listeye ekle`} title={p.suppliers.length ? "Alım listesine ekle" : "Ürüne tedarikçi bağlı değil"}>
+                  <ListPlus aria-hidden="true" />Listeye ekle
+                </Button>
+              </td>
             </tr>; })}</tbody>
           </table>
         </div>

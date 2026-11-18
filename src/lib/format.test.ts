@@ -4,6 +4,7 @@ import { matchesSearch } from "./catalog";
 describe("cari iskonto", () => {
   it("10% iskonto 6.75 TL -> 6.08 TL", () => expect(discounted(6.75, 10)).toBe(6.08));
   it("0% iskonto fiyatı değiştirmez", () => expect(discounted(4.5, 0)).toBe(4.5));
+  it("rounds a half cent up like PostgreSQL numeric", () => expect(discounted(0.29, 50)).toBe(0.15));
 });
 describe("fiyatı girilmemiş ürün", () => {
   it("0 TL ürün stokta olsa da sepete eklenemez", () => expect(isOrderable(0, 100)).toBe(false));

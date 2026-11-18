@@ -6,6 +6,7 @@ import { fetchAll } from "@/lib/fetch-all";
 import { Stat } from "@/components/site/CariStatement";
 import { useState } from "react";
 import { alertLevel, needsAlert } from "@/lib/stock-alerts";
+import { isStockShortage } from "@/lib/stock-shortages";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -21,16 +22,15 @@ function Overview() {
     queryKey: ["admin-overview"],
     queryFn: async () => {
       const since = new Date(Date.now() - 29 * DAY); since.setHours(0, 0, 0, 0);
-      const [orders, pending, low, out, balances, messages, latest] = await Promise.all([
+      const [orders, pending, stock, balances, messages, latest] = await Promise.all([
         fetchAll((a, b) => supabase.from("orders").select("id,total,status,created_at").gte("created_at", since.toISOString()).order("id").range(a, b)),
         supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending"),
-        fetchAll((a, b) => supabase.from("products").select("id,sku,name,stock,min_stock,max_stock,stock_alert_enabled,stock_alert_threshold").order("id").range(a, b)),
-        supabase.from("products").select("id", { count: "exact", head: true }).lte("stock", 0),
+        fetchAll((a, b) => supabase.from("products").select("id,sku,name,stock,min_stock,max_stock,stock_alert_enabled,stock_alert_threshold").eq("is_active", true).order("id").range(a, b)),
         fetchAll((a, b) => supabase.from("account_balances").select("balance").order("customer_account_id").range(a, b)),
         supabase.from("contact_submissions").select("id", { count: "exact", head: true }).gte("created_at", new Date(Date.now() - 7 * DAY).toISOString()),
         supabase.from("orders").select("id,order_no,total,status,created_at,account:customer_accounts(company_name)").eq("status", "pending").order("created_at", { ascending: false }).limit(8),
       ]);
-      return { since, orders, pending: pending.count ?? 0, critical: low.filter((p) => p.stock <= p.min_stock).length, alerts: low.filter(needsAlert).map((p) => ({ ...p, min_stock: alertLevel(p) })).sort((a, b) => a.stock / Math.max(1, a.min_stock) - b.stock / Math.max(1, b.min_stock)), out: out.count ?? 0, receivable: balances.reduce((s, r) => s + Math.max(0, Number(r.balance ?? 0)), 0), messages: messages.count ?? 0, latest: latest.data ?? [] };
+      return { since, orders, pending: pending.count ?? 0, critical: stock.filter(isStockShortage).length, alerts: stock.filter(needsAlert).map((p) => ({ ...p, min_stock: alertLevel(p) })).sort((a, b) => a.stock / Math.max(1, a.min_stock) - b.stock / Math.max(1, b.min_stock)), out: stock.filter((p) => p.stock === 0).length, receivable: balances.reduce((s, r) => s + Math.max(0, Number(r.balance ?? 0)), 0), messages: messages.count ?? 0, latest: latest.data ?? [] };
     },
   });
   if (!data) return <p className="text-muted-foreground">Yükleniyor…</p>;
@@ -49,7 +49,7 @@ function Overview() {
         <Stat label="Son 30 gün satış" value={money(monthTotal)} />
         <Stat label="Toplam cari alacak" value={money(data.receivable)} tone={data.receivable > 0 ? "text-destructive" : ""} />
         <Link to="/admin/siparisler" className="block hover:opacity-90"><Stat label="Bekleyen sipariş →" value={data.pending} tone={data.pending ? "text-warning" : ""} /></Link>
-        <Link to="/admin/eksik-stok" className="block hover:opacity-90"><Stat label={`Minimum stok altı (${data.out} tükendi) →`} value={data.critical} tone={data.critical ? "text-destructive" : ""} /></Link>
+        <Link to="/admin/eksik-stok" className="block hover:opacity-90"><Stat label={`Eksik stok (${data.out} tükendi) →`} value={data.critical} tone={data.critical ? "text-destructive" : ""} /></Link>
         <Link to="/admin/mesajlar" className="block hover:opacity-90"><Stat label="Son 7 gün mesaj →" value={data.messages} /></Link>
       </div>
       <StockAlerts items={data.alerts} />
