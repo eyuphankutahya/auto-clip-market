@@ -645,6 +645,39 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_draft_lines: {
+        Row: {
+          owner_id: string
+          product_id: string
+          product_name: string
+          quantity: number
+          sku: string | null
+          supplier_codes: string[]
+          supplier_id: string
+          supplier_name: string
+        }
+        Insert: {
+          owner_id: string
+          product_id: string
+          product_name: string
+          quantity: number
+          sku?: string | null
+          supplier_codes?: string[]
+          supplier_id: string
+          supplier_name: string
+        }
+        Update: {
+          owner_id?: string
+          product_id?: string
+          product_name?: string
+          quantity?: number
+          sku?: string | null
+          supplier_codes?: string[]
+          supplier_id?: string
+          supplier_name?: string
+        }
+        Relationships: []
+      }
       purchases: {
         Row: {
           created_at: string
