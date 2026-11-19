@@ -1,36 +1,10 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { fetchAll } from "./fetch-all";
 import { mergePurchaseLines, type PurchaseLine } from "./purchase-list";
 
-type DraftRow = {
-  owner_id: string;
-  product_id: string;
-  sku: string | null;
-  product_name: string;
-  supplier_id: string;
-  supplier_name: string;
-  supplier_codes: string[];
-  quantity: number;
-};
-
-// This table's contract is defined in docs/purchase-draft-schema.sql.
-type DraftDatabase = Omit<Database, "public"> & {
-  public: Omit<Database["public"], "Tables"> & {
-    Tables: Database["public"]["Tables"] & {
-      purchase_draft_lines: {
-        Row: DraftRow;
-        Insert: DraftRow;
-        Update: Partial<DraftRow>;
-        Relationships: [];
-      };
-    };
-  };
-};
-
-const draftClient = supabase as unknown as SupabaseClient<DraftDatabase>;
+type DraftRow = Database["public"]["Tables"]["purchase_draft_lines"]["Insert"];
 
 export type PurchaseDraftChange = { upsert: PurchaseLine[] } | { remove: string };
 
@@ -39,7 +13,7 @@ export function draftOptions(ownerId: string) {
     queryKey: ["admin-purchase-draft", ownerId],
     queryFn: async (): Promise<PurchaseLine[]> => {
       const rows = await fetchAll((from, to) =>
-        draftClient.from("purchase_draft_lines").select("*").eq("owner_id", ownerId)
+        supabase.from("purchase_draft_lines").select("*").eq("owner_id", ownerId)
           .order("product_id").range(from, to),
       );
       return rows.map((row) => ({
@@ -61,7 +35,7 @@ export function usePurchaseDraft(ownerId: string) {
   const query = useQuery(options);
   const save = useMutation({
     mutationFn: async (change: PurchaseDraftChange) => {
-      const table = draftClient.from("purchase_draft_lines");
+      const table = supabase.from("purchase_draft_lines");
       const { error } = "remove" in change
         ? await table.delete().eq("owner_id", ownerId).eq("product_id", change.remove)
         : await table.upsert(change.upsert.map((line): DraftRow => ({
