@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { validateStockLimits } from "@/lib/stock-limits";
 import { Save } from "lucide-react";
+import { ProductCategoryFields } from "@/components/site/ProductCategoryFields";
+import { categoryPath, type CatalogCategory } from "@/lib/catalog-groups";
 
 type Product = { id: string; sku: string | null; revision: number; min_stock: number; max_stock: number | null };
-export function BulkProductDialog({ products, categories, onClose, onSaved }: { products: Product[]; categories: { id: string; name: string }[]; onClose: () => void; onSaved: () => void }) {
+export function BulkProductDialog({ products, categories, onClose, onSaved }: { products: Product[]; categories: CatalogCategory[]; onClose: () => void; onSaved: () => void }) {
   const [fields, setFields] = useState<string[]>([]);
   const [price, setPrice] = useState("");
   const [min, setMin] = useState("");

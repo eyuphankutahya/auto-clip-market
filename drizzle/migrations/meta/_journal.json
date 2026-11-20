@@ -155,6 +155,13 @@
       "when": 1795073919314,
       "tag": "0021_create_purchase_draft_lines",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1795155219670,
+      "tag": "0022_main_product_category_hierarchy",
+      "breakpoints": true
     }
   ]
 }

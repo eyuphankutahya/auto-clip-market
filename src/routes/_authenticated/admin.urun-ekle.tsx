@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ProductPhotoUpload } from "@/components/site/ProductPhotoUpload";
+import { ProductCategoryFields } from "@/components/site/ProductCategoryFields";
 
 export const Route = createFileRoute("/_authenticated/admin/urun-ekle")({
   head: () => ({ meta: [

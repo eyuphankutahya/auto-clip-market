@@ -4,6 +4,7 @@ import { fetchAll } from "@/lib/fetch-all";
 import type { CatalogProduct } from "@/lib/catalog";
 
 export type CatalogFilters = { q?: string | undefined; kategori?: string | undefined; marka?: string | undefined; sayfa?: number | undefined; slug?: string | undefined };
+export type { CatalogCategory } from "@/lib/catalog-groups";
 export const catalogPageQuery = (filters: CatalogFilters = {}) => queryOptions({
   queryKey: ["catalog-page", filters], staleTime: 60_000,
   queryFn: async () => {

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchAll } from "@/lib/fetch-all";
 import { compareProductCodes } from "@/lib/catalog-rules";
 
-const productSelect = "*, category:categories(id,name,slug), oems:product_oem_numbers(id,oem), vehicles:product_vehicles(id,brand_id,model_id,brand:brands(name,slug))";
+const productSelect = "*, category:categories(id,name,slug,parent_id), oems:product_oem_numbers(id,oem), vehicles:product_vehicles(id,brand_id,brand:brands(name,slug))";
 
 async function fetchCatalog() {
   const [products, categories, brands] = await Promise.all([

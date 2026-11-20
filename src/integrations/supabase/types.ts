@@ -141,22 +141,33 @@ export type Database = {
         Row: {
           id: string
           name: string
+          parent_id: string | null
           slug: string
           sort: number
         }
         Insert: {
           id?: string
           name: string
+          parent_id?: string | null
           slug: string
           sort?: number
         }
         Update: {
           id?: string
           name?: string
+          parent_id?: string | null
           slug?: string
           sort?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contact_submissions: {
         Row: {
