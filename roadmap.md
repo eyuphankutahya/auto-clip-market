@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Replan catalog around five main groups: KLİPS, Soket, Jant Kapağı, Çelik Jant Göbekleri, Oto Bakım Malzemeleri ve Kimyasalları; retain existing clip groups as KLİPS subcategories and preserve all product/order data
 - [ ] Keep vehicle brands only: stop using vehicle models in catalog, admin forms and exports; models remain in the database as deprecated
 - [x] Keep shortage and purchase-list quantities in multiples of 100 with − / + steps and rounded-up suggestions; browser-verified 100→200→100, typed 150 rejected, purchase list stepper, desktop and phone scroll of the last column
 - [x] Replace lower purchase form with inline product quantity selection in multiples of 100; 200-unit save, stock readback, removal and mobile verified
